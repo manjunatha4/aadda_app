@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm run export:web",
+  "buildCommand": "pnpm --filter @aadda/shared run build && pnpm run export:web",
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,
@@ -21,4 +21,3 @@
     }
   ]
 }
-

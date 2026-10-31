@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm --filter @aadda/mobile run export:web",
+  "buildCommand": "pnpm --filter @aadda/shared run build && pnpm --filter @aadda/mobile run export:web",
   "outputDirectory": "apps/mobile/dist",
   "framework": null,
   "cleanUrls": true,
@@ -21,4 +21,3 @@
     }
   ]
 }
-

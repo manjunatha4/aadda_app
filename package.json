@@ -5,7 +5,7 @@
   "description": "AADDA — Your people. Your chaos. Invite-only private digital hangout for close friend circles with Kannada-first localization.",
   "scripts": {
     "build": "pnpm --recursive run build",
-    "build:web": "pnpm --filter @aadda/mobile run export:web",
+    "build:web": "pnpm --filter @aadda/shared run build && pnpm --filter @aadda/mobile run export:web",
     "dev:api": "pnpm --filter @aadda/api run start:dev",
     "dev:mobile": "pnpm --filter @aadda/mobile run start",
     "prisma:generate": "pnpm --filter @aadda/api run prisma:generate",
