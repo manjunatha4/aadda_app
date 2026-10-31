@@ -144,15 +144,5 @@ pnpm run dev:mobile
 
 ---
 
-## 5. Seed Credentials
 
-| User | Username | Email | Password | District |
-|---|---|---|---|---|
-| Praveen Kumar | `praveen_k` | `praveen@aadda.app` | `AaddaSecret123!` | Bengaluru Urban |
-| Ananya Gowda | `ananya_gowda` | `ananya@aadda.app` | `AaddaSecret123!` | Mysuru |
-| Karthik | `karthik_hubballi` | `karthik@aadda.app` | `AaddaSecret123!` | Dharwad |
-
-**Pre-seeded Adda**:
-- Name: **ಕಟ್ಟೆ ಗ್ಯಾಂಗ್ ⚡ (Katte Gang)**
-- Invite Code: **KATTE2026**
 
