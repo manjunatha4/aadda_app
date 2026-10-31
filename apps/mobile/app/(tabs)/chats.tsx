@@ -54,7 +54,7 @@ export default function ChatsScreen() {
   return (
     <MainLayout
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#7C3AED" />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={DS_TOKENS.colors.purple} />
       }
     >
       {/* Page Header */}

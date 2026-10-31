@@ -524,9 +524,11 @@ export default function ChatScreen() {
               flexDirection: 'row',
               justifyContent: 'center',
               alignItems: 'center',
-              backgroundColor: 'rgba(0,0,0,0.15)',
+              backgroundColor: '#F1F5F9',
               borderRadius: 20,
               padding: 4,
+              borderWidth: 1,
+              borderColor: '#E2E8F0',
               alignSelf: 'center',
             }}
           >
@@ -544,7 +546,7 @@ export default function ChatScreen() {
             >
               <Text
                 style={{
-                  color: stickerTab === 'abc' ? '#2563EB' : '#FFFFFF',
+                  color: stickerTab === 'abc' ? '#6366F1' : '#64748B',
                   fontSize: 11,
                   fontWeight: '800',
                 }}
@@ -565,7 +567,7 @@ export default function ChatScreen() {
             >
               <Text
                 style={{
-                  color: stickerTab === 'stickers' ? '#2563EB' : '#FFFFFF',
+                  color: stickerTab === 'stickers' ? '#6366F1' : '#64748B',
                   fontSize: 13,
                   fontWeight: '800',
                 }}
@@ -585,7 +587,7 @@ export default function ChatScreen() {
             >
               <Text
                 style={{
-                  color: stickerTab === 'smileys' ? '#2563EB' : '#FFFFFF',
+                  color: stickerTab === 'smileys' ? '#6366F1' : '#64748B',
                   fontSize: 13,
                   fontWeight: '800',
                 }}
