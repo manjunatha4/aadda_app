@@ -32,24 +32,25 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
             maxWidth: 360,
             height: 64,
             borderRadius: 36,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            borderWidth: 1,
-            borderColor: '#E2E8F0',
+            backgroundColor: '#FFFFFF',
+            borderWidth: 1.5,
+            borderColor: 'rgba(0, 0, 0, 0.08)',
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
             paddingHorizontal: 12,
-            shadowColor: '#0F172A',
+            shadowColor: '#000000',
             shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.12,
-            shadowRadius: 24,
-            elevation: 12,
+            shadowOpacity: 0.14,
+            shadowRadius: 20,
+            elevation: 10,
           },
           Platform.OS === 'web'
             ? ({
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                boxShadow: '0 16px 40px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.04)',
+                boxShadow:
+                  '0 10px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.05)',
               } as any)
             : {},
         ]}
