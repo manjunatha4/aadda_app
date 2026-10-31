@@ -19,36 +19,20 @@ export default function RootLayout() {
       <StatusBar style="light" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: '#24183B' },
-          headerTintColor: '#D9FF67',
-          headerTitleStyle: { fontWeight: 'bold' },
-          contentStyle: { backgroundColor: '#24183B' },
+          headerShown: false,
+          contentStyle: { backgroundColor: '#0B0B10' },
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="adda/[id]"
-          options={{ title: 'Adda Room', headerBackTitle: 'Back' }}
-        />
-        <Stack.Screen
-          name="chat/[id]"
-          options={{ title: 'Chat', headerBackTitle: 'Back' }}
-        />
-        <Stack.Screen
-          name="chaos/[id]"
-          options={{ title: 'Chaos Challenge', headerBackTitle: 'Back' }}
-        />
-        <Stack.Screen
-          name="modal/vibe"
-          options={{ presentation: 'modal', title: 'Vibe Check ⚡' }}
-        />
-        <Stack.Screen
-          name="modal/create-adda"
-          options={{ presentation: 'modal', title: 'Create Adda' }}
-        />
+        <Stack.Screen name="adda/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="chaos/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="create-adda" options={{ headerShown: false }} />
+        <Stack.Screen name="modal/vibe" options={{ presentation: 'modal', headerShown: false }} />
+        <Stack.Screen name="modal/create-adda" options={{ presentation: 'modal', headerShown: false }} />
       </Stack>
     </QueryClientProvider>
   );

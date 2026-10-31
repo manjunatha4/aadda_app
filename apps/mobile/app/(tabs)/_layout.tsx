@@ -13,6 +13,7 @@ const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
 function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
   return (
     <View
+      pointerEvents="box-none"
       style={{
         position: Platform.OS === 'web' ? ('fixed' as any) : 'absolute',
         bottom: 24,
@@ -21,23 +22,23 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
-        pointerEvents: 'box-none',
       }}
     >
       <View
+        pointerEvents="auto"
         style={[
           {
             width: '92%',
             maxWidth: 360,
             height: 64,
             borderRadius: 36,
-            backgroundColor: 'rgba(22, 22, 28, 0.82)',
+            backgroundColor: 'rgba(22, 22, 28, 0.88)',
             borderWidth: 1.2,
             borderColor: 'rgba(255, 255, 255, 0.18)',
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingHorizontal: 8,
+            paddingHorizontal: 12,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 12 },
             shadowOpacity: 0.35,
@@ -81,9 +82,6 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
               activeOpacity={0.7}
               style={{
                 flex: 1,
-                flexGrow: 1,
-                flexShrink: 0,
-                flexBasis: 0,
                 height: 64,
                 alignItems: 'center',
                 justifyContent: 'center',

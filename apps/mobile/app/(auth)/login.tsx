@@ -102,27 +102,41 @@ export default function AuthScreen() {
       return;
     }
 
-    try {
-      setLoading(true);
-      const existing = await clientStore.findUserByLogin(cleanEmail);
-      if (existing) {
-        // Direct instant login for returning users!
-        const loginRes = await clientStore.login(cleanEmail);
-        await setAuth(loginRes.user, loginRes.tokens.accessToken, loginRes.tokens.refreshToken);
-        router.replace('/(tabs)');
-        return;
-      }
-    } catch {
-      // Continue to onboarding if not found
-    } finally {
-      setLoading(false);
-    }
-
     if (!isValidEmail(cleanEmail)) {
       setErrorMessage(
         isKn ? 'ದಯವಿಟ್ಟು ಮಾನ್ಯ ಇಮೇಲ್ ನಮೂದಿಸಿ (ಉದಾ: name@example.com)' : 'Please enter a valid email format (e.g. name@example.com)',
       );
       return;
+    }
+
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+
+      // Check local store first for returning user
+      const localExisting = await clientStore.findUserByLogin(cleanEmail);
+      if (localExisting) {
+        const loginRes = await clientStore.login(cleanEmail);
+        await setAuth(loginRes.user, loginRes.tokens.accessToken, loginRes.tokens.refreshToken);
+        router.replace('/(tabs)');
+        return;
+      }
+
+      // Check cloud API for returning user
+      try {
+        const cloudRes = await api.post('/auth/login', { login: cleanEmail });
+        if (cloudRes && cloudRes.user && cloudRes.tokens) {
+          await setAuth(cloudRes.user, cloudRes.tokens.accessToken, cloudRes.tokens.refreshToken);
+          router.replace('/(tabs)');
+          return;
+        }
+      } catch {
+        // Not yet registered on backend -> proceed to onboarding steps
+      }
+    } catch {
+      // Continue to onboarding if check fails
+    } finally {
+      setLoading(false);
     }
 
     setErrorMessage(null);

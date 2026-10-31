@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 
 interface Entry {
   id: string;
@@ -36,26 +36,34 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
 
   return (
     <View
-      style={{
-        backgroundColor: '#352454',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 16,
-        borderWidth: 2,
-        borderColor: '#D9FF67',
-        shadowColor: '#D9FF67',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-      }}
+      style={[
+        {
+          backgroundColor: 'rgba(28, 28, 42, 0.82)',
+          borderRadius: 20,
+          padding: 16,
+          marginBottom: 16,
+          borderWidth: 1.2,
+          borderColor: 'rgba(124, 58, 237, 0.35)',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.25,
+          shadowRadius: 12,
+        },
+        Platform.OS === 'web'
+          ? ({
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+            } as any)
+          : {},
+      ]}
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <View style={{ backgroundColor: '#D9FF67', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
-          <Text style={{ color: '#24183B', fontWeight: '800', fontSize: 10 }}>
+        <View style={{ backgroundColor: 'rgba(124, 58, 237, 0.25)', borderWidth: 1, borderColor: '#7C3AED', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
+          <Text style={{ color: '#C4B5FD', fontWeight: '800', fontSize: 10 }}>
             CHAOS 🔥 {category}
           </Text>
         </View>
-        <Text style={{ color: '#F4F0FF', opacity: 0.7, fontSize: 11 }}>Active Round</Text>
+        <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '600' }}>Active Round</Text>
       </View>
 
       <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700', marginBottom: 12, lineHeight: 22 }}>
@@ -64,7 +72,7 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
 
       {/* Submissions list */}
       {entries.length > 0 && (
-        <View style={{ marginBottom: 12 }}>
+        <View style={{ marginBottom: 12, gap: 6 }}>
           {entries.map((entry) => (
             <View
               key={entry.id}
@@ -72,17 +80,18 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                backgroundColor: '#24183B',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 padding: 10,
-                borderRadius: 10,
-                marginBottom: 6,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.08)',
               }}
             >
               <View style={{ flex: 1, marginRight: 8 }}>
-                <Text style={{ color: '#D9FF67', fontSize: 11, fontWeight: '600' }}>
+                <Text style={{ color: '#C4B5FD', fontSize: 11, fontWeight: '700' }}>
                   {entry.user.displayName}
                 </Text>
-                <Text style={{ color: '#F4F0FF', fontSize: 13, marginTop: 2 }}>
+                <Text style={{ color: '#FFFFFF', fontSize: 13, marginTop: 2 }}>
                   {entry.content}
                 </Text>
               </View>
@@ -90,7 +99,9 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
               <TouchableOpacity
                 onPress={() => onVote && onVote(entry.id)}
                 style={{
-                  backgroundColor: '#FF786B',
+                  backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(239, 68, 68, 0.4)',
                   paddingHorizontal: 10,
                   paddingVertical: 5,
                   borderRadius: 12,
@@ -98,7 +109,7 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#24183B', fontWeight: '800', fontSize: 12 }}>
+                <Text style={{ color: '#F87171', fontWeight: '800', fontSize: 12 }}>
                   🔥 {entry.voteCount}
                 </Text>
               </TouchableOpacity>
@@ -111,13 +122,17 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
         <TouchableOpacity
           onPress={onSubmitAnswer}
           style={{
-            backgroundColor: '#D9FF67',
+            backgroundColor: '#7C3AED',
             paddingVertical: 10,
-            borderRadius: 10,
+            borderRadius: 12,
             alignItems: 'center',
+            shadowColor: '#7C3AED',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
           }}
         >
-          <Text style={{ color: '#24183B', fontWeight: '800', fontSize: 13 }}>
+          <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 13 }}>
             {isKannada ? 'ಉತ್ತರಿಸಿ (Respond)' : 'Submit Answer'}
           </Text>
         </TouchableOpacity>
@@ -125,4 +140,3 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
     </View>
   );
 };
-
