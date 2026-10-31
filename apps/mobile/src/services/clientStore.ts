@@ -389,11 +389,6 @@ class ClientStore {
       message: 'Verification code resent successfully',
     };
   }
-        accessToken: `token_${user.id}`,
-        refreshToken: `ref_${user.id}`,
-      },
-    };
-  }
 
   async getCurrentUser() {
     await this.init();
