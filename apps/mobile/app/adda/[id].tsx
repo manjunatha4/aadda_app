@@ -114,9 +114,9 @@ export default function AddaDetailScreen() {
                 width: 56,
                 height: 56,
                 borderRadius: 28,
-                backgroundColor: 'rgba(124, 58, 237, 0.2)',
+                backgroundColor: DS_TOKENS.colors.purpleLight,
                 borderWidth: 1.5,
-                borderColor: '#7C3AED',
+                borderColor: DS_TOKENS.colors.purpleBorder,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -126,17 +126,17 @@ export default function AddaDetailScreen() {
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: '#FFFFFF', fontSize: 20, fontWeight: '900' }}>
+              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 20, fontWeight: '900' }}>
                 {adda.name}
               </Text>
-              <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: '600', marginTop: 2 }}>
+              <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 2 }}>
                 👥 {adda.memberCount || 1} {isKn ? 'ಸದಸ್ಯರು' : 'members'} · Created {new Date(adda.createdAt || Date.now()).toLocaleDateString()}
               </Text>
             </View>
           </View>
 
           {Boolean(adda.description) && (
-            <Text style={{ color: '#CBD5E1', fontSize: 14, lineHeight: 20, marginTop: 4 }}>
+            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 4 }}>
               {adda.description}
             </Text>
           )}
@@ -144,22 +144,22 @@ export default function AddaDetailScreen() {
           {/* Secret Invite Code Box */}
           <View
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.45)',
+              backgroundColor: DS_TOKENS.colors.bgSecondary,
               borderRadius: 18,
               padding: 16,
               marginTop: 18,
-              borderWidth: 1.2,
-              borderColor: 'rgba(124, 58, 237, 0.35)',
+              borderWidth: 1,
+              borderColor: DS_TOKENS.colors.borderSubtle,
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
             }}
           >
             <View>
-              <Text style={{ color: '#C4B5FD', fontSize: 11, fontWeight: '800', letterSpacing: 0.8 }}>
+              <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 11, fontWeight: '800', letterSpacing: 0.8 }}>
                 {isKn ? 'ಇನ್ವೈಟ್ ಕೋಡ್' : 'SECRET INVITE CODE'}
               </Text>
-              <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '900', letterSpacing: 2, marginTop: 4 }}>
+              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: 2, marginTop: 4 }}>
                 {activeInvite}
               </Text>
             </View>
@@ -176,10 +176,10 @@ export default function AddaDetailScreen() {
         <GlassCard style={{ padding: 18 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <View>
-              <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800' }}>
+              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 16, fontWeight: '800' }}>
                 {isKn ? 'ರೂಮ್ ಚಾಟ್‌ಗೆ ಪ್ರವೇಶಿಸಿ' : 'Join Conversation'}
               </Text>
-              <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+              <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
                 {isKn ? 'ನೈಜ ಸಮಯದಲ್ಲಿ ಸಂದೇಶ ಕಳುಹಿಸಿ' : 'Real-time group chat and sticker reactions'}
               </Text>
             </View>
@@ -195,13 +195,13 @@ export default function AddaDetailScreen() {
         </GlassCard>
 
         {/* Leave Room Option */}
-        <GlassCard style={{ padding: 18, borderColor: 'rgba(239, 68, 68, 0.25)' }}>
+        <GlassCard style={{ padding: 18, borderColor: DS_TOKENS.colors.roseBorder, backgroundColor: DS_TOKENS.colors.roseLight }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <View>
-              <Text style={{ color: '#F87171', fontSize: 15, fontWeight: '800' }}>
+              <Text style={{ color: DS_TOKENS.colors.rose, fontSize: 15, fontWeight: '800' }}>
                 {isKn ? 'ರೂಮ್‌ನಿಂದ ನಿರ್ಗಮಿಸಿ' : 'Leave this Room'}
               </Text>
-              <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+              <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
                 {isKn ? 'ನೀವು ನಂತರ ಕೋಡ್ ಬಳಸಿ ಮತ್ತೆ ಸೇರಬಹುದು' : 'You can rejoin later using the invite code'}
               </Text>
             </View>

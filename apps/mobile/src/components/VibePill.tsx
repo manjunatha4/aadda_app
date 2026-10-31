@@ -9,49 +9,49 @@ const VIBE_METADATA: Record<
     labelKn: 'ಮೆಂಟಲಿ ಆಫ್‌ಲೈನ್',
     labelEn: 'Mentally Offline',
     emoji: '📴',
-    accent: '#8B5CF6',
-    bg: 'rgba(139, 92, 246, 0.16)',
-    text: '#E9D5FF',
+    accent: '#6366F1',
+    bg: '#EEF2FF',
+    text: '#4F46E5',
   },
   NEED_GOSSIP: {
     labelKn: 'ಗಾಸಿಪ್ ಬೇಕು',
     labelEn: 'Need Gossip',
     emoji: '👀',
     accent: '#F43F5E',
-    bg: 'rgba(244, 63, 94, 0.16)',
-    text: '#FECDD3',
+    bg: '#FFF1F2',
+    text: '#E11D48',
   },
   DEAD_INSIDE: {
     labelKn: 'ಡೆಡ್ ಇನ್‌ಸೈಡ್',
     labelEn: 'Dead Inside',
     emoji: '💀',
     accent: '#64748B',
-    bg: 'rgba(100, 116, 139, 0.2)',
-    text: '#E2E8F0',
+    bg: '#F1F5F9',
+    text: '#475569',
   },
   CHILL_MODE: {
     labelKn: 'ಚಿಲ್ ಮೋಡ್',
     labelEn: 'Chill Mode',
     emoji: '☕',
     accent: '#10B981',
-    bg: 'rgba(16, 185, 129, 0.16)',
-    text: '#A7F3D0',
+    bg: '#ECFDF5',
+    text: '#059669',
   },
   MAIN_CHARACTER: {
     labelKn: 'ಮೇನ್ ಕ್ಯಾರೆಕ್ಟರ್',
     labelEn: 'Main Character',
     emoji: '💅',
     accent: '#EC4899',
-    bg: 'rgba(236, 72, 153, 0.16)',
-    text: '#FBCFE8',
+    bg: '#FDF2F8',
+    text: '#DB2777',
   },
   BATTERY_LOW: {
     labelKn: 'ಬ್ಯಾಟರಿ 1%',
     labelEn: 'Battery 1%',
     emoji: '🪫',
     accent: '#EF4444',
-    bg: 'rgba(239, 68, 68, 0.18)',
-    text: '#FCA5A5',
+    bg: '#FEF2F2',
+    text: '#DC2626',
   },
 };
 
@@ -76,9 +76,9 @@ export const VibePill: React.FC<VibePillProps> = ({
     labelKn: mood,
     labelEn: mood,
     emoji: '✨',
-    accent: '#8B5CF6',
-    bg: 'rgba(139, 92, 246, 0.16)',
-    text: '#E9D5FF',
+    accent: '#6366F1',
+    bg: '#EEF2FF',
+    text: '#4F46E5',
   };
 
   const label = isKannada ? meta.labelKn : meta.labelEn;
@@ -97,15 +97,9 @@ export const VibePill: React.FC<VibePillProps> = ({
           marginRight: 8,
           flexDirection: 'row',
           alignItems: 'center',
-          borderWidth: 1.2,
-          borderColor: meta.accent + '55',
+          borderWidth: 1,
+          borderColor: meta.accent + '40',
         },
-        Platform.OS === 'web'
-          ? ({
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-            } as any)
-          : {},
       ]}
     >
       <Text style={{ fontSize: compact ? 12 : 16, marginRight: 6 }}>{meta.emoji}</Text>
@@ -123,7 +117,7 @@ export const VibePill: React.FC<VibePillProps> = ({
         {customNote && !compact && (
           <Text
             style={{
-              color: '#94A3B8',
+              color: '#64748B',
               fontSize: 11,
               marginTop: 1,
             }}

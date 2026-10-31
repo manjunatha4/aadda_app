@@ -110,7 +110,7 @@ export default function TodayScreen() {
   return (
     <MainLayout
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#7C3AED" />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={DS_TOKENS.colors.purple} />
       }
     >
       <ToastNotification
@@ -149,9 +149,9 @@ export default function TodayScreen() {
                 width: 44,
                 height: 44,
                 borderRadius: 22,
-                backgroundColor: 'rgba(124, 58, 237, 0.25)',
+                backgroundColor: DS_TOKENS.colors.purpleLight,
                 borderWidth: 1.5,
-                borderColor: '#7C3AED',
+                borderColor: DS_TOKENS.colors.purpleBorder,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -159,10 +159,10 @@ export default function TodayScreen() {
               <Text style={{ fontSize: 20 }}>👋</Text>
             </View>
             <View>
-              <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900' }}>
+              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 18, fontWeight: '900' }}>
                 {isKn ? `ನಮಸ್ಕಾರ, ${displayName}!` : `Welcome back, ${displayName}!`}
               </Text>
-              <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: '600' }}>
+              <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 13, fontWeight: '600' }}>
                 {isKn ? 'ನಿಮ್ಮ ಸ್ನೇಹಿತರೊಂದಿಗೆ ಸಂಪರ್ಕದಲ್ಲಿರಿ ಮತ್ತು ವೈಬ್ ಹಂಚಿಕೊಳ್ಳಿ' : 'Real-time hangouts and collaborative daily chaos'}
               </Text>
             </View>
@@ -174,9 +174,9 @@ export default function TodayScreen() {
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/chaos')}
             style={{
-              backgroundColor: 'rgba(124, 58, 237, 0.16)',
+              backgroundColor: DS_TOKENS.colors.purpleLight,
               borderWidth: 1,
-              borderColor: 'rgba(124, 58, 237, 0.35)',
+              borderColor: DS_TOKENS.colors.purpleBorder,
               borderRadius: DS_TOKENS.radii.pill,
               paddingHorizontal: 12,
               paddingVertical: 6,
@@ -186,7 +186,7 @@ export default function TodayScreen() {
             }}
           >
             <Text style={{ fontSize: 13 }}>⚡</Text>
-            <Text style={{ color: '#C4B5FD', fontSize: 12, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
               {isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್ ಟಾಸ್ಕ್ ಟ್ರ್ಯಾಕರ್' : 'Daily Chaos Tasks'}
             </Text>
           </TouchableOpacity>
@@ -194,9 +194,9 @@ export default function TodayScreen() {
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/chats')}
             style={{
-              backgroundColor: 'rgba(56, 189, 248, 0.12)',
+              backgroundColor: DS_TOKENS.colors.skyLight,
               borderWidth: 1,
-              borderColor: 'rgba(56, 189, 248, 0.3)',
+              borderColor: DS_TOKENS.colors.skyBorder,
               borderRadius: DS_TOKENS.radii.pill,
               paddingHorizontal: 12,
               paddingVertical: 6,
@@ -206,7 +206,7 @@ export default function TodayScreen() {
             }}
           >
             <Text style={{ fontSize: 13 }}>💬</Text>
-            <Text style={{ color: '#7DD3FC', fontSize: 12, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.sky, fontSize: 12, fontWeight: '800' }}>
               {isKn ? 'ಸಕ್ರಿಯ ಚಾಟ್‌ಗಳು' : 'Active Chats'}
             </Text>
           </TouchableOpacity>
@@ -214,9 +214,9 @@ export default function TodayScreen() {
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/profile')}
             style={{
-              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              backgroundColor: DS_TOKENS.colors.emeraldLight,
               borderWidth: 1,
-              borderColor: 'rgba(16, 185, 129, 0.3)',
+              borderColor: DS_TOKENS.colors.emeraldBorder,
               borderRadius: DS_TOKENS.radii.pill,
               paddingHorizontal: 12,
               paddingVertical: 6,
@@ -226,7 +226,7 @@ export default function TodayScreen() {
             }}
           >
             <Text style={{ fontSize: 13 }}>📍</Text>
-            <Text style={{ color: '#6EE7B7', fontSize: 12, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.emerald, fontSize: 12, fontWeight: '800' }}>
               {user?.district || 'Bengaluru'}
             </Text>
           </TouchableOpacity>
@@ -235,7 +235,7 @@ export default function TodayScreen() {
 
       {/* Secret Invite Code Join Box */}
       <GlassCard style={{ marginBottom: 20 }}>
-        <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '800', marginBottom: 10 }}>
+        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 15, fontWeight: '800', marginBottom: 10 }}>
           🔑 {isKn ? 'ಸೀಕ್ರೆಟ್ ಕೋಡ್ ಮೂಲಕ ರೂಮ್‌ಗೆ ಸೇರಿ' : 'Join a Room with Secret Code'}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -262,7 +262,7 @@ export default function TodayScreen() {
               marginTop: 10,
               fontSize: 13,
               fontWeight: '700',
-              color: joinStatus.type === 'success' ? '#34D399' : '#F87171',
+              color: joinStatus.type === 'success' ? DS_TOKENS.colors.emerald : DS_TOKENS.colors.rose,
             }}
           >
             {joinStatus.message}
@@ -272,10 +272,10 @@ export default function TodayScreen() {
 
       {/* Active Rooms Section */}
       <View style={{ marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900' }}>
+        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 18, fontWeight: '900' }}>
           {isKn ? 'ನಿಮ್ಮ ರೂಮ್ಸ್‌ಗಳು' : 'Your Rooms & Addas'}
         </Text>
-        <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '700' }}>
+        <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '700' }}>
           {addas.length} {isKn ? 'ಸಕ್ರಿಯ' : 'active'}
         </Text>
       </View>
@@ -315,7 +315,7 @@ export default function TodayScreen() {
                       width: 44,
                       height: 44,
                       borderRadius: 22,
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      backgroundColor: DS_TOKENS.colors.bgSecondary,
                       borderWidth: 1,
                       borderColor: DS_TOKENS.colors.borderSubtle,
                       alignItems: 'center',
@@ -329,10 +329,10 @@ export default function TodayScreen() {
                   </View>
 
                   <View style={{ flex: 1 }}>
-                    <Text numberOfLines={1} style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900' }}>
+                    <Text numberOfLines={1} style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 16, fontWeight: '900' }}>
                       {adda.name}
                     </Text>
-                    <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                    <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
                       👥 {adda.memberCount || 1} {isKn ? 'ಸದಸ್ಯರು' : 'members'}
                     </Text>
                   </View>
@@ -346,9 +346,9 @@ export default function TodayScreen() {
                       copyCode(adda.inviteCode, adda.id);
                     }}
                     style={{
-                      backgroundColor: copiedId === adda.id ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                      backgroundColor: copiedId === adda.id ? DS_TOKENS.colors.emeraldLight : DS_TOKENS.colors.bgSecondary,
                       borderWidth: 1,
-                      borderColor: copiedId === adda.id ? '#10B981' : DS_TOKENS.colors.borderSubtle,
+                      borderColor: copiedId === adda.id ? DS_TOKENS.colors.emeraldBorder : DS_TOKENS.colors.borderSubtle,
                       borderRadius: DS_TOKENS.radii.pill,
                       paddingHorizontal: 10,
                       paddingVertical: 5,
@@ -357,7 +357,7 @@ export default function TodayScreen() {
                       gap: 4,
                     }}
                   >
-                    <Text style={{ color: copiedId === adda.id ? '#10B981' : '#E2E8F0', fontSize: 11, fontWeight: '800' }}>
+                    <Text style={{ color: copiedId === adda.id ? DS_TOKENS.colors.emerald : DS_TOKENS.colors.textPrimary, fontSize: 11, fontWeight: '800' }}>
                       {copiedId === adda.id ? '✓ COPIED' : `🔑 ${adda.inviteCode}`}
                     </Text>
                   </TouchableOpacity>

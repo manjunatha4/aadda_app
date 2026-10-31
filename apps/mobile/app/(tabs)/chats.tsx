@@ -119,9 +119,9 @@ export default function ChatsScreen() {
                       width: 48,
                       height: 48,
                       borderRadius: 24,
-                      backgroundColor: 'rgba(124, 58, 237, 0.2)',
+                      backgroundColor: DS_TOKENS.colors.purpleLight,
                       borderWidth: 1.5,
-                      borderColor: 'rgba(124, 58, 237, 0.45)',
+                      borderColor: DS_TOKENS.colors.purpleBorder,
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginRight: 14,
@@ -133,20 +133,20 @@ export default function ChatsScreen() {
                   {/* Room Details */}
                   <View style={{ flex: 1, marginRight: 8 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                      <Text numberOfLines={1} style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800', flex: 1 }}>
+                      <Text numberOfLines={1} style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 16, fontWeight: '800', flex: 1 }}>
                         {name}
                       </Text>
-                      <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700', marginLeft: 8 }}>
+                      <Text style={{ color: DS_TOKENS.colors.textMuted, fontSize: 11, fontWeight: '700', marginLeft: 8 }}>
                         {time}
                       </Text>
                     </View>
 
-                    <Text numberOfLines={1} style={{ color: '#94A3B8', fontSize: 13, fontWeight: '500' }}>
+                    <Text numberOfLines={1} style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 13, fontWeight: '500' }}>
                       {lastMsg}
                     </Text>
                   </View>
 
-                  <Text style={{ color: '#64748B', fontSize: 16, fontWeight: '800' }}>›</Text>
+                  <Text style={{ color: DS_TOKENS.colors.textMuted, fontSize: 16, fontWeight: '800' }}>›</Text>
                 </View>
               </GlassCard>
             );

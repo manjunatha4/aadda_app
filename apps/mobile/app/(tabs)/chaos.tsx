@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
 import { useAuthStore } from '../../src/stores/authStore';
 import { DailyChaosItem, DailyChaosStats, ChaosPriority, ChaosStatus } from '@aadda/shared';
+import { SavedFolder, SavedItem } from '../../src/services/clientStore';
 import {
   MainLayout,
   PageHeader,
@@ -23,9 +24,9 @@ import {
 
 const PRIORITY_OPTIONS = [
   { label: 'Low', value: 'LOW', color: '#10B981', emoji: '🟢' },
-  { label: 'Medium', value: 'MEDIUM', color: '#38BDF8', emoji: '🔵' },
-  { label: 'High', value: 'HIGH', color: '#F59E0B', emoji: '🟡' },
-  { label: 'Critical', value: 'CRITICAL', color: '#EF4444', emoji: '🔴' },
+  { label: 'Medium', value: 'MEDIUM', color: '#0284C7', emoji: '🔵' },
+  { label: 'High', value: 'HIGH', color: '#D97706', emoji: '🟡' },
+  { label: 'Critical', value: 'CRITICAL', color: '#DC2626', emoji: '🔴' },
 ];
 
 const CATEGORY_OPTIONS = [
@@ -82,6 +83,74 @@ export default function DailyChaosScreen() {
   // Delete dialog state
   const [deleteTarget, setDeleteTarget] = useState<DailyChaosItem | null>(null);
 
+  // Saved Folders (Reference Image 3)
+  const [folders, setFolders] = useState<SavedFolder[]>([
+    { id: '1', title: 'Friends', color: '#FFB82E', emoji: '💛', count: 12 },
+    { id: '2', title: 'Astronomy', color: '#3C97FF', emoji: '🚀', count: 8 },
+    { id: '3', title: 'Tech & Code', color: '#FF7A29', emoji: '💻', count: 15 },
+    { id: '4', title: 'Cartoons', color: '#9C75F7', emoji: '🦄', count: 9 },
+    { id: '5', title: 'Tasty food', color: '#FF6464', emoji: '🍕', count: 24 },
+    { id: '6', title: 'Sport', color: '#31C390', emoji: '⚽', count: 7 },
+  ]);
+  const [activeFolderModal, setActiveFolderModal] = useState<SavedFolder | null>(null);
+  const [folderItems, setFolderItems] = useState<SavedItem[]>([]);
+  const [loadingFolderItems, setLoadingFolderItems] = useState(false);
+  const [newFolderItemTitle, setNewFolderItemTitle] = useState('');
+  const [newFolderItemDesc, setNewFolderItemDesc] = useState('');
+
+  // Daily Chaos Polls (Reference Image 3)
+  const [pollVotes, setPollVotes] = useState<Record<string, number>>({
+    poll1_opt1: 58,
+    poll1_opt2: 42,
+    poll2_opt1: 71,
+    poll2_opt2: 29,
+  });
+  const [userVoted, setUserVoted] = useState<Record<string, string>>({});
+
+  const handleOpenFolder = async (folder: SavedFolder) => {
+    setActiveFolderModal(folder);
+    setLoadingFolderItems(true);
+    try {
+      const items = await api.get(`/folders/${folder.id}/items`);
+      setFolderItems(Array.isArray(items) ? items : []);
+    } catch {
+      setFolderItems([]);
+    } finally {
+      setLoadingFolderItems(false);
+    }
+  };
+
+  const handleAddFolderItem = async () => {
+    if (!activeFolderModal || !newFolderItemTitle.trim()) return;
+    try {
+      const created = await api.post(`/folders/${activeFolderModal.id}/items`, {
+        title: newFolderItemTitle.trim(),
+        description: newFolderItemDesc.trim(),
+        tag: activeFolderModal.title,
+      });
+      setFolderItems((prev) => [created, ...prev]);
+      setFolders((prev) =>
+        prev.map((f) => (f.id === activeFolderModal.id ? { ...f, count: f.count + 1 } : f)),
+      );
+      setNewFolderItemTitle('');
+      setNewFolderItemDesc('');
+      showToast('Item saved to folder!');
+    } catch {
+      showToast('Failed to save item', 'error');
+    }
+  };
+
+  const handleVote = (pollId: string, optionId: string) => {
+    if (userVoted[pollId]) return;
+    setUserVoted((prev) => ({ ...prev, [pollId]: optionId }));
+    const voteKey = `${pollId}_${optionId}`;
+    setPollVotes((prev) => ({
+      ...prev,
+      [voteKey]: (prev[voteKey] || 0) + 1,
+    }));
+    showToast('Vote submitted! 🗳️');
+  };
+
   // Toast state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
@@ -129,7 +198,7 @@ export default function DailyChaosScreen() {
     await loadChaos();
   };
 
-  // Open modal for Create
+  // Open modal for new item
   const handleOpenCreateModal = () => {
     setEditingItem(null);
     setFormTitle('');
@@ -143,14 +212,14 @@ export default function DailyChaosScreen() {
     setModalVisible(true);
   };
 
-  // Open modal for Edit
+  // Open modal for editing
   const handleOpenEditModal = (item: DailyChaosItem) => {
     setEditingItem(item);
     setFormTitle(item.title);
     setFormDescription(item.description || '');
-    setFormDate(item.date || new Date().toISOString().split('T')[0]);
+    setFormDate(item.date);
     setFormDeadline(item.deadline || '');
-    setFormPriority(item.priority || 'MEDIUM');
+    setFormPriority(item.priority);
     setFormCategory(item.category || 'General');
     setFormTags(item.tags?.join(', ') || '');
     setFormError(null);
@@ -160,7 +229,7 @@ export default function DailyChaosScreen() {
   // Save (Create or Update)
   const handleSaveChaos = async () => {
     if (!formTitle.trim()) {
-      setFormError(isKn ? 'ದಯವಿಟ್ಟು ಶೀರ್ಷಿಕೆ ನಮೂದಿಸಿ' : 'Please enter a task title');
+      setFormError(isKn ? 'ದಯವಿಟ್ಟು ಕಾರ್ಯದ ಶೀರ್ಷಿಕೆಯನ್ನು ನಮೂದಿಸಿ' : 'Please enter a task title');
       return;
     }
 
@@ -168,35 +237,24 @@ export default function DailyChaosScreen() {
       setFormSubmitting(true);
       setFormError(null);
 
-      const parsedTags = formTags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
+      const payload = {
+        title: formTitle.trim(),
+        description: formDescription.trim() || undefined,
+        date: formDate.trim() || new Date().toISOString().split('T')[0],
+        deadline: formDeadline.trim() || undefined,
+        priority: formPriority,
+        category: formCategory,
+        tags: formTags
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean),
+      };
 
       if (editingItem) {
-        // Update
-        await api.patch(`/chaos/${editingItem.id}`, {
-          title: formTitle.trim(),
-          description: formDescription.trim(),
-          date: formDate,
-          deadline: formDeadline,
-          priority: formPriority,
-          category: formCategory,
-          tags: parsedTags,
-        });
-        showToast(isKn ? 'ಕೆಯೋಸ್ ನವೀಕರಿಸಲಾಗಿದೆ! ✓' : 'Chaos entry updated successfully! ✓');
+        await api.patch(`/chaos/${editingItem.id}`, payload);
+        showToast(isKn ? 'ಕೆಯೋಸ್ ನವೀಕರಿಸಲಾಗಿದೆ! ⚡' : 'Daily Chaos updated successfully! ⚡');
       } else {
-        // Create
-        await api.post('/chaos', {
-          title: formTitle.trim(),
-          description: formDescription.trim(),
-          date: formDate,
-          deadline: formDeadline,
-          priority: formPriority,
-          category: formCategory,
-          tags: parsedTags,
-          status: 'PENDING',
-        });
+        await api.post('/chaos', payload);
         showToast(isKn ? 'ಹೊಸ ಕೆಯೋಸ್ ಸೇರಿಸಲಾಗಿದೆ! 🎉' : 'Daily Chaos created successfully! 🎉');
       }
 
@@ -241,7 +299,7 @@ export default function DailyChaosScreen() {
   return (
     <MainLayout
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#7C3AED" />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={DS_TOKENS.colors.purple} />
       }
     >
       <ToastNotification
@@ -269,6 +327,196 @@ export default function DailyChaosScreen() {
         }
       />
 
+      {/* Saved Folders Section - Exactly as shown in Reference Image 3 */}
+      <View style={{ marginBottom: 24 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 24, fontWeight: '900' }}>
+              {isKn ? 'ಉಳಿಸಲಾಗಿದೆ' : 'Saved'}
+            </Text>
+            <View
+              style={{
+                backgroundColor: '#F1F5F9',
+                borderColor: '#E2E8F0',
+                borderWidth: 1,
+                borderRadius: 14,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+              }}
+            >
+              <Text style={{ color: '#475569', fontSize: 12, fontWeight: '800' }}>
+                {folders.length} {isKn ? 'ಫೋಲ್ಡರ್‌ಗಳು +' : 'folders +'}
+              </Text>
+            </View>
+          </View>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: '#ECFDF5',
+              borderWidth: 1,
+              borderColor: '#A7F3D0',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 22 }}>🐸</Text>
+          </View>
+        </View>
+
+        {/* 2-Column Folders Grid */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+          {folders.map((f) => (
+            <TouchableOpacity
+              key={f.id}
+              activeOpacity={0.85}
+              onPress={() => handleOpenFolder(f)}
+              style={{
+                flex: 1,
+                minWidth: '46%',
+                borderRadius: 20,
+                backgroundColor: f.color,
+                padding: 16,
+                minHeight: 110,
+                justifyContent: 'space-between',
+                shadowColor: f.color,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 10,
+                elevation: 4,
+              }}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 24 }}>{f.emoji}</Text>
+                <View
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 12,
+                  }}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '900' }}>
+                    {f.count} items
+                  </Text>
+                </View>
+              </View>
+              <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '900', marginTop: 12 }}>
+                {f.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Daily Chaos Polls Section - Exactly as shown in Reference Image 3 */}
+      <View style={{ marginBottom: 24 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 18 }}>🔥</Text>
+            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 19, fontWeight: '900' }}>
+              {isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್ ಪೋಲ್‌ಗಳು' : 'Daily Chaos Polls'}
+            </Text>
+          </View>
+          <View
+            style={{
+              backgroundColor: '#FEF3C7',
+              borderColor: '#FDE68A',
+              borderWidth: 1,
+              borderRadius: 12,
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+            }}
+          >
+            <Text style={{ color: '#D97706', fontSize: 11, fontWeight: '800' }}>2 active</Text>
+          </View>
+        </View>
+
+        {/* Featured Poll Card 1 */}
+        <GlassCard style={{ padding: 18, marginBottom: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <View
+              style={{
+                backgroundColor: '#ECFDF5',
+                borderColor: '#A7F3D0',
+                borderWidth: 1,
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+              }}
+            >
+              <Text style={{ color: '#047857', fontSize: 11, fontWeight: '900' }}>
+                CHAOS 🔥 MOST_LIKELY_TO
+              </Text>
+            </View>
+            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 11, fontWeight: '700' }}>
+              Active Round
+            </Text>
+          </View>
+
+          <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 17, fontWeight: '900', lineHeight: 24, marginBottom: 16 }}>
+            {isKn
+              ? 'ರಾತ್ರಿ 2 ಗಂಟೆಗೆ ಸ್ವಿಗ್ಗಿ ಆರ್ಡರ್ ಮಾಡಿ ಅದು ಬರುವ ಮುನ್ನವೇ ನಿದ್ದೆ ಮಾಡುವ ಸಾಧ್ಯತೆ ಯಾರಿಗಿದೆ?'
+              : 'Most likely to order Swiggy at 2 AM and sleep before it arrives'}
+          </Text>
+
+          {/* Interactive Voting Options */}
+          <View style={{ gap: 10 }}>
+            <TouchableOpacity
+              onPress={() => handleVote('poll1', 'opt1')}
+              activeOpacity={0.8}
+              style={{
+                borderWidth: 1.5,
+                borderColor: userVoted['poll1'] === 'opt1' ? DS_TOKENS.colors.purple : DS_TOKENS.colors.borderSubtle,
+                backgroundColor: userVoted['poll1'] === 'opt1' ? DS_TOKENS.colors.purpleLight : DS_TOKENS.colors.bgSecondary,
+                borderRadius: 12,
+                padding: 12,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '700' }}>
+                🍕 {isKn ? 'ನಾನು (100% ಅಪರಾಧಿ)' : 'Me (100% guilty)'}
+              </Text>
+              <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 13, fontWeight: '900' }}>
+                {Math.round((pollVotes.poll1_opt1 / (pollVotes.poll1_opt1 + pollVotes.poll1_opt2)) * 100)}% ({pollVotes.poll1_opt1})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => handleVote('poll1', 'opt2')}
+              activeOpacity={0.8}
+              style={{
+                borderWidth: 1.5,
+                borderColor: userVoted['poll1'] === 'opt2' ? DS_TOKENS.colors.purple : DS_TOKENS.colors.borderSubtle,
+                backgroundColor: userVoted['poll1'] === 'opt2' ? DS_TOKENS.colors.purpleLight : DS_TOKENS.colors.bgSecondary,
+                borderRadius: 12,
+                padding: 12,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '700' }}>
+                😂 {isKn ? 'ನನ್ನ ಬೆಸ್ಟ್ ಫ್ರೆಂಡ್' : 'My best friend'}
+              </Text>
+              <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 13, fontWeight: '900' }}>
+                {Math.round((pollVotes.poll1_opt2 / (pollVotes.poll1_opt1 + pollVotes.poll1_opt2)) * 100)}% ({pollVotes.poll1_opt2})
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </GlassCard>
+      </View>
+
+      {/* Tasks Section Header */}
+      <View style={{ marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 19, fontWeight: '900' }}>
+          ⚡ {isKn ? 'ದೈನಂದಿನ ಕಾರ್ಯಗಳು ಮತ್ತು ಸವಾಲುಗಳು' : 'Daily Tasks & Trackers'}
+        </Text>
+      </View>
+
       {/* Real Statistics Cards */}
       <View
         style={{
@@ -286,58 +534,58 @@ export default function DailyChaosScreen() {
             </Text>
             <Text style={{ fontSize: 18 }}>📊</Text>
           </View>
-          <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: '900', marginTop: 8 }}>
+          <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 28, fontWeight: '900', marginTop: 8 }}>
             {stats.total}
           </Text>
-          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+          <Text style={{ color: DS_TOKENS.colors.textMuted, fontSize: 11, fontWeight: '700', marginTop: 2 }}>
             {isKn ? 'ನೋಂದಾಯಿತ ಕಾರ್ಯಗಳು' : 'Recorded entries'}
           </Text>
         </GlassCard>
 
         {/* Pending */}
-        <GlassCard style={{ flex: 1, minWidth: 140, padding: 16, borderColor: 'rgba(245, 158, 11, 0.3)' }}>
+        <GlassCard style={{ flex: 1, minWidth: 140, padding: 16, borderColor: DS_TOKENS.colors.amberBorder, backgroundColor: DS_TOKENS.colors.amberLight }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ color: '#FBBF24', fontSize: 12, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.amber, fontSize: 12, fontWeight: '800' }}>
               {isKn ? 'ಬಾಕಿ ಇದೆ' : 'Pending'}
             </Text>
             <Text style={{ fontSize: 18 }}>⏳</Text>
           </View>
-          <Text style={{ color: '#FBBF24', fontSize: 28, fontWeight: '900', marginTop: 8 }}>
+          <Text style={{ color: DS_TOKENS.colors.amber, fontSize: 28, fontWeight: '900', marginTop: 8 }}>
             {stats.pending}
           </Text>
-          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+          <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 11, fontWeight: '700', marginTop: 2 }}>
             {isKn ? 'ತಕ್ಷಣದ ಗಮನ ಅಗತ್ಯವಿದೆ' : 'Needs attention'}
           </Text>
         </GlassCard>
 
         {/* In Progress */}
-        <GlassCard style={{ flex: 1, minWidth: 140, padding: 16, borderColor: 'rgba(56, 189, 248, 0.3)' }}>
+        <GlassCard style={{ flex: 1, minWidth: 140, padding: 16, borderColor: DS_TOKENS.colors.skyBorder, backgroundColor: DS_TOKENS.colors.skyLight }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.sky, fontSize: 12, fontWeight: '800' }}>
               {isKn ? 'ಪ್ರಗತಿಯಲ್ಲಿದೆ' : 'In Progress'}
             </Text>
             <Text style={{ fontSize: 18 }}>⚡</Text>
           </View>
-          <Text style={{ color: '#38BDF8', fontSize: 28, fontWeight: '900', marginTop: 8 }}>
+          <Text style={{ color: DS_TOKENS.colors.sky, fontSize: 28, fontWeight: '900', marginTop: 8 }}>
             {stats.inProgress}
           </Text>
-          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+          <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 11, fontWeight: '700', marginTop: 2 }}>
             {isKn ? 'ಕೆಲಸ ನಡೆಯುತ್ತಿದೆ' : 'Currently working'}
           </Text>
         </GlassCard>
 
         {/* Completed */}
-        <GlassCard style={{ flex: 1, minWidth: 140, padding: 16, borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+        <GlassCard style={{ flex: 1, minWidth: 140, padding: 16, borderColor: DS_TOKENS.colors.emeraldBorder, backgroundColor: DS_TOKENS.colors.emeraldLight }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ color: '#34D399', fontSize: 12, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.emerald, fontSize: 12, fontWeight: '800' }}>
               {isKn ? 'ಪೂರ್ಣಗೊಂಡಿದೆ' : 'Completed'}
             </Text>
             <Text style={{ fontSize: 18 }}>✓</Text>
           </View>
-          <Text style={{ color: '#34D399', fontSize: 28, fontWeight: '900', marginTop: 8 }}>
+          <Text style={{ color: DS_TOKENS.colors.emerald, fontSize: 28, fontWeight: '900', marginTop: 8 }}>
             {stats.completed}
           </Text>
-          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+          <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 11, fontWeight: '700', marginTop: 2 }}>
             {isKn ? 'ಯಶಸ್ವಿಯಾಗಿ ಮುಗಿದಿದೆ' : 'Goals achieved'}
           </Text>
         </GlassCard>
@@ -363,9 +611,9 @@ export default function DailyChaosScreen() {
                 key={f.value}
                 onPress={() => setStatusFilter(f.value)}
                 style={{
-                  backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.25)' : 'rgba(255, 255, 255, 0.06)',
+                  backgroundColor: isSelected ? DS_TOKENS.colors.purpleLight : DS_TOKENS.colors.bgSecondary,
                   borderWidth: 1,
-                  borderColor: isSelected ? '#7C3AED' : 'rgba(255, 255, 255, 0.1)',
+                  borderColor: isSelected ? DS_TOKENS.colors.purple : DS_TOKENS.colors.borderSubtle,
                   borderRadius: DS_TOKENS.radii.pill,
                   paddingHorizontal: 12,
                   paddingVertical: 6,
@@ -373,7 +621,7 @@ export default function DailyChaosScreen() {
               >
                 <Text
                   style={{
-                    color: isSelected ? '#FFFFFF' : '#94A3B8',
+                    color: isSelected ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
                     fontSize: 12,
                     fontWeight: isSelected ? '800' : '600',
                   }}
@@ -387,7 +635,7 @@ export default function DailyChaosScreen() {
 
         {/* Priority Filter Chips */}
         <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '800', marginRight: 4 }}>
+          <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 11, fontWeight: '800', marginRight: 4 }}>
             {isKn ? 'ಆದ್ಯತೆ:' : 'PRIORITY:'}
           </Text>
           {['ALL', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((p) => {
@@ -400,14 +648,14 @@ export default function DailyChaosScreen() {
                   paddingHorizontal: 10,
                   paddingVertical: 4,
                   borderRadius: DS_TOKENS.radii.pill,
-                  backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                  backgroundColor: isSelected ? DS_TOKENS.colors.purpleLight : 'transparent',
                   borderWidth: 1,
-                  borderColor: isSelected ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
+                  borderColor: isSelected ? DS_TOKENS.colors.purpleBorder : 'transparent',
                 }}
               >
                 <Text
                   style={{
-                    color: isSelected ? '#FFFFFF' : '#64748B',
+                    color: isSelected ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
                     fontSize: 11,
                     fontWeight: '800',
                   }}
@@ -449,9 +697,9 @@ export default function DailyChaosScreen() {
                 style={{
                   padding: 16,
                   borderColor: isCompleted
-                    ? 'rgba(16, 185, 129, 0.3)'
+                    ? DS_TOKENS.colors.emeraldBorder
                     : item.priority === 'CRITICAL'
-                    ? 'rgba(239, 68, 68, 0.35)'
+                    ? DS_TOKENS.colors.roseBorder
                     : DS_TOKENS.colors.borderSubtle,
                 }}
               >
@@ -465,8 +713,8 @@ export default function DailyChaosScreen() {
                       height: 26,
                       borderRadius: 13,
                       borderWidth: 2,
-                      borderColor: isCompleted ? '#10B981' : '#64748B',
-                      backgroundColor: isCompleted ? '#10B981' : 'rgba(255, 255, 255, 0.05)',
+                      borderColor: isCompleted ? DS_TOKENS.colors.emerald : '#CBD5E1',
+                      backgroundColor: isCompleted ? DS_TOKENS.colors.emerald : DS_TOKENS.colors.bgSecondary,
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginTop: 2,
@@ -480,7 +728,7 @@ export default function DailyChaosScreen() {
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
                       <Text
                         style={{
-                          color: isCompleted ? '#64748B' : '#FFFFFF',
+                          color: isCompleted ? DS_TOKENS.colors.textMuted : DS_TOKENS.colors.textPrimary,
                           fontSize: 16,
                           fontWeight: '800',
                           textDecorationLine: isCompleted ? 'line-through' : 'none',
@@ -493,9 +741,9 @@ export default function DailyChaosScreen() {
                       {/* Priority Badge */}
                       <View
                         style={{
-                          backgroundColor: `${priorityOpt.color}22`,
+                          backgroundColor: `${priorityOpt.color}15`,
                           borderWidth: 1,
-                          borderColor: `${priorityOpt.color}55`,
+                          borderColor: `${priorityOpt.color}40`,
                           borderRadius: DS_TOKENS.radii.pill,
                           paddingHorizontal: 8,
                           paddingVertical: 2,
@@ -515,7 +763,7 @@ export default function DailyChaosScreen() {
                     {Boolean(item.description) && (
                       <Text
                         style={{
-                          color: '#94A3B8',
+                          color: DS_TOKENS.colors.textSecondary,
                           fontSize: 13,
                           lineHeight: 18,
                           marginBottom: 8,
@@ -529,13 +777,15 @@ export default function DailyChaosScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
                       <View
                         style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                          backgroundColor: DS_TOKENS.colors.bgSecondary,
                           borderRadius: 8,
                           paddingHorizontal: 8,
                           paddingVertical: 3,
+                          borderWidth: 1,
+                          borderColor: DS_TOKENS.colors.borderSubtle,
                         }}
                       >
-                        <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700' }}>
+                        <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 11, fontWeight: '700' }}>
                           📅 {item.date}
                         </Text>
                       </View>
@@ -543,13 +793,15 @@ export default function DailyChaosScreen() {
                       {Boolean(item.deadline) && (
                         <View
                           style={{
-                            backgroundColor: 'rgba(245, 158, 11, 0.12)',
+                            backgroundColor: DS_TOKENS.colors.amberLight,
                             borderRadius: 8,
                             paddingHorizontal: 8,
                             paddingVertical: 3,
+                            borderWidth: 1,
+                            borderColor: DS_TOKENS.colors.amberBorder,
                           }}
                         >
-                          <Text style={{ color: '#FBBF24', fontSize: 11, fontWeight: '800' }}>
+                          <Text style={{ color: DS_TOKENS.colors.amber, fontSize: 11, fontWeight: '800' }}>
                             ⏰ {item.deadline}
                           </Text>
                         </View>
@@ -557,13 +809,15 @@ export default function DailyChaosScreen() {
 
                       <View
                         style={{
-                          backgroundColor: 'rgba(124, 58, 237, 0.15)',
+                          backgroundColor: DS_TOKENS.colors.purpleLight,
                           borderRadius: 8,
                           paddingHorizontal: 8,
                           paddingVertical: 3,
+                          borderWidth: 1,
+                          borderColor: DS_TOKENS.colors.purpleBorder,
                         }}
                       >
-                        <Text style={{ color: '#C4B5FD', fontSize: 11, fontWeight: '700' }}>
+                        <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 11, fontWeight: '700' }}>
                           🏷️ {item.category}
                         </Text>
                       </View>
@@ -572,13 +826,15 @@ export default function DailyChaosScreen() {
                         <View
                           key={tag}
                           style={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                            backgroundColor: DS_TOKENS.colors.bgSecondary,
                             borderRadius: 8,
                             paddingHorizontal: 6,
                             paddingVertical: 2,
+                            borderWidth: 1,
+                            borderColor: DS_TOKENS.colors.borderSubtle,
                           }}
                         >
-                          <Text style={{ color: '#64748B', fontSize: 10, fontWeight: '700' }}>
+                          <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 10, fontWeight: '700' }}>
                             #{tag}
                           </Text>
                         </View>
@@ -592,7 +848,9 @@ export default function DailyChaosScreen() {
                       onPress={() => handleOpenEditModal(item)}
                       style={{
                         padding: 6,
-                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                        backgroundColor: DS_TOKENS.colors.bgSecondary,
+                        borderWidth: 1,
+                        borderColor: DS_TOKENS.colors.borderSubtle,
                         borderRadius: 8,
                       }}
                     >
@@ -602,7 +860,9 @@ export default function DailyChaosScreen() {
                       onPress={() => setDeleteTarget(item)}
                       style={{
                         padding: 6,
-                        backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                        backgroundColor: DS_TOKENS.colors.roseLight,
+                        borderWidth: 1,
+                        borderColor: DS_TOKENS.colors.roseBorder,
                         borderRadius: 8,
                       }}
                     >
@@ -688,6 +948,94 @@ export default function DailyChaosScreen() {
             onPress={handleSaveChaos}
             loading={formSubmitting}
             style={{ flex: 1 }}
+          />
+        </View>
+      </Modal>
+
+      {/* FOLDER ITEMS MODAL */}
+      <Modal
+        visible={Boolean(activeFolderModal)}
+        onClose={() => setActiveFolderModal(null)}
+        title={`${activeFolderModal?.emoji || '📁'} ${activeFolderModal?.title || 'Folder'}`}
+      >
+        <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 14 }}>
+          {isKn ? 'ಈ ಫೋಲ್ಡರ್‌ನಲ್ಲಿ ಉಳಿಸಲಾದ ಐಟಂಗಳು' : 'Saved notes, hangouts, and highlights in this folder'}
+        </Text>
+
+        {/* Add item to folder input */}
+        <View style={{ marginBottom: 16 }}>
+          <InputField
+            value={newFolderItemTitle}
+            onChangeText={setNewFolderItemTitle}
+            placeholder={isKn ? '+ ಹೊಸ ಐಟಂ ಶೀರ್ಷಿಕೆ' : '+ New item title'}
+            style={{ marginBottom: 8 }}
+          />
+          <InputField
+            value={newFolderItemDesc}
+            onChangeText={setNewFolderItemDesc}
+            placeholder={isKn ? 'ಟಿಪ್ಪಣಿ ಅಥವಾ ವಿವರ (ಐಚ್ಛಿಕ)' : 'Note or details (optional)'}
+            style={{ marginBottom: 8 }}
+          />
+          <PrimaryButton
+            title={isKn ? 'ಫೋಲ್ಡರ್‌ಗೆ ಸೇರಿಸಿ' : 'Add to Folder'}
+            onPress={handleAddFolderItem}
+            disabled={!newFolderItemTitle.trim()}
+          />
+        </View>
+
+        {/* Items List */}
+        {loadingFolderItems ? (
+          <LoadingState message="Loading saved items..." />
+        ) : folderItems.length === 0 ? (
+          <EmptyState
+            icon="📂"
+            title={isKn ? 'ಯಾವುದೇ ಐಟಂ ಉಳಿಸಿಲ್ಲ' : 'No items saved yet'}
+            description={isKn ? 'ಮೇಲಿನ ಫಾರ್ಮ್ ಬಳಸಿ ಮೊದಲ ಐಟಂ ಸೇರಿಸಿ!' : 'Add your first note or link above!'}
+          />
+        ) : (
+          <View style={{ gap: 10 }}>
+            {folderItems.map((item) => (
+              <GlassCard key={item.id} style={{ padding: 12 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
+                    {item.title}
+                  </Text>
+                  {Boolean(item.tag) && (
+                    <View
+                      style={{
+                        backgroundColor: DS_TOKENS.colors.purpleLight,
+                        borderColor: DS_TOKENS.colors.purpleBorder,
+                        borderWidth: 1,
+                        borderRadius: 10,
+                        paddingHorizontal: 8,
+                        paddingVertical: 2,
+                      }}
+                    >
+                      <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 10, fontWeight: '800' }}>
+                        {item.tag}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                {Boolean(item.description) && (
+                  <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '500', marginTop: 4 }}>
+                    {item.description}
+                  </Text>
+                )}
+                {Boolean(item.date) && (
+                  <Text style={{ color: DS_TOKENS.colors.textMuted, fontSize: 11, fontWeight: '600', marginTop: 4 }}>
+                    🕒 {item.date}
+                  </Text>
+                )}
+              </GlassCard>
+            ))}
+          </View>
+        )}
+
+        <View style={{ marginTop: 16 }}>
+          <SecondaryButton
+            title={isKn ? 'ಮುಚ್ಚಿ' : 'Close'}
+            onPress={() => setActiveFolderModal(null)}
           />
         </View>
       </Modal>

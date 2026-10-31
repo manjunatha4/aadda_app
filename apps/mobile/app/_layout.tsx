@@ -1,9 +1,22 @@
 import React, { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '../src/stores/authStore';
 import '../src/i18n';
+
+// Ensure full white background across all web views and browsers
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  try {
+    document.documentElement.style.backgroundColor = '#FFFFFF';
+    document.body.style.backgroundColor = '#FFFFFF';
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+  } catch (e) {
+    // ignore
+  }
+}
 
 const queryClient = new QueryClient();
 
@@ -16,11 +29,11 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: '#0B0B10' },
+          contentStyle: { backgroundColor: '#FFFFFF' },
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />

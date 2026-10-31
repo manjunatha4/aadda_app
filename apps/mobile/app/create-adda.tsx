@@ -109,9 +109,9 @@ export default function CreateAddaScreen() {
                 width: 72,
                 height: 72,
                 borderRadius: 36,
-                backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                borderWidth: 2,
-                borderColor: '#10B981',
+                backgroundColor: DS_TOKENS.colors.emeraldLight,
+                borderWidth: 1.5,
+                borderColor: DS_TOKENS.colors.emeraldBorder,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 16,
@@ -120,32 +120,32 @@ export default function CreateAddaScreen() {
               <Text style={{ fontSize: 36 }}>🎉</Text>
             </View>
 
-            <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: '900', textAlign: 'center' }}>
+            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 24, fontWeight: '900', textAlign: 'center' }}>
               {createdAdda.name}
             </Text>
-            <Text style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', marginTop: 4, maxWidth: 360 }}>
+            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 13, textAlign: 'center', marginTop: 4, maxWidth: 360 }}>
               {isKn ? 'ನಿಮ್ಮ ಹೊಸ ರೂಮ್ ಸಿದ್ಧವಾಗಿದೆ! ಸ್ನೇಹಿತರೊಂದಿಗೆ ಸೀಕ್ರೆಟ್ ಕೋಡ್ ಹಂಚಿಕೊಳ್ಳಿ.' : 'Your room is live across all devices! Share the secret invite code with your crew.'}
             </Text>
 
             {/* Secret Code Box */}
             <View
               style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                backgroundColor: DS_TOKENS.colors.bgSecondary,
                 borderRadius: 20,
                 padding: 20,
                 marginVertical: 22,
                 width: '100%',
                 alignItems: 'center',
-                borderWidth: 1.2,
-                borderColor: 'rgba(124, 58, 237, 0.4)',
+                borderWidth: 1,
+                borderColor: DS_TOKENS.colors.borderSubtle,
               }}
             >
-              <Text style={{ color: '#C4B5FD', fontSize: 11, fontWeight: '800', letterSpacing: 1 }}>
+              <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 11, fontWeight: '800', letterSpacing: 1 }}>
                 {isKn ? 'ಸೀಕ್ರೆಟ್ ಕೊಠಡಿ ಕೋಡ್' : 'SECRET ROOM JOINING CODE'}
               </Text>
               <Text
                 style={{
-                  color: '#FFFFFF',
+                  color: DS_TOKENS.colors.textPrimary,
                   fontSize: 32,
                   fontWeight: '900',
                   letterSpacing: 3,
@@ -187,7 +187,7 @@ export default function CreateAddaScreen() {
           /* ROOM CREATION FORM */
           <GlassCard elevated>
             {/* Room Icon / Badge Picker */}
-            <Text style={{ color: '#CBD5E1', fontSize: 13, fontWeight: '800', marginBottom: 8 }}>
+            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 13, fontWeight: '800', marginBottom: 8 }}>
               {isKn ? 'ರೂಮ್ ಐಕಾನ್ ಆಯ್ಕೆಮಾಡಿ' : 'Choose Room Icon'}
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
@@ -201,9 +201,9 @@ export default function CreateAddaScreen() {
                       width: 44,
                       height: 44,
                       borderRadius: 14,
-                      backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.35)' : 'rgba(255, 255, 255, 0.06)',
+                      backgroundColor: isSelected ? DS_TOKENS.colors.purpleLight : DS_TOKENS.colors.bgSecondary,
                       borderWidth: 1.5,
-                      borderColor: isSelected ? '#7C3AED' : DS_TOKENS.colors.borderSubtle,
+                      borderColor: isSelected ? DS_TOKENS.colors.purple : DS_TOKENS.colors.borderSubtle,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}

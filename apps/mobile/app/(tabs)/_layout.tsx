@@ -5,7 +5,7 @@ import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native
 
 const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
   index: { active: '🏠', inactive: '🏠' },
-  chaos: { active: '⚡', inactive: '⚡' },
+  chaos: { active: '📁', inactive: '📁' },
   chats: { active: '💬', inactive: '💬' },
   profile: { active: '👤', inactive: '👤' },
 };
@@ -32,24 +32,24 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
             maxWidth: 360,
             height: 64,
             borderRadius: 36,
-            backgroundColor: 'rgba(22, 22, 28, 0.88)',
-            borderWidth: 1.2,
-            borderColor: 'rgba(255, 255, 255, 0.18)',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderWidth: 1,
+            borderColor: '#E2E8F0',
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
             paddingHorizontal: 12,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 12 },
-            shadowOpacity: 0.35,
+            shadowColor: '#0F172A',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.12,
             shadowRadius: 24,
-            elevation: 16,
+            elevation: 12,
           },
           Platform.OS === 'web'
             ? ({
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                boxShadow: '0 14px 40px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25)',
+                boxShadow: '0 16px 40px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.04)',
               } as any)
             : {},
         ]}
@@ -95,13 +95,13 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
                     borderRadius: 24,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: isFocused ? 'rgba(255, 255, 255, 0.18)' : 'transparent',
+                    backgroundColor: isFocused ? '#EEF2FF' : 'transparent',
                     borderWidth: isFocused ? 1 : 0,
-                    borderColor: isFocused ? 'rgba(255, 255, 255, 0.32)' : 'transparent',
+                    borderColor: isFocused ? '#C7D2FE' : 'transparent',
                   },
                   isFocused && Platform.OS === 'web'
                     ? ({
-                        boxShadow: '0 2px 12px rgba(255, 255, 255, 0.12)',
+                        boxShadow: '0 2px 8px rgba(99, 102, 241, 0.15)',
                       } as any)
                     : {},
                 ]}

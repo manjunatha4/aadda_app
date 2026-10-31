@@ -38,35 +38,37 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
     <View
       style={[
         {
-          backgroundColor: 'rgba(28, 28, 42, 0.82)',
+          backgroundColor: '#FFFFFF',
           borderRadius: 20,
           padding: 16,
           marginBottom: 16,
-          borderWidth: 1.2,
-          borderColor: 'rgba(124, 58, 237, 0.35)',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.25,
-          shadowRadius: 12,
+          borderWidth: 1,
+          borderColor: '#E2E8F0',
+          shadowColor: '#0F172A',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.05,
+          shadowRadius: 14,
+          elevation: 2,
         },
         Platform.OS === 'web'
           ? ({
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03)',
             } as any)
           : {},
       ]}
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <View style={{ backgroundColor: 'rgba(124, 58, 237, 0.25)', borderWidth: 1, borderColor: '#7C3AED', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
-          <Text style={{ color: '#C4B5FD', fontWeight: '800', fontSize: 10 }}>
+        <View style={{ backgroundColor: '#EEF2FF', borderWidth: 1, borderColor: '#C7D2FE', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
+          <Text style={{ color: '#6366F1', fontWeight: '800', fontSize: 10 }}>
             CHAOS 🔥 {category}
           </Text>
         </View>
-        <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '600' }}>Active Round</Text>
+        <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '600' }}>Active Round</Text>
       </View>
 
-      <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700', marginBottom: 12, lineHeight: 22 }}>
+      <Text style={{ color: '#0F172A', fontSize: 16, fontWeight: '700', marginBottom: 12, lineHeight: 22 }}>
         {displayPrompt}
       </Text>
 
@@ -80,60 +82,59 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: '#F8FAFC',
                 padding: 10,
                 borderRadius: 12,
                 borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.08)',
+                borderColor: '#E2E8F0',
               }}
             >
               <View style={{ flex: 1, marginRight: 8 }}>
-                <Text style={{ color: '#C4B5FD', fontSize: 11, fontWeight: '700' }}>
+                <Text style={{ color: '#6366F1', fontSize: 11, fontWeight: '800' }}>
                   {entry.user.displayName}
                 </Text>
-                <Text style={{ color: '#FFFFFF', fontSize: 13, marginTop: 2 }}>
-                  {entry.content}
-                </Text>
+                <Text style={{ color: '#334155', fontSize: 13, marginTop: 2 }}>{entry.content}</Text>
               </View>
 
-              <TouchableOpacity
-                onPress={() => onVote && onVote(entry.id)}
-                style={{
-                  backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                  borderWidth: 1,
-                  borderColor: 'rgba(239, 68, 68, 0.4)',
-                  paddingHorizontal: 10,
-                  paddingVertical: 5,
-                  borderRadius: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: '#F87171', fontWeight: '800', fontSize: 12 }}>
-                  🔥 {entry.voteCount}
-                </Text>
-              </TouchableOpacity>
+              {onVote && (
+                <TouchableOpacity
+                  onPress={() => onVote(entry.id)}
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    borderRadius: 12,
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <Text style={{ fontSize: 12 }}>🔥</Text>
+                  <Text style={{ color: '#0F172A', fontSize: 11, fontWeight: '800' }}>
+                    {entry.voteCount}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           ))}
         </View>
       )}
 
+      {/* Action CTA */}
       {onSubmitAnswer && (
         <TouchableOpacity
           onPress={onSubmitAnswer}
           style={{
-            backgroundColor: '#7C3AED',
-            paddingVertical: 10,
+            backgroundColor: '#6366F1',
             borderRadius: 12,
+            paddingVertical: 10,
             alignItems: 'center',
-            shadowColor: '#7C3AED',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.3,
-            shadowRadius: 6,
           }}
         >
           <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 13 }}>
-            {isKannada ? 'ಉತ್ತರಿಸಿ (Respond)' : 'Submit Answer'}
+            {isKannada ? 'ಉತ್ತರಿಸಿ ⚡' : 'Drop Your Answer ⚡'}
           </Text>
         </TouchableOpacity>
       )}

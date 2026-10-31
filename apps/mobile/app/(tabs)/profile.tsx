@@ -59,25 +59,26 @@ export default function ProfileScreen() {
             width: 84,
             height: 84,
             borderRadius: 42,
-            backgroundColor: '#7C3AED',
+            backgroundColor: DS_TOKENS.colors.purple,
             alignItems: 'center',
             justifyContent: 'center',
             borderWidth: 3,
-            borderColor: 'rgba(255, 255, 255, 0.4)',
+            borderColor: '#FFFFFF',
             marginBottom: 14,
-            shadowColor: '#7C3AED',
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.4,
-            shadowRadius: 16,
+            shadowColor: DS_TOKENS.colors.purple,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+            elevation: 4,
           }}
         >
           <Text style={{ fontSize: 36, color: '#FFFFFF', fontWeight: '900' }}>{initial}</Text>
         </View>
 
-        <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '900', letterSpacing: -0.3 }}>
+        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: -0.3 }}>
           {displayName}
         </Text>
-        <Text style={{ color: '#94A3B8', fontSize: 14, fontWeight: '700', marginTop: 3 }}>
+        <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 14, fontWeight: '700', marginTop: 3 }}>
           @{user?.username || 'member'}
         </Text>
 
@@ -85,30 +86,30 @@ export default function ProfileScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
           <View
             style={{
-              backgroundColor: 'rgba(124, 58, 237, 0.2)',
+              backgroundColor: DS_TOKENS.colors.purpleLight,
               borderWidth: 1,
-              borderColor: 'rgba(124, 58, 237, 0.4)',
+              borderColor: DS_TOKENS.colors.purpleBorder,
               borderRadius: DS_TOKENS.radii.pill,
               paddingHorizontal: 12,
               paddingVertical: 4,
             }}
           >
-            <Text style={{ color: '#C4B5FD', fontSize: 12, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
               📍 {user?.district || 'Bengaluru'}
             </Text>
           </View>
 
           <View
             style={{
-              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+              backgroundColor: DS_TOKENS.colors.emeraldLight,
               borderWidth: 1,
-              borderColor: 'rgba(16, 185, 129, 0.35)',
+              borderColor: DS_TOKENS.colors.emeraldBorder,
               borderRadius: DS_TOKENS.radii.pill,
               paddingHorizontal: 10,
               paddingVertical: 4,
             }}
           >
-            <Text style={{ color: '#6EE7B7', fontSize: 12, fontWeight: '800' }}>✓ Verified</Text>
+            <Text style={{ color: DS_TOKENS.colors.emerald, fontSize: 12, fontWeight: '800' }}>✓ Verified</Text>
           </View>
         </View>
       </GlassCard>
@@ -128,10 +129,10 @@ export default function ProfileScreen() {
           }}
         >
           <View>
-            <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '700' }}>
+            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '700' }}>
               {isKn ? 'ಇಮೇಲ್ ವಿಳಾಸ' : 'Email Address'}
             </Text>
-            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginTop: 2 }}>
+            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '800', marginTop: 2 }}>
               {user?.email || 'user@aadda.app'}
             </Text>
           </View>
@@ -153,24 +154,24 @@ export default function ProfileScreen() {
           }}
         >
           <View>
-            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
               🌐 {isKn ? 'ಅಪ್ಲಿಕೇಶನ್ ಭಾಷೆ' : 'Application Language'}
             </Text>
-            <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
               {isKn ? 'ಕನ್ನಡದಲ್ಲಿ ಬಳಸಲಾಗುತ್ತಿದೆ' : 'Currently in English'}
             </Text>
           </View>
           <View
             style={{
-              backgroundColor: 'rgba(124, 58, 237, 0.2)',
+              backgroundColor: DS_TOKENS.colors.purpleLight,
               borderWidth: 1,
-              borderColor: 'rgba(124, 58, 237, 0.4)',
+              borderColor: DS_TOKENS.colors.purpleBorder,
               borderRadius: DS_TOKENS.radii.pill,
               paddingHorizontal: 12,
               paddingVertical: 5,
             }}
           >
-            <Text style={{ color: '#C4B5FD', fontSize: 12, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
               {isKn ? 'ಕನ್ನಡ (KN)' : 'English (EN)'}
             </Text>
           </View>
@@ -189,26 +190,26 @@ export default function ProfileScreen() {
           }}
         >
           <View>
-            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
               ⚡ {isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್ ಮ್ಯಾನೇಜರ್' : 'Daily Chaos Tasks'}
             </Text>
-            <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
               {isKn ? 'ನಿಮ್ಮ ಕಾರ್ಯಗಳನ್ನು ನಿರ್ವಹಿಸಿ' : 'View and track your daily tasks'}
             </Text>
           </View>
-          <Text style={{ color: '#64748B', fontSize: 16, fontWeight: '800' }}>›</Text>
+          <Text style={{ color: DS_TOKENS.colors.textMuted, fontSize: 16, fontWeight: '800' }}>›</Text>
         </TouchableOpacity>
       </GlassCard>
 
       {/* Logout Action */}
-      <GlassCard style={{ padding: 16, borderColor: 'rgba(239, 68, 68, 0.25)' }}>
+      <GlassCard style={{ padding: 16, borderColor: DS_TOKENS.colors.roseBorder, backgroundColor: DS_TOKENS.colors.roseLight }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View>
-            <Text style={{ color: '#F87171', fontSize: 15, fontWeight: '800' }}>
+            <Text style={{ color: DS_TOKENS.colors.rose, fontSize: 15, fontWeight: '800' }}>
               {isKn ? 'ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್' : 'Sign Out of AADDA'}
             </Text>
-            <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
-              {isKn ? 'ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಸೆಶನ್ ಮುಗಿಸಿ' : 'You can log back in anytime with your email'}
+            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+              {isKn ? 'ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಸೆಶನ್ ಮುಗಿಸಿ' : 'You can log back in anytime with your credentials'}
             </Text>
           </View>
           <SecondaryButton
@@ -226,7 +227,7 @@ export default function ProfileScreen() {
         message={
           isKn
             ? 'ನಿಮ್ಮ ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್ ಆಗಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?'
-            : 'Are you sure you want to log out? You can sign right back in anytime using your email address.'
+            : 'Are you sure you want to log out? You can sign right back in anytime using your credentials.'
         }
         confirmText={isKn ? 'ಲಾಗ್ ಔಟ್' : 'Log Out'}
         cancelText={isKn ? 'ರದ್ದು' : 'Cancel'}

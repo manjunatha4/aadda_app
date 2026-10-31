@@ -139,6 +139,18 @@ function parseJsonBody(req: any): Promise<any> {
   });
 }
 
+function hashPassword(password: string, salt: string): string {
+  return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+}
+
+function generateSalt(): string {
+  return crypto.randomBytes(16).toString('hex');
+}
+
+function generateVerificationCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
 export default async function handler(req: any, res: any) {
   // CORS Configuration
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -151,9 +163,31 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  const url = req.url || '';
+  const rawUrl = req.headers?.['x-matched-path'] || req.url || '';
   const method = req.method || 'GET';
-  const pathname = url.split('?')[0].replace(/^\/api/, '');
+  let pathname = rawUrl.split('?')[0];
+
+  if (pathname.startsWith('/api')) {
+    pathname = pathname.substring(4);
+  }
+
+  // Fallback to query parameter when URL was rewritten to /api
+  if (!pathname || pathname === '/' || pathname === '') {
+    const qRoute = req.query?._route || req.query?.slug || req.query?.path;
+    if (qRoute) {
+      if (Array.isArray(qRoute)) {
+        pathname = '/' + qRoute.join('/');
+      } else {
+        pathname = qRoute.startsWith('/') ? qRoute : '/' + qRoute;
+      }
+    } else if (rawUrl.includes('?')) {
+      const searchParams = new URLSearchParams(rawUrl.split('?')[1]);
+      const r = searchParams.get('_route') || searchParams.get('path') || searchParams.get('slug');
+      if (r) {
+        pathname = r.startsWith('/') ? r : '/' + r;
+      }
+    }
+  }
 
   const store = await syncFromCloud();
 
@@ -170,29 +204,143 @@ export default async function handler(req: any, res: any) {
     // -------------------------------------------------------------
     // AUTH ROUTES
     // -------------------------------------------------------------
-    if (pathname === '/auth/login' && method === 'POST') {
-      const login = (body.login || '').trim().toLowerCase();
-      let user = store.users.find(
-        (u) => u.email.toLowerCase() === login || u.username.toLowerCase() === login,
+    if (pathname === '/auth/check-email' && method === 'POST') {
+      const email = (body.email || '').trim().toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return json({ available: false, message: 'Please enter a valid email address' }, 400);
+      }
+      const existing = store.users.find(
+        (u) => u.email && u.email.toLowerCase() === email && u.isEmailVerified !== false,
       );
+      if (existing) {
+        return json({ available: false, message: 'This email is already registered. Please sign in instead.' });
+      }
+      return json({ available: true, message: 'Email is available' });
+    }
 
-      if (!user) {
-        const username = login.includes('@') ? login.split('@')[0] : login;
-        user = {
-          id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-          email: login.includes('@') ? login : `${login}@aadda.app`,
-          username,
-          displayName: username,
-          district: 'Bengaluru',
-          language: 'en',
-          createdAt: new Date().toISOString(),
-        };
-        store.users.push(user);
-        await saveToCloud(store);
+    if (pathname === '/auth/check-username' && method === 'POST') {
+      const username = (body.username || '').trim().toLowerCase();
+      if (!username || username.length < 3 || username.length > 20) {
+        return json({ available: false, message: 'Username must be 3-20 characters long' }, 400);
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return json({ available: false, message: 'Username can only contain letters, numbers, and underscores' }, 400);
+      }
+      const existing = store.users.find(
+        (u) => u.username && u.username.toLowerCase() === username,
+      );
+      if (existing) {
+        return json({ available: false, message: 'Username is already taken' });
+      }
+      return json({ available: true, message: 'Username is available' });
+    }
+
+    if (pathname === '/auth/register' && method === 'POST') {
+      const email = (body.email || '').trim().toLowerCase();
+      const username = (body.username || '').trim().toLowerCase();
+      const displayName = (body.displayName || body.username || email.split('@')[0]).trim();
+      const state = (body.state || 'Karnataka').trim();
+      const district = (body.district || 'Bengaluru Urban').trim();
+      const password = body.password || '';
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return json({ message: 'Valid email is required' }, 400);
+      }
+      if (!username || username.length < 3) {
+        return json({ message: 'Username must be at least 3 characters' }, 400);
       }
 
+      // Check existing email
+      const existingEmail = store.users.find(
+        (u) => u.email && u.email.toLowerCase() === email && u.isEmailVerified !== false,
+      );
+      if (existingEmail) {
+        return json({ message: 'This email is already registered. Please sign in.' }, 400);
+      }
+
+      // Check existing username
+      const existingUsername = store.users.find(
+        (u) => u.username && u.username.toLowerCase() === username && u.id !== existingEmail?.id,
+      );
+      if (existingUsername) {
+        return json({ message: 'Username is already taken' }, 400);
+      }
+
+      const salt = generateSalt();
+      const passwordHash = password ? hashPassword(password, salt) : '';
+      const verificationCode = generateVerificationCode();
+      const verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+      let user = store.users.find((u) => u.email && u.email.toLowerCase() === email);
+      if (user) {
+        user.username = username;
+        user.displayName = displayName;
+        user.state = state;
+        user.district = district;
+        user.salt = salt;
+        user.passwordHash = passwordHash;
+        user.verificationCode = verificationCode;
+        user.verificationExpires = verificationExpires;
+        user.isEmailVerified = false;
+      } else {
+        user = {
+          id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          email,
+          username,
+          displayName,
+          state,
+          district,
+          salt,
+          passwordHash,
+          isEmailVerified: false,
+          verificationCode,
+          verificationExpires,
+          createdAt: new Date().toISOString(),
+          language: body.language || 'en',
+        };
+        store.users.push(user);
+      }
+
+      await saveToCloud(store);
+
       return json({
-        user,
+        success: true,
+        message: 'Account created! Please verify your email.',
+        email: user.email,
+        verificationCode,
+      });
+    }
+
+    if (pathname === '/auth/verify-email' && method === 'POST') {
+      const email = (body.email || '').trim().toLowerCase();
+      const code = (body.code || '').trim();
+
+      const user = store.users.find((u) => u.email && u.email.toLowerCase() === email);
+      if (!user) {
+        return json({ message: 'User account not found' }, 404);
+      }
+
+      if (!user.verificationCode || user.verificationCode !== code) {
+        return json({ message: 'Invalid verification code. Please check and try again.' }, 400);
+      }
+
+      if (user.verificationExpires && new Date(user.verificationExpires).getTime() < Date.now()) {
+        return json({ message: 'Verification code has expired. Please request a new one.' }, 400);
+      }
+
+      user.isEmailVerified = true;
+      delete user.verificationCode;
+      delete user.verificationExpires;
+
+      await saveToCloud(store);
+
+      const safeUser = { ...user };
+      delete safeUser.passwordHash;
+      delete safeUser.salt;
+
+      return json({
+        success: true,
+        user: safeUser,
         tokens: {
           accessToken: `token_${user.id}`,
           refreshToken: `ref_${user.id}`,
@@ -200,30 +348,79 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    if (pathname === '/auth/register' && method === 'POST') {
+    if (pathname === '/auth/resend-code' && method === 'POST') {
       const email = (body.email || '').trim().toLowerCase();
-      let user = store.users.find((u) => u.email.toLowerCase() === email);
-
-      if (user) {
-        user.displayName = body.displayName || user.displayName;
-        user.username = body.username || user.username;
-        user.district = body.district || user.district;
-      } else {
-        user = {
-          id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-          email,
-          username: body.username || email.split('@')[0],
-          displayName: body.displayName || body.username || email.split('@')[0],
-          district: body.district || 'Bengaluru',
-          language: body.language || 'en',
-          createdAt: new Date().toISOString(),
-        };
-        store.users.push(user);
+      const user = store.users.find((u) => u.email && u.email.toLowerCase() === email);
+      if (!user) {
+        return json({ message: 'User account not found' }, 404);
       }
 
+      const code = generateVerificationCode();
+      user.verificationCode = code;
+      user.verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
       await saveToCloud(store);
+
       return json({
-        user,
+        success: true,
+        message: 'Verification code resent successfully',
+        verificationCode: code,
+      });
+    }
+
+    if (pathname === '/auth/login' && method === 'POST') {
+      const login = (body.login || '').trim().toLowerCase();
+      const password = body.password || '';
+
+      let user = store.users.find(
+        (u) => (u.email && u.email.toLowerCase() === login) || (u.username && u.username.toLowerCase() === login),
+      );
+
+      if (!user) {
+        // Direct instant login fallback if no password provided (backward compatibility)
+        if (!password) {
+          const username = login.includes('@') ? login.split('@')[0] : login;
+          user = {
+            id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            email: login.includes('@') ? login : `${login}@aadda.app`,
+            username,
+            displayName: username,
+            state: 'Karnataka',
+            district: 'Bengaluru Urban',
+            isEmailVerified: true,
+            language: 'en',
+            createdAt: new Date().toISOString(),
+          };
+          store.users.push(user);
+          await saveToCloud(store);
+        } else {
+          return json({ message: 'Account not found. Please register.' }, 404);
+        }
+      }
+
+      // Check password if account has one set
+      if (user.passwordHash && user.salt && password) {
+        const hash = hashPassword(password, user.salt);
+        if (hash !== user.passwordHash) {
+          return json({ message: 'Incorrect password. Please try again.' }, 401);
+        }
+      }
+
+      // Check email verification status
+      if (user.isEmailVerified === false) {
+        return json({
+          requiresVerification: true,
+          email: user.email,
+          verificationCode: user.verificationCode,
+          message: 'Please verify your email address to continue.',
+        }, 403);
+      }
+
+      const safeUser = { ...user };
+      delete safeUser.passwordHash;
+      delete safeUser.salt;
+
+      return json({
+        user: safeUser,
         tokens: {
           accessToken: `token_${user.id}`,
           refreshToken: `ref_${user.id}`,
@@ -236,7 +433,13 @@ export default async function handler(req: any, res: any) {
       const token = authHeader.replace('Bearer ', '').trim();
       const userId = token.replace('token_', '');
       const user = store.users.find((u) => u.id === userId) || store.users[0] || null;
-      return json(user);
+      if (user) {
+        const safeUser = { ...user };
+        delete safeUser.passwordHash;
+        delete safeUser.salt;
+        return json(safeUser);
+      }
+      return json(null);
     }
 
     // -------------------------------------------------------------

@@ -6,9 +6,16 @@ export interface LocalUser {
   email: string;
   username: string;
   displayName: string;
+  state?: string;
   district?: string;
   language?: string;
   avatarUrl?: string;
+  isEmailVerified?: boolean;
+  verificationCode?: string;
+  verificationExpires?: string;
+  passwordHash?: string;
+  salt?: string;
+  createdAt?: string;
 }
 
 export interface LocalAdda {
@@ -205,6 +212,28 @@ class ClientStore {
     }
   }
 
+  async checkEmail(email: string) {
+    await this.init();
+    const clean = email.trim().toLowerCase();
+    const existing = this.users.find(
+      (u) => u.email.toLowerCase() === clean && u.isEmailVerified !== false,
+    );
+    if (existing) {
+      return { available: false, message: 'This email is already registered. Please sign in.' };
+    }
+    return { available: true, message: 'Email is available' };
+  }
+
+  async checkUsername(username: string) {
+    await this.init();
+    const clean = username.trim().toLowerCase();
+    const existing = this.users.find((u) => u.username.toLowerCase() === clean);
+    if (existing) {
+      return { available: false, message: 'Username is already taken' };
+    }
+    return { available: true, message: 'Username is available' };
+  }
+
   async findUserByLogin(login: string) {
     await this.init();
     const clean = login.trim().toLowerCase();
@@ -213,7 +242,7 @@ class ClientStore {
     );
   }
 
-  async login(login: string) {
+  async login(login: string, password?: string) {
     await this.init();
     const clean = login.trim().toLowerCase();
     let user = this.users.find(
@@ -228,11 +257,22 @@ class ClientStore {
         email,
         username,
         displayName: username,
-        district: 'Bengaluru',
+        state: 'Karnataka',
+        district: 'Bengaluru Urban',
+        isEmailVerified: true,
         language: 'en',
       };
       this.users.push(user);
       await this.persist();
+    }
+
+    if (user.isEmailVerified === false) {
+      return {
+        requiresVerification: true,
+        email: user.email,
+        verificationCode: user.verificationCode,
+        message: 'Please verify your email address to continue.',
+      };
     }
 
     await storage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
@@ -250,39 +290,105 @@ class ClientStore {
 
   async register(data: {
     username: string;
-    displayName: string;
+    displayName?: string;
     email: string;
+    state?: string;
     district?: string;
+    password?: string;
     language?: string;
   }) {
     await this.init();
     const cleanEmail = data.email.trim().toLowerCase();
+    const cleanUsername = data.username.trim().toLowerCase();
     let user = this.users.find((u) => u.email.toLowerCase() === cleanEmail);
 
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
     if (user) {
-      user.displayName = data.displayName || user.displayName;
-      user.username = data.username || user.username;
-      user.district = data.district || user.district;
+      user.displayName = data.displayName || cleanUsername;
+      user.username = cleanUsername;
+      user.state = data.state || user.state || 'Karnataka';
+      user.district = data.district || user.district || 'Bengaluru Urban';
+      user.verificationCode = code;
+      user.verificationExpires = expires;
+      user.isEmailVerified = false;
     } else {
       user = {
         id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         email: cleanEmail,
-        username: data.username.trim(),
-        displayName: data.displayName.trim() || data.username.trim(),
-        district: data.district || 'Bengaluru',
+        username: cleanUsername,
+        displayName: data.displayName?.trim() || cleanUsername,
+        state: data.state || 'Karnataka',
+        district: data.district || 'Bengaluru Urban',
+        isEmailVerified: false,
+        verificationCode: code,
+        verificationExpires: expires,
         language: data.language || 'en',
+        createdAt: new Date().toISOString(),
       };
       this.users.push(user);
     }
 
     await this.persist();
+
+    return {
+      success: true,
+      email: user.email,
+      verificationCode: code,
+      message: 'Account created! Please verify your email.',
+    };
+  }
+
+  async verifyEmail(email: string, code: string) {
+    await this.init();
+    const cleanEmail = email.trim().toLowerCase();
+    const user = this.users.find((u) => u.email.toLowerCase() === cleanEmail);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.verificationCode && user.verificationCode !== code.trim()) {
+      throw new Error('Invalid verification code');
+    }
+
+    user.isEmailVerified = true;
+    delete user.verificationCode;
+    delete user.verificationExpires;
+    await this.persist();
+
     await storage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
     await storage.setItem('accessToken', `token_${user.id}`);
     await storage.setItem('refreshToken', `ref_${user.id}`);
 
     return {
+      success: true,
       user,
       tokens: {
+        accessToken: `token_${user.id}`,
+        refreshToken: `ref_${user.id}`,
+      },
+    };
+  }
+
+  async resendCode(email: string) {
+    await this.init();
+    const cleanEmail = email.trim().toLowerCase();
+    const user = this.users.find((u) => u.email.toLowerCase() === cleanEmail);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    user.verificationCode = code;
+    user.verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    await this.persist();
+    return {
+      success: true,
+      verificationCode: code,
+      message: 'Verification code resent successfully',
+    };
+  }
         accessToken: `token_${user.id}`,
         refreshToken: `ref_${user.id}`,
       },

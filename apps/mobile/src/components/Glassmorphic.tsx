@@ -11,41 +11,35 @@ interface GlassViewProps {
 }
 
 /**
- * Premium Glassmorphism Container with true backdrop blur & layered lighting
+ * Premium White Glassmorphism Container with true backdrop blur & soft shadows
  */
 export const GlassView: React.FC<GlassViewProps> = ({
   children,
   style,
   intensity = 'medium',
-  tint = 'dark',
-  borderOpacity = 0.16,
-  borderRadius = 24,
+  tint = 'light',
+  borderOpacity = 0.1,
+  borderRadius = 20,
 }) => {
-  // Background colors per tint and intensity
-  let bg = 'rgba(24, 24, 30, 0.72)';
-  let borderColor = `rgba(255, 255, 255, ${borderOpacity})`;
-  let blur = '20px';
+  let bg = 'rgba(255, 255, 255, 0.95)';
+  let borderColor = '#E2E8F0';
+  let blur = '16px';
 
-  if (tint === 'light') {
-    bg = intensity === 'light' ? 'rgba(255, 255, 255, 0.55)' : 'rgba(255, 255, 255, 0.75)';
-    borderColor = `rgba(255, 255, 255, 0.8)`;
-  } else if (tint === 'dark') {
-    bg = intensity === 'light' ? 'rgba(20, 20, 26, 0.55)' : intensity === 'ultra' ? 'rgba(16, 16, 22, 0.85)' : 'rgba(22, 22, 28, 0.72)';
-    borderColor = `rgba(255, 255, 255, ${borderOpacity})`;
+  if (tint === 'accent') {
+    bg = 'rgba(99, 102, 241, 0.08)';
+    borderColor = '#C7D2FE';
   } else if (tint === 'coral') {
-    bg = 'rgba(255, 100, 100, 0.82)';
-    borderColor = 'rgba(255, 255, 255, 0.35)';
+    bg = 'rgba(239, 68, 68, 0.06)';
+    borderColor = '#FECACA';
   } else if (tint === 'blue') {
-    bg = 'rgba(45, 120, 255, 0.82)';
-    borderColor = 'rgba(255, 255, 255, 0.35)';
+    bg = 'rgba(2, 132, 199, 0.06)';
+    borderColor = '#BAE6FD';
   }
 
   const webGlassStyle: any = Platform.OS === 'web' ? {
     backdropFilter: `blur(${blur})`,
     WebkitBackdropFilter: `blur(${blur})`,
-    boxShadow: tint === 'light'
-      ? '0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)'
-      : '0 12px 40px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2)',
+    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.02)',
   } : {};
 
   return (
@@ -79,17 +73,17 @@ export const GlassPill: React.FC<GlassPillProps> = ({ children, style, onPress, 
     <View
       style={[
         {
-          backgroundColor: active ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.1)',
+          backgroundColor: active ? '#EEF2FF' : '#F8FAFC',
           borderWidth: 1,
-          borderColor: active ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.18)',
+          borderColor: active ? '#C7D2FE' : '#E2E8F0',
           borderRadius: 20,
           paddingHorizontal: 12,
-          paddingVertical: 5,
+          paddingVertical: 6,
         },
         Platform.OS === 'web'
           ? ({
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
             } as any)
           : {},
         style,
@@ -101,7 +95,7 @@ export const GlassPill: React.FC<GlassPillProps> = ({ children, style, onPress, 
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+      <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
         {content}
       </TouchableOpacity>
     );

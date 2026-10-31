@@ -8,9 +8,11 @@ export interface UserProfile {
   displayName: string;
   avatarUrl?: string | null;
   bio?: string | null;
+  state?: string | null;
   district?: string | null;
   language: Language;
   isVerified: boolean;
+  isEmailVerified?: boolean;
   createdAt: string;
 }
 

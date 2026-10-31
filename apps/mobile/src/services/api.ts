@@ -81,19 +81,43 @@ class ApiClient {
     endpoint: string,
     data?: any,
   ): Promise<T> {
-    // 1. Auth Login
-    if (endpoint.startsWith('/auth/login') && method === 'POST') {
-      const res = await clientStore.login(data?.login || 'user');
+    // 1. Auth Check Email
+    if (endpoint.startsWith('/auth/check-email') && method === 'POST') {
+      const res = await clientStore.checkEmail(data?.email || '');
       return res as unknown as T;
     }
 
-    // 2. Auth Register
+    // 2. Auth Check Username
+    if (endpoint.startsWith('/auth/check-username') && method === 'POST') {
+      const res = await clientStore.checkUsername(data?.username || '');
+      return res as unknown as T;
+    }
+
+    // 3. Auth Verify Email
+    if (endpoint.startsWith('/auth/verify-email') && method === 'POST') {
+      const res = await clientStore.verifyEmail(data?.email, data?.code);
+      return res as unknown as T;
+    }
+
+    // 4. Auth Resend Code
+    if (endpoint.startsWith('/auth/resend-code') && method === 'POST') {
+      const res = await clientStore.resendCode(data?.email);
+      return res as unknown as T;
+    }
+
+    // 5. Auth Login
+    if (endpoint.startsWith('/auth/login') && method === 'POST') {
+      const res = await clientStore.login(data?.login || 'user', data?.password);
+      return res as unknown as T;
+    }
+
+    // 6. Auth Register
     if (endpoint.startsWith('/auth/register') && method === 'POST') {
       const res = await clientStore.register(data);
       return res as unknown as T;
     }
 
-    // 3. Current User
+    // 7. Current User
     if (endpoint.startsWith('/auth/me') && method === 'GET') {
       const user = await clientStore.getCurrentUser();
       return user as unknown as T;

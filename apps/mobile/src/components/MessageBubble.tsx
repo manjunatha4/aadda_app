@@ -57,16 +57,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             width: 32,
             height: 32,
             borderRadius: 16,
-            backgroundColor: '#6366F1',
+            backgroundColor: '#EEF2FF',
             alignItems: 'center',
             justifyContent: 'center',
             marginRight: 8,
             marginBottom: 2,
-            borderWidth: 1.5,
-            borderColor: 'rgba(255, 255, 255, 0.3)',
+            borderWidth: 1,
+            borderColor: '#C7D2FE',
           }}
         >
-          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
+          <Text style={{ color: '#6366F1', fontSize: 13, fontWeight: '900' }}>
             {senderName.charAt(0).toUpperCase()}
           </Text>
         </View>
@@ -77,7 +77,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {!isMe && (
           <Text
             style={{
-              color: '#C4B5FD',
+              color: '#6366F1',
               fontSize: 11,
               fontWeight: '700',
               marginLeft: 8,
@@ -92,26 +92,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         <View
           style={[
             {
-              backgroundColor: isMe ? '#7C3AED' : 'rgba(28, 28, 42, 0.88)',
-              borderRadius: 22,
-              borderBottomRightRadius: isMe ? 4 : 22,
-              borderBottomLeftRadius: isMe ? 22 : 4,
+              backgroundColor: isMe ? '#6366F1' : '#F8FAFC',
+              borderRadius: 20,
+              borderBottomRightRadius: isMe ? 4 : 20,
+              borderBottomLeftRadius: isMe ? 20 : 4,
               paddingHorizontal: mediaUrl ? 6 : 14,
               paddingVertical: mediaUrl ? 6 : 10,
-              borderWidth: isMe ? 1 : 1.2,
-              borderColor: isMe ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.12)',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.25,
-              shadowRadius: 8,
-              elevation: 3,
+              borderWidth: 1,
+              borderColor: isMe ? '#4F46E5' : '#E2E8F0',
+              shadowColor: '#0F172A',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: isMe ? 0.2 : 0.04,
+              shadowRadius: 6,
+              elevation: 2,
             },
-            Platform.OS === 'web'
-              ? ({
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                } as any)
-              : {},
           ]}
         >
           {/* Reply context */}
@@ -119,18 +113,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <View
               style={{
                 borderLeftWidth: 3,
-                borderLeftColor: isMe ? '#C4B5FD' : '#818CF8',
+                borderLeftColor: isMe ? '#C7D2FE' : '#818CF8',
                 paddingLeft: 8,
                 marginBottom: 6,
                 opacity: 0.9,
               }}
             >
-              <Text style={{ color: isMe ? '#E9D5FF' : '#C4B5FD', fontSize: 11, fontWeight: '800' }}>
+              <Text style={{ color: isMe ? '#EEF2FF' : '#6366F1', fontSize: 11, fontWeight: '800' }}>
                 {replyTo.sender.displayName}
               </Text>
               <Text
                 numberOfLines={1}
-                style={{ color: isMe ? '#F3E8FF' : '#94A3B8', fontSize: 11 }}
+                style={{ color: isMe ? '#E0E7FF' : '#64748B', fontSize: 11 }}
               >
                 {replyTo.content}
               </Text>
@@ -146,7 +140,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   width: 240,
                   height: 200,
                   borderRadius: 14,
-                  backgroundColor: '#1E1B2E',
+                  backgroundColor: '#E2E8F0',
                 }}
                 resizeMode="cover"
               />
@@ -157,7 +151,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {Boolean(content) && (
             <Text
               style={{
-                color: '#FFFFFF',
+                color: isMe ? '#FFFFFF' : '#0F172A',
                 fontSize: 15,
                 lineHeight: 21,
                 fontWeight: '500',
@@ -181,7 +175,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             {isMe && (
               <View
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
                   paddingHorizontal: 5,
                   paddingVertical: 1,
                   borderRadius: 6,
@@ -193,7 +187,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             )}
             <Text
               style={{
-                color: isMe ? 'rgba(255, 255, 255, 0.75)' : '#94A3B8',
+                color: isMe ? 'rgba(255, 255, 255, 0.8)' : '#94A3B8',
                 fontSize: 10,
                 fontWeight: '600',
               }}
@@ -203,15 +197,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </View>
         </View>
 
-        {/* Reaction Badges */}
+        {/* Reaction badges pill row */}
         {Object.keys(reactionCounts).length > 0 && (
           <View
             style={{
               flexDirection: 'row',
               flexWrap: 'wrap',
-              marginTop: -8,
+              gap: 4,
+              marginTop: 4,
               marginLeft: isMe ? 0 : 8,
-              alignSelf: isMe ? 'flex-end' : 'flex-start',
+              justifyContent: isMe ? 'flex-end' : 'flex-start',
             }}
           >
             {Object.entries(reactionCounts).map(([emoji, count]) => (
@@ -219,23 +214,22 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 key={emoji}
                 onPress={() => onAddReaction && onAddReaction(emoji)}
                 style={{
-                  backgroundColor: 'rgba(28, 28, 42, 0.95)',
-                  borderWidth: 1.2,
-                  borderColor: 'rgba(255, 255, 255, 0.16)',
+                  backgroundColor: '#FFFFFF',
+                  borderWidth: 1,
+                  borderColor: '#E2E8F0',
                   borderRadius: 14,
                   paddingHorizontal: 7,
                   paddingVertical: 2,
-                  marginRight: 4,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 4,
+                  shadowColor: '#0F172A',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 3,
                 }}
               >
                 <Text style={{ fontSize: 11 }}>{emoji}</Text>
-                <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800', marginLeft: 3 }}>
+                <Text style={{ color: '#0F172A', fontSize: 10, fontWeight: '800', marginLeft: 3 }}>
                   {count}
                 </Text>
               </TouchableOpacity>
@@ -244,20 +238,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
       </View>
 
-      {/* Sender Avatar circle on the right */}
+      {/* Sender Avatar circle on the right for current user */}
       {isMe && (
         <View
           style={{
             width: 32,
             height: 32,
             borderRadius: 16,
-            backgroundColor: '#7C3AED',
+            backgroundColor: '#6366F1',
             alignItems: 'center',
             justifyContent: 'center',
             marginLeft: 8,
             marginBottom: 2,
             borderWidth: 1.5,
-            borderColor: 'rgba(255, 255, 255, 0.4)',
+            borderColor: '#FFFFFF',
+            shadowColor: '#6366F1',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
           }}
         >
           <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>

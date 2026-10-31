@@ -17,37 +17,53 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../stores/authStore';
 
 // ---------------------------------------------------------------------
-// GLOBAL DESIGN SYSTEM TOKENS
+// GLOBAL WHITE THEME DESIGN SYSTEM TOKENS
 // ---------------------------------------------------------------------
 export const DS_TOKENS = {
   colors: {
-    bg: '#0B0B10',
-    bgCard: 'rgba(22, 22, 32, 0.75)',
-    bgCardElevated: 'rgba(28, 28, 42, 0.85)',
-    borderSubtle: 'rgba(255, 255, 255, 0.12)',
-    borderHighlight: 'rgba(255, 255, 255, 0.22)',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#94A3B8',
-    textMuted: '#64748B',
-    purple: '#7C3AED',
-    purpleHover: '#6D28D9',
-    emerald: '#10B981',
-    amber: '#F59E0B',
-    rose: '#EF4444',
-    sky: '#38BDF8',
+    bg: '#FFFFFF',                      // Pure white main background
+    bgSecondary: '#F8FAFC',             // Very light grey background for sections/inputs
+    bgCard: 'rgba(255, 255, 255, 0.94)', // White glassmorphism card
+    bgCardElevated: '#FFFFFF',          // Crisp white elevated card
+    borderSubtle: '#E2E8F0',            // Clean light grey border
+    borderHighlight: '#CBD5E1',         // Slightly pronounced light grey border
+    textPrimary: '#0F172A',             // Dark neutral grey (Slate 900) for highest readability
+    textSecondary: '#475569',           // Slate 600 for subtext
+    textMuted: '#94A3B8',               // Slate 400 for placeholders / subtle hints
+    purple: '#6366F1',                  // Modern Indigo/Violet accent
+    purpleHover: '#4F46E5',
+    purpleLight: '#EEF2FF',             // Soft pastel violet tint
+    purpleBorder: '#C7D2FE',
+    emerald: '#10B981',                 // Clean emerald
+    emeraldLight: '#ECFDF5',            // Soft pastel emerald tint
+    emeraldBorder: '#A7F3D0',
+    amber: '#F59E0B',                   // Warm amber
+    amberLight: '#FFFBEB',              // Soft pastel amber tint
+    amberBorder: '#FDE68A',
+    rose: '#EF4444',                    // Crisp rose
+    roseLight: '#FEF2F2',               // Soft pastel rose tint
+    roseBorder: '#FECACA',
+    sky: '#0284C7',                     // Vibrant sky blue
+    skyLight: '#F0F9FF',                // Soft pastel sky tint
+    skyBorder: '#BAE6FD',
   },
   radii: {
     sm: 10,
-    md: 16,
-    lg: 24,
-    xl: 32,
+    md: 14,
+    lg: 20,
+    xl: 28,
     pill: 9999,
   },
-  blur: '24px',
+  blur: '20px',
+  shadows: {
+    card: '0 4px 20px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03)',
+    elevated: '0 12px 32px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04)',
+    button: '0 4px 14px rgba(99, 102, 241, 0.25)',
+  },
 };
 
 // ---------------------------------------------------------------------
-// 1. GLASS CARD
+// 1. WHITE GLASS CARD
 // ---------------------------------------------------------------------
 export interface GlassCardProps {
   children?: React.ReactNode;
@@ -68,16 +84,16 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 }) => {
   const baseStyle: ViewStyle = {
     backgroundColor: elevated ? DS_TOKENS.colors.bgCardElevated : DS_TOKENS.colors.bgCard,
-    borderWidth: 1.2,
+    borderWidth: 1,
     borderColor: borderColor || (elevated ? DS_TOKENS.colors.borderHighlight : DS_TOKENS.colors.borderSubtle),
     borderRadius: DS_TOKENS.radii.lg,
     padding: 18,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: elevated ? 8 : 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: elevated ? 20 : 12,
-    elevation: elevated ? 8 : 4,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: elevated ? 6 : 2 },
+    shadowOpacity: elevated ? 0.08 : 0.04,
+    shadowRadius: elevated ? 16 : 8,
+    elevation: elevated ? 4 : 2,
   };
 
   const webStyle: any =
@@ -85,9 +101,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       ? {
           backdropFilter: `blur(${DS_TOKENS.blur})`,
           WebkitBackdropFilter: `blur(${DS_TOKENS.blur})`,
-          boxShadow: elevated
-            ? '0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15)'
-            : '0 8px 24px rgba(0, 0, 0, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.08)',
+          boxShadow: elevated ? DS_TOKENS.shadows.elevated : DS_TOKENS.shadows.card,
         }
       : {};
 
@@ -143,15 +157,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, badge, 
           {badge !== undefined && (
             <View
               style={{
-                backgroundColor: 'rgba(124, 58, 237, 0.2)',
+                backgroundColor: DS_TOKENS.colors.purpleLight,
                 borderWidth: 1,
-                borderColor: 'rgba(124, 58, 237, 0.4)',
+                borderColor: DS_TOKENS.colors.purpleBorder,
                 borderRadius: DS_TOKENS.radii.pill,
                 paddingHorizontal: 10,
                 paddingVertical: 2,
               }}
             >
-              <Text style={{ color: '#C4B5FD', fontSize: 12, fontWeight: '800' }}>{badge}</Text>
+              <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
+                {badge}
+              </Text>
             </View>
           )}
         </View>
@@ -184,7 +200,7 @@ export const TopNavigation: React.FC = () => {
   const isKn = i18n.language === 'kn';
 
   const navItems = [
-    { name: isKn ? 'ಇಂದು' : 'Dashboard', href: '/(tabs)', icon: '🛖', match: '/(tabs)' },
+    { name: isKn ? 'ಇಂದು' : 'Dashboard', href: '/(tabs)', icon: '🏠', match: '/(tabs)' },
     { name: isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್' : 'Daily Chaos', href: '/(tabs)/chaos', icon: '⚡', match: '/chaos' },
     { name: isKn ? 'ಚಾಟ್‌ಗಳು' : 'Chats', href: '/(tabs)/chats', icon: '💬', match: '/chats' },
     { name: isKn ? 'ಪ್ರೊಫೈಲ್' : 'Profile', href: '/(tabs)/profile', icon: '👤', match: '/profile' },
@@ -200,7 +216,7 @@ export const TopNavigation: React.FC = () => {
       style={[
         {
           width: '100%',
-          backgroundColor: 'rgba(15, 15, 22, 0.85)',
+          backgroundColor: 'rgba(255, 255, 255, 0.94)',
           borderBottomWidth: 1,
           borderBottomColor: DS_TOKENS.colors.borderSubtle,
           paddingHorizontal: 24,
@@ -209,6 +225,11 @@ export const TopNavigation: React.FC = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
           zIndex: 100,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.04,
+          shadowRadius: 8,
+          elevation: 2,
         },
         Platform.OS === 'web'
           ? ({
@@ -229,30 +250,37 @@ export const TopNavigation: React.FC = () => {
           style={{
             width: 34,
             height: 34,
-            borderRadius: 12,
-            backgroundColor: '#7C3AED',
+            borderRadius: 10,
+            backgroundColor: DS_TOKENS.colors.purple,
             alignItems: 'center',
             justifyContent: 'center',
-            shadowColor: '#7C3AED',
+            shadowColor: DS_TOKENS.colors.purple,
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.5,
+            shadowOpacity: 0.3,
             shadowRadius: 6,
           }}
         >
-          <Text style={{ fontSize: 18 }}>⚡</Text>
+          <Text style={{ fontSize: 18, color: '#FFFFFF' }}>⚡</Text>
         </View>
-        <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900', letterSpacing: 1.2 }}>
+        <Text
+          style={{
+            color: DS_TOKENS.colors.textPrimary,
+            fontSize: 18,
+            fontWeight: '900',
+            letterSpacing: 1.2,
+          }}
+        >
           AADDA
         </Text>
         <View
           style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            backgroundColor: DS_TOKENS.colors.purpleLight,
             paddingHorizontal: 6,
             paddingVertical: 2,
             borderRadius: 6,
           }}
         >
-          <Text style={{ color: '#A1A1AA', fontSize: 10, fontWeight: '800' }}>PRO</Text>
+          <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 10, fontWeight: '800' }}>PRO</Text>
         </View>
       </TouchableOpacity>
 
@@ -272,18 +300,18 @@ export const TopNavigation: React.FC = () => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 6,
-                paddingHorizontal: 12,
-                paddingVertical: 7,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
                 borderRadius: DS_TOKENS.radii.pill,
-                backgroundColor: isActive ? 'rgba(124, 58, 237, 0.22)' : 'transparent',
+                backgroundColor: isActive ? DS_TOKENS.colors.purpleLight : 'transparent',
                 borderWidth: 1,
-                borderColor: isActive ? 'rgba(124, 58, 237, 0.45)' : 'transparent',
+                borderColor: isActive ? DS_TOKENS.colors.purpleBorder : 'transparent',
               }}
             >
-              <Text style={{ fontSize: 14 }}>{item.icon}</Text>
+              <Text style={{ fontSize: 15 }}>{item.icon}</Text>
               <Text
                 style={{
-                  color: isActive ? '#FFFFFF' : DS_TOKENS.colors.textSecondary,
+                  color: isActive ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
                   fontWeight: isActive ? '800' : '600',
                   fontSize: 13,
                 }}
@@ -300,15 +328,15 @@ export const TopNavigation: React.FC = () => {
         <TouchableOpacity
           onPress={handleToggleLang}
           style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            backgroundColor: DS_TOKENS.colors.bgSecondary,
             borderWidth: 1,
             borderColor: DS_TOKENS.colors.borderSubtle,
-            paddingHorizontal: 10,
-            paddingVertical: 5,
+            paddingHorizontal: 12,
+            paddingVertical: 6,
             borderRadius: DS_TOKENS.radii.pill,
           }}
         >
-          <Text style={{ color: '#E2E8F0', fontSize: 12, fontWeight: '700' }}>
+          <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 12, fontWeight: '700' }}>
             {isKn ? 'KN' : 'EN'} 🌐
           </Text>
         </TouchableOpacity>
@@ -320,21 +348,21 @@ export const TopNavigation: React.FC = () => {
               flexDirection: 'row',
               alignItems: 'center',
               gap: 8,
-              backgroundColor: 'rgba(255, 255, 255, 0.06)',
+              backgroundColor: DS_TOKENS.colors.bgSecondary,
               borderWidth: 1,
               borderColor: DS_TOKENS.colors.borderSubtle,
               paddingLeft: 4,
-              paddingRight: 10,
+              paddingRight: 12,
               paddingVertical: 4,
               borderRadius: DS_TOKENS.radii.pill,
             }}
           >
             <View
               style={{
-                width: 26,
-                height: 26,
-                borderRadius: 13,
-                backgroundColor: '#7C3AED',
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                backgroundColor: DS_TOKENS.colors.purple,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -343,7 +371,7 @@ export const TopNavigation: React.FC = () => {
                 {(user.displayName || user.username || 'U').charAt(0).toUpperCase()}
               </Text>
             </View>
-            <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>
+            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 12, fontWeight: '700' }}>
               {user.displayName || user.username}
             </Text>
           </TouchableOpacity>
@@ -354,7 +382,7 @@ export const TopNavigation: React.FC = () => {
 };
 
 // ---------------------------------------------------------------------
-// 4. MAIN LAYOUT
+// 4. MAIN LAYOUT (PURE WHITE THEME)
 // ---------------------------------------------------------------------
 export interface MainLayoutProps {
   children: React.ReactNode;
@@ -393,18 +421,18 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
   return (
     <View style={{ flex: 1, backgroundColor: DS_TOKENS.colors.bg }}>
-      {/* Ambient background glow accents */}
+      {/* Subtle pastel ambient background highlights */}
       <View
         pointerEvents="none"
         style={{
           position: 'absolute',
           top: -120,
           left: '20%',
-          width: 400,
-          height: 400,
-          borderRadius: 200,
-          backgroundColor: 'rgba(124, 58, 237, 0.08)',
-          ...(isWeb ? ({ filter: 'blur(100px)' } as any) : {}),
+          width: 450,
+          height: 450,
+          borderRadius: 225,
+          backgroundColor: 'rgba(99, 102, 241, 0.04)',
+          ...(isWeb ? ({ filter: 'blur(120px)' } as any) : {}),
         }}
       />
       <View
@@ -413,11 +441,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           position: 'absolute',
           bottom: 0,
           right: '10%',
-          width: 350,
-          height: 350,
-          borderRadius: 175,
-          backgroundColor: 'rgba(56, 189, 248, 0.05)',
-          ...(isWeb ? ({ filter: 'blur(90px)' } as any) : {}),
+          width: 400,
+          height: 400,
+          borderRadius: 200,
+          backgroundColor: 'rgba(14, 165, 233, 0.03)',
+          ...(isWeb ? ({ filter: 'blur(100px)' } as any) : {}),
         }}
       />
 
@@ -475,7 +503,7 @@ export const PrimaryButton: React.FC<ButtonProps> = ({
       activeOpacity={0.85}
       style={[
         {
-          backgroundColor: disabled ? 'rgba(255, 255, 255, 0.12)' : bgColor,
+          backgroundColor: disabled ? '#E2E8F0' : bgColor,
           borderRadius: DS_TOKENS.radii.md,
           paddingVertical: 13,
           paddingHorizontal: 20,
@@ -485,11 +513,9 @@ export const PrimaryButton: React.FC<ButtonProps> = ({
           gap: 8,
           shadowColor: bgColor,
           shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: disabled ? 0 : 0.35,
+          shadowOpacity: disabled ? 0 : 0.25,
           shadowRadius: 10,
-          elevation: disabled ? 0 : 4,
-          borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.25)',
+          elevation: disabled ? 0 : 3,
         },
         style,
       ]}
@@ -501,7 +527,7 @@ export const PrimaryButton: React.FC<ButtonProps> = ({
           {Boolean(icon) && <Text style={{ fontSize: 16 }}>{icon}</Text>}
           <Text
             style={{
-              color: disabled ? '#A1A1AA' : '#FFFFFF',
+              color: disabled ? '#94A3B8' : '#FFFFFF',
               fontWeight: '900',
               fontSize: 14,
               letterSpacing: 0.3,
@@ -529,7 +555,7 @@ export const SecondaryButton: React.FC<ButtonProps> = ({
       activeOpacity={0.8}
       style={[
         {
-          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+          backgroundColor: DS_TOKENS.colors.bgSecondary,
           borderWidth: 1,
           borderColor: DS_TOKENS.colors.borderSubtle,
           borderRadius: DS_TOKENS.radii.md,
@@ -540,20 +566,19 @@ export const SecondaryButton: React.FC<ButtonProps> = ({
           justifyContent: 'center',
           gap: 8,
         },
-        Platform.OS === 'web'
-          ? ({ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' } as any)
-          : {},
         style,
       ]}
     >
       {Boolean(icon) && <Text style={{ fontSize: 15 }}>{icon}</Text>}
-      <Text style={{ color: '#E2E8F0', fontWeight: '800', fontSize: 13 }}>{title}</Text>
+      <Text style={{ color: DS_TOKENS.colors.textPrimary, fontWeight: '800', fontSize: 13 }}>
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 // ---------------------------------------------------------------------
-// 6. INPUT FIELD
+// 6. INPUT FIELD (WHITE THEME)
 // ---------------------------------------------------------------------
 export interface InputFieldProps {
   label?: string;
@@ -562,11 +587,13 @@ export interface InputFieldProps {
   placeholder?: string;
   icon?: string;
   errorMessage?: string | null;
+  successMessage?: string | null;
   multiline?: boolean;
   numberOfLines?: number;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   keyboardType?: any;
   secureTextEntry?: boolean;
+  rightElement?: React.ReactNode;
   style?: ViewStyle;
 }
 
@@ -577,11 +604,13 @@ export const InputField: React.FC<InputFieldProps> = ({
   placeholder,
   icon,
   errorMessage,
+  successMessage,
   multiline = false,
   numberOfLines = 1,
   autoCapitalize = 'none',
   keyboardType = 'default',
   secureTextEntry = false,
+  rightElement,
   style,
 }) => {
   return (
@@ -589,7 +618,7 @@ export const InputField: React.FC<InputFieldProps> = ({
       {Boolean(label) && (
         <Text
           style={{
-            color: '#CBD5E1',
+            color: DS_TOKENS.colors.textPrimary,
             fontSize: 13,
             fontWeight: '800',
             marginBottom: 6,
@@ -602,21 +631,19 @@ export const InputField: React.FC<InputFieldProps> = ({
       <View
         style={[
           {
-            backgroundColor: 'rgba(255, 255, 255, 0.06)',
+            backgroundColor: DS_TOKENS.colors.bgSecondary,
             borderWidth: 1.2,
-            borderColor: errorMessage ? DS_TOKENS.colors.rose : DS_TOKENS.colors.borderSubtle,
-            borderRadius: multiline ? DS_TOKENS.radii.md : DS_TOKENS.radii.md,
+            borderColor: errorMessage
+              ? DS_TOKENS.colors.rose
+              : successMessage
+              ? DS_TOKENS.colors.emerald
+              : DS_TOKENS.colors.borderSubtle,
+            borderRadius: DS_TOKENS.radii.md,
             paddingHorizontal: 14,
             paddingVertical: multiline ? 12 : 11,
             flexDirection: 'row',
             alignItems: multiline ? 'flex-start' : 'center',
           },
-          Platform.OS === 'web'
-            ? ({
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-              } as any)
-            : {},
         ]}
       >
         {Boolean(icon) && (
@@ -626,7 +653,7 @@ export const InputField: React.FC<InputFieldProps> = ({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#64748B"
+          placeholderTextColor={DS_TOKENS.colors.textMuted}
           multiline={multiline}
           numberOfLines={numberOfLines}
           autoCapitalize={autoCapitalize}
@@ -634,21 +661,41 @@ export const InputField: React.FC<InputFieldProps> = ({
           secureTextEntry={secureTextEntry}
           style={{
             flex: 1,
-            color: '#FFFFFF',
+            color: DS_TOKENS.colors.textPrimary,
             fontSize: 14,
             fontWeight: '600',
             minHeight: multiline ? numberOfLines * 20 : undefined,
           }}
         />
-        {Boolean(value) && !multiline && (
+        {rightElement}
+        {Boolean(value) && !multiline && !rightElement && (
           <TouchableOpacity onPress={() => onChangeText('')} style={{ padding: 4 }}>
-            <Text style={{ color: '#64748B', fontWeight: '800', fontSize: 13 }}>✕</Text>
+            <Text style={{ color: DS_TOKENS.colors.textMuted, fontWeight: '800', fontSize: 13 }}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
       {Boolean(errorMessage) && (
-        <Text style={{ color: DS_TOKENS.colors.rose, fontSize: 12, fontWeight: '700', marginTop: 4 }}>
+        <Text
+          style={{
+            color: DS_TOKENS.colors.rose,
+            fontSize: 12,
+            fontWeight: '700',
+            marginTop: 4,
+          }}
+        >
           ⚠️ {errorMessage}
+        </Text>
+      )}
+      {Boolean(successMessage) && !errorMessage && (
+        <Text
+          style={{
+            color: DS_TOKENS.colors.emerald,
+            fontSize: 12,
+            fontWeight: '700',
+            marginTop: 4,
+          }}
+        >
+          ✓ {successMessage}
         </Text>
       )}
     </View>
@@ -656,7 +703,7 @@ export const InputField: React.FC<InputFieldProps> = ({
 };
 
 // ---------------------------------------------------------------------
-// 7. MODAL
+// 7. MODAL (WHITE THEME)
 // ---------------------------------------------------------------------
 export interface ModalProps {
   visible: boolean;
@@ -679,13 +726,13 @@ export const Modal: React.FC<ModalProps> = ({
         style={[
           {
             flex: 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backgroundColor: 'rgba(15, 23, 42, 0.4)',
             justifyContent: 'center',
             alignItems: 'center',
             padding: 16,
           },
           Platform.OS === 'web'
-            ? ({ backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' } as any)
+            ? ({ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' } as any)
             : {},
         ]}
       >
@@ -696,6 +743,7 @@ export const Modal: React.FC<ModalProps> = ({
             maxWidth,
             maxHeight: '90%',
             padding: 22,
+            backgroundColor: '#FFFFFF',
           }}
         >
           {Boolean(title) && (
@@ -710,19 +758,23 @@ export const Modal: React.FC<ModalProps> = ({
                 paddingBottom: 12,
               }}
             >
-              <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900' }}>{title}</Text>
+              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 18, fontWeight: '900' }}>
+                {title}
+              </Text>
               <TouchableOpacity
                 onPress={onClose}
                 style={{
                   width: 32,
                   height: 32,
                   borderRadius: 16,
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: DS_TOKENS.colors.bgSecondary,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ color: '#E2E8F0', fontWeight: '900', fontSize: 14 }}>✕</Text>
+                <Text style={{ color: DS_TOKENS.colors.textSecondary, fontWeight: '900', fontSize: 14 }}>
+                  ✕
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -734,7 +786,7 @@ export const Modal: React.FC<ModalProps> = ({
 };
 
 // ---------------------------------------------------------------------
-// 8. DROPDOWN / SELECTOR PILLS
+// 8. DROPDOWN / SELECTOR PILLS (WHITE THEME)
 // ---------------------------------------------------------------------
 export interface DropdownProps {
   label?: string;
@@ -747,7 +799,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, value, options, onSel
   return (
     <View style={{ marginBottom: 14 }}>
       {Boolean(label) && (
-        <Text style={{ color: '#CBD5E1', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
+        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
           {label}
         </Text>
       )}
@@ -761,14 +813,14 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, value, options, onSel
               activeOpacity={0.8}
               style={{
                 backgroundColor: isSelected
-                  ? opt.color || DS_TOKENS.colors.purple
-                  : 'rgba(255, 255, 255, 0.08)',
+                  ? DS_TOKENS.colors.purpleLight
+                  : DS_TOKENS.colors.bgSecondary,
                 borderRadius: DS_TOKENS.radii.pill,
                 paddingHorizontal: 12,
                 paddingVertical: 7,
                 borderWidth: 1.2,
                 borderColor: isSelected
-                  ? opt.color || DS_TOKENS.colors.purple
+                  ? DS_TOKENS.colors.purple
                   : DS_TOKENS.colors.borderSubtle,
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -778,7 +830,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, value, options, onSel
               {Boolean(opt.emoji) && <Text style={{ fontSize: 13 }}>{opt.emoji}</Text>}
               <Text
                 style={{
-                  color: isSelected ? '#FFFFFF' : '#94A3B8',
+                  color: isSelected ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
                   fontSize: 12,
                   fontWeight: '800',
                 }}
@@ -794,7 +846,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, value, options, onSel
 };
 
 // ---------------------------------------------------------------------
-// 9. DATA TABLE
+// 9. DATA TABLE (WHITE THEME)
 // ---------------------------------------------------------------------
 export interface DataTableProps {
   columns: Array<{ key: string; label: string; flex?: number }>;
@@ -809,7 +861,7 @@ export const DataTable: React.FC<DataTableProps> = ({ columns, data, renderRow }
       <View
         style={{
           flexDirection: 'row',
-          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          backgroundColor: DS_TOKENS.colors.bgSecondary,
           borderBottomWidth: 1,
           borderBottomColor: DS_TOKENS.colors.borderSubtle,
           paddingHorizontal: 16,
@@ -821,7 +873,7 @@ export const DataTable: React.FC<DataTableProps> = ({ columns, data, renderRow }
             key={c.key}
             style={{
               flex: c.flex || 1,
-              color: '#94A3B8',
+              color: DS_TOKENS.colors.textSecondary,
               fontSize: 12,
               fontWeight: '800',
               textTransform: 'uppercase',
@@ -840,7 +892,7 @@ export const DataTable: React.FC<DataTableProps> = ({ columns, data, renderRow }
 };
 
 // ---------------------------------------------------------------------
-// 10. EMPTY STATE
+// 10. EMPTY STATE (WHITE THEME)
 // ---------------------------------------------------------------------
 export interface EmptyStateProps {
   icon?: string;
@@ -869,7 +921,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <Text style={{ fontSize: 44, marginBottom: 12 }}>{icon}</Text>
       <Text
         style={{
-          color: '#FFFFFF',
+          color: DS_TOKENS.colors.textPrimary,
           fontSize: 18,
           fontWeight: '900',
           textAlign: 'center',
@@ -880,7 +932,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       </Text>
       <Text
         style={{
-          color: '#94A3B8',
+          color: DS_TOKENS.colors.textSecondary,
           fontSize: 13,
           fontWeight: '600',
           textAlign: 'center',
@@ -899,15 +951,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 };
 
 // ---------------------------------------------------------------------
-// 11. LOADING STATE
+// 11. LOADING STATE (WHITE THEME)
 // ---------------------------------------------------------------------
 export const LoadingState: React.FC<{ message?: string }> = ({
   message = 'Loading data...',
 }) => {
   return (
     <View style={{ paddingVertical: 48, alignItems: 'center', justifyContent: 'center' }}>
-      <ActivityIndicator size="large" color="#7C3AED" />
-      <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: '700', marginTop: 12 }}>
+      <ActivityIndicator size="large" color={DS_TOKENS.colors.purple} />
+      <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 13, fontWeight: '700', marginTop: 12 }}>
         {message}
       </Text>
     </View>
@@ -915,19 +967,19 @@ export const LoadingState: React.FC<{ message?: string }> = ({
 };
 
 // ---------------------------------------------------------------------
-// 12. ERROR STATE
+// 12. ERROR STATE (WHITE THEME)
 // ---------------------------------------------------------------------
 export const ErrorState: React.FC<{ message: string; onRetry?: () => void }> = ({
   message,
   onRetry,
 }) => {
   return (
-    <GlassCard style={{ borderColor: 'rgba(239, 68, 68, 0.4)', alignItems: 'center', padding: 24 }}>
+    <GlassCard style={{ borderColor: DS_TOKENS.colors.roseBorder, backgroundColor: DS_TOKENS.colors.roseLight, alignItems: 'center', padding: 24 }}>
       <Text style={{ fontSize: 36, marginBottom: 10 }}>⚠️</Text>
-      <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900', marginBottom: 4 }}>
+      <Text style={{ color: '#991B1B', fontSize: 16, fontWeight: '900', marginBottom: 4 }}>
         Something went wrong
       </Text>
-      <Text style={{ color: '#FCA5A5', fontSize: 13, textAlign: 'center', marginBottom: 16 }}>
+      <Text style={{ color: '#B91C1C', fontSize: 13, textAlign: 'center', marginBottom: 16 }}>
         {message}
       </Text>
       {onRetry && <PrimaryButton title="Try Again" onPress={onRetry} variant="rose" />}
@@ -936,7 +988,7 @@ export const ErrorState: React.FC<{ message: string; onRetry?: () => void }> = (
 };
 
 // ---------------------------------------------------------------------
-// 13. CONFIRMATION DIALOG
+// 13. CONFIRMATION DIALOG (WHITE THEME)
 // ---------------------------------------------------------------------
 export interface ConfirmationDialogProps {
   visible: boolean;
@@ -965,7 +1017,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         <Text style={{ fontSize: 36, marginBottom: 8 }}>{destructive ? '🗑️' : '❓'}</Text>
         <Text
           style={{
-            color: '#FFFFFF',
+            color: DS_TOKENS.colors.textPrimary,
             fontSize: 18,
             fontWeight: '900',
             textAlign: 'center',
@@ -976,7 +1028,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         </Text>
         <Text
           style={{
-            color: '#94A3B8',
+            color: DS_TOKENS.colors.textSecondary,
             fontSize: 13,
             fontWeight: '600',
             textAlign: 'center',
@@ -1001,7 +1053,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 };
 
 // ---------------------------------------------------------------------
-// 14. TOAST NOTIFICATION
+// 14. TOAST NOTIFICATION (WHITE THEME)
 // ---------------------------------------------------------------------
 export interface ToastNotificationProps {
   visible: boolean;
@@ -1018,14 +1070,17 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
 }) => {
   if (!visible) return null;
 
-  let borderColor = 'rgba(16, 185, 129, 0.4)';
+  let borderColor = DS_TOKENS.colors.emeraldBorder;
   let icon = '✓';
+  let iconColor = DS_TOKENS.colors.emerald;
   if (type === 'error') {
-    borderColor = 'rgba(239, 68, 68, 0.4)';
+    borderColor = DS_TOKENS.colors.roseBorder;
     icon = '⚠️';
+    iconColor = DS_TOKENS.colors.rose;
   } else if (type === 'info') {
-    borderColor = 'rgba(56, 189, 248, 0.4)';
+    borderColor = DS_TOKENS.colors.skyBorder;
     icon = 'ℹ️';
+    iconColor = DS_TOKENS.colors.sky;
   }
 
   return (
@@ -1045,7 +1100,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
       <View
         style={[
           {
-            backgroundColor: 'rgba(20, 20, 30, 0.94)',
+            backgroundColor: '#FFFFFF',
             borderWidth: 1.2,
             borderColor,
             borderRadius: DS_TOKENS.radii.pill,
@@ -1054,25 +1109,29 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
             flexDirection: 'row',
             alignItems: 'center',
             gap: 8,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.4,
+            shadowColor: '#0F172A',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.12,
             shadowRadius: 16,
+            elevation: 8,
           },
           Platform.OS === 'web'
             ? ({ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' } as any)
             : {},
         ]}
       >
-        <Text style={{ fontSize: 14 }}>{icon}</Text>
-        <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 13 }}>{message}</Text>
+        <Text style={{ fontSize: 14, color: iconColor }}>{icon}</Text>
+        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontWeight: '800', fontSize: 13 }}>
+          {message}
+        </Text>
         {onDismiss && (
           <TouchableOpacity onPress={onDismiss} style={{ marginLeft: 6 }}>
-            <Text style={{ color: '#94A3B8', fontWeight: '800', fontSize: 12 }}>✕</Text>
+            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontWeight: '800', fontSize: 12 }}>
+              ✕
+            </Text>
           </TouchableOpacity>
         )}
       </View>
     </View>
   );
 };
-

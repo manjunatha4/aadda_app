@@ -82,18 +82,18 @@ export default function VibeModal() {
                 onPress={() => setSelectedMood(opt.mood)}
                 style={{
                   padding: 14,
-                  backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.25)' : DS_TOKENS.colors.bgCard,
-                  borderColor: isSelected ? '#7C3AED' : DS_TOKENS.colors.borderSubtle,
+                  backgroundColor: isSelected ? DS_TOKENS.colors.purpleLight : DS_TOKENS.colors.bgCard,
+                  borderColor: isSelected ? DS_TOKENS.colors.purple : DS_TOKENS.colors.borderSubtle,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                     <Text style={{ fontSize: 24 }}>{opt.emoji}</Text>
                     <View>
-                      <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '800' }}>
+                      <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 15, fontWeight: '800' }}>
                         {isKn ? opt.labelKn : opt.labelEn}
                       </Text>
-                      <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                      <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
                         {opt.desc}
                       </Text>
                     </View>
@@ -105,8 +105,8 @@ export default function VibeModal() {
                       height: 20,
                       borderRadius: 10,
                       borderWidth: 2,
-                      borderColor: isSelected ? '#7C3AED' : '#64748B',
-                      backgroundColor: isSelected ? '#7C3AED' : 'transparent',
+                      borderColor: isSelected ? DS_TOKENS.colors.purple : '#CBD5E1',
+                      backgroundColor: isSelected ? DS_TOKENS.colors.purple : 'transparent',
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
