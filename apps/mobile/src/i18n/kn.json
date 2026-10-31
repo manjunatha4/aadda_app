@@ -1,0 +1,87 @@
+{
+  "common": {
+    "appName": "AADDA",
+    "tagline": "ನಿಮ್ಮ ಗ್ಯಾಂಗ್. ನಿಮ್ಮ ಚಾವಡಿ.",
+    "subTagline": "Your people. Your chaos.",
+    "save": "ಉಳಿಸಿ",
+    "cancel": "ರದ್ದುಮಾಡಿ",
+    "continue": "ಮುಂದುವರಿಯಿರಿ",
+    "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+    "search": "ಹುಡುಕಿ...",
+    "error": "ದೋಷ ಸಂಭವಿಸಿದೆ",
+    "success": "ಯಶಸ್ವಿಯಾಗಿದೆ",
+    "copy": "ಕಾಪಿ ಮಾಡಿ",
+    "copied": "ಕಾಪಿ ಮಾಡಲಾಗಿದೆ!"
+  },
+  "auth": {
+    "welcomeTitle": "ನಿಮ್ಮ ಅಡ್ಡಾಗೆ ಸ್ವಾಗತ 🔥",
+    "welcomeSubtitle": "ಕ್ಲೋಸ್ ಫ್ರೆಂಡ್ಸ್ ಜೊತೆ ಪ್ರೈವೇಟ್ ಹ್ಯಾಂಗೌಟ್ ಮತ್ತು ರಿಯಲ್-ಟೈಮ್ ಮಜಾ",
+    "login": "ಲಾಗಿನ್ ಆಗಿ",
+    "register": "ಖಾತೆ ರಚಿಸಿ",
+    "usernameOrEmail": "ಯೂಸರ್ ನೇಮ್ ಅಥವಾ ಇಮೇಲ್",
+    "displayName": "ನಿಮ್ಮ ಹೆಸರು (ಡಿಸ್ಪ್ಲೇ ನೇಮ್)",
+    "password": "ಪಾಸ್ವರ್ಡ್",
+    "district": "ಜಿಲ್ಲೆ (ಉದಾ: ಬೆಂಗಳೂರು, ಮೈಸೂರು)",
+    "preferredLanguage": "ಭಾಷೆ ಆಯ್ಕೆ",
+    "noAccount": "ಖಾತೆ ಇಲ್ಲವೇ? ಹೊಸದಾಗಿ ಸೈನ್ ಅಪ್ ಮಾಡಿ",
+    "hasAccount": "ಈಗಾಗಲೇ ಖಾತೆ ಇದೆಯೇ? ಲಾಗಿನ್ ಆಗಿ",
+    "invalidCredentials": "ಯೂಸರ್ ನೇಮ್ ಅಥವಾ ಪಾಸ್ವರ್ಡ್ ತಪ್ಪಾಗಿದೆ"
+  },
+  "tabs": {
+    "addas": "ಅಡ್ಡಾಗಳು",
+    "chats": "ಚಾಟ್",
+    "chaos": "ಕೇಯಾಸ್ (Chaos)",
+    "profile": "ಪ್ರೊಫೈಲ್"
+  },
+  "addas": {
+    "title": "ನಿಮ್ಮ ಅಡ್ಡಾಗಳು",
+    "createAdda": "ಹೊಸ ಅಡ್ಡಾ ರಚಿಸಿ",
+    "joinAdda": "ಕೋಡ್ ಬಳಸಿ ಸೇರಿ",
+    "enterInviteCode": "ಇನ್ವಿಟೇಶನ್ ಕೋಡ್ ನಮೂದಿಸಿ (ADDA-XXXX)",
+    "namePlaceholder": "ಅಡ್ಡಾ ಹೆಸರು (ಉದಾ: ಕಟ್ಟೆ ಗ್ಯಾಂಗ್)",
+    "descPlaceholder": "ಅಡ್ಡಾ ಬಗ್ಗೆ ಸಣ್ಣ ವಿವರಣೆ...",
+    "members": "ಸದಸ್ಯರು",
+    "generateInvite": "ಇನ್ವೈಟ್ ಕೋಡ್ ರಚಿಸಿ",
+    "activeVibes": "ಪ್ರಸ್ತುತ ವೈಬ್‌ಗಳು",
+    "activeChaos": "ಲೈವ್ ಕೇಯಾಸ್ ಚಾಲೆಂಜ್"
+  },
+  "chat": {
+    "typeMessage": "ಮೆಸೇಜ್ ಟೈಪ್ ಮಾಡಿ...",
+    "typing": "ಟೈಪ್ ಮಾಡುತ್ತಿದ್ದಾರೆ...",
+    "today": "ಇಂದು",
+    "yesterday": "ನಿನ್ನೆ",
+    "reply": "ಉತ್ತರಿಸಿ",
+    "reactions": "ರಿಯಾಕ್ಷನ್ಸ್",
+    "delivered": "ತಲುಪಿದೆ",
+    "read": "ಓದಲಾಗಿದೆ"
+  },
+  "vibe": {
+    "title": "ವೈಬ್ ಚೆಕ್ ⚡",
+    "subtitle": "ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಮೂಡ್ ನಿಮ್ಮ ಗ್ಯಾಂಗ್‌ಗೆ ತಿಳಿಸಿ",
+    "mentallyOffline": "ಮೆಂಟಲಿ ಆಫ್‌ಲೈನ್ 📴",
+    "needGossip": "ಗಾಸಿಪ್ ಬೇಕು 👀",
+    "deadInside": "ಡೆಡ್ ಇನ್‌ಸೈಡ್ 💀",
+    "chillMode": "ಚಿಲ್ ಮೋಡ್ ☕",
+    "mainCharacter": "ಮೇನ್ ಕ್ಯಾರೆಕ್ಟರ್ 💅",
+    "batteryLow": "ಬ್ಯಾಟರಿ 1% 🪫",
+    "customNotePlaceholder": "ಏನಾದ್ರೂ ಹೇಳಬೇಕಾ? (ಐಚ್ಛಿಕ)"
+  },
+  "chaos": {
+    "title": "ಕೇಯಾಸ್ ಎಂಜಿನ್ 🔥",
+    "subtitle": "ಫ್ರೆಂಡ್ಸ್ ಚಾಲೆಂಜ್‌ಗಳು & ಲೈವ್ ವೋಟಿಂಗ್",
+    "submitAnswer": "ನಿಮ್ಮ ಉತ್ತರ ನೀಡಿ",
+    "vote": "ವೋಟ್ ಮಾಡಿ",
+    "votesCount": "ವೋಟ್‌ಗಳು",
+    "expiresIn": "ಮುಕ್ತಾಯಕ್ಕೆ ಬಾಕಿ",
+    "newChallenge": "ಹೊಸ ಚಾಲೆಂಜ್ ಆರಂಭಿಸಿ"
+  },
+  "profile": {
+    "myProfile": "ನನ್ನ ಪ್ರೊಫೈಲ್",
+    "edit": "ತಿದ್ದುಪಡಿ",
+    "language": "ಭಾಷೆ (Language)",
+    "switchLang": "Switch to English",
+    "logout": "ಲಾಗ್ ಔಟ್",
+    "verified": "ವೆರಿಫೈಡ್ ಸದಸ್ಯ"
+  }
+}
+

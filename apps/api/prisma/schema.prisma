@@ -1,0 +1,367 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Language {
+  kn
+  en
+}
+
+enum AddaRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum ConversationType {
+  DIRECT
+  ADDA
+}
+
+enum ActivityStatus {
+  ACTIVE
+  VOTING
+  COMPLETED
+  EXPIRED
+}
+
+enum ActivityCategory {
+  ONE_WORD
+  MOST_LIKELY
+  VOICE_NOTE
+  EMOJI_ROAST
+  CUSTOM
+}
+
+enum VibeMood {
+  MENTALLY_OFFLINE
+  NEED_GOSSIP
+  DEAD_INSIDE
+  CHILL_MODE
+  MAIN_CHARACTER
+  BATTERY_LOW
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+// 1. User
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  phone        String?   @unique
+  username     String    @unique
+  displayName  String
+  passwordHash String
+  avatarUrl    String?
+  bio          String?
+  district     String?
+  language     Language  @default(kn)
+  isVerified   Boolean   @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  refreshTokens       RefreshToken[]
+  deviceTokens        DeviceToken[]
+  createdAddas        Adda[]               @relation("AddaCreator")
+  addaMemberships     AddaMember[]
+  createdInvitations  Invitation[]         @relation("InvitationCreator")
+  conversationMembers ConversationMember[]
+  messages            Message[]
+  messageReactions    MessageReaction[]
+  activities          Activity[]           @relation("ActivityCreator")
+  activityEntries     ActivityEntry[]
+  vibeStatuses        VibeStatus[]
+  notifications       Notification[]
+  blockedUsers        UserBlock[]          @relation("Blocker")
+  blockedByUsers      UserBlock[]          @relation("Blocked")
+  reportsCreated      UserReport[]         @relation("Reporter")
+  reportsReceived     UserReport[]         @relation("ReportedUser")
+  mediaUploads        MediaUpload[]
+
+  @@index([username])
+  @@index([email])
+}
+
+// 2. RefreshToken
+model RefreshToken {
+  id              String    @id @default(uuid())
+  tokenHash       String    @unique
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  replacedByToken String?
+  createdAt       DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+// 3. DeviceToken
+model DeviceToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  platform  String   // 'android' | 'ios' | 'web'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// 4. Adda
+model Adda {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  avatarUrl   String?
+  creatorId   String
+  creator     User     @relation("AddaCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members      AddaMember[]
+  invitations  Invitation[]
+  conversation Conversation?
+  activities   Activity[]
+  vibeStatuses VibeStatus[]
+
+  @@index([creatorId])
+}
+
+// 5. AddaMember
+model AddaMember {
+  id       String   @id @default(uuid())
+  addaId   String
+  adda     Adda     @relation(fields: [addaId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     AddaRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  @@unique([addaId, userId])
+  @@index([userId])
+  @@index([addaId])
+}
+
+// 6. Invitation
+model Invitation {
+  id        String    @id @default(uuid())
+  addaId    String
+  adda      Adda      @relation(fields: [addaId], references: [id], onDelete: Cascade)
+  creatorId String
+  creator   User      @relation("InvitationCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  codeHash  String    @unique
+  maxUses   Int       @default(1)
+  usedCount Int       @default(0)
+  expiresAt DateTime?
+  isRevoked Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  @@index([codeHash])
+  @@index([addaId])
+}
+
+// 7. Conversation
+model Conversation {
+  id        String           @id @default(uuid())
+  type      ConversationType @default(ADDA)
+  addaId    String?          @unique
+  adda      Adda?            @relation(fields: [addaId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  members  ConversationMember[]
+  messages Message[]
+
+  @@index([addaId])
+}
+
+// 8. ConversationMember
+model ConversationMember {
+  id                String       @id @default(uuid())
+  conversationId    String
+  conversation      Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadMessageId String?
+  lastReadAt        DateTime?
+  joinedAt          DateTime     @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+}
+
+// 9. Message
+model Message {
+  id             String           @id @default(uuid())
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User             @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content        String
+  mediaUrl       String?
+  mediaType      MediaType?
+  replyToId      String?
+  replyTo        Message?         @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies        Message[]        @relation("MessageReplies")
+  idempotencyKey String?          @unique
+  isEdited       Boolean          @default(false)
+  isDeleted      Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  reactions MessageReaction[]
+  reports   UserReport[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+// 10. MessageReaction
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+}
+
+// 11. Activity (Chaos Engine)
+model Activity {
+  id           String           @id @default(uuid())
+  addaId       String
+  adda         Adda             @relation(fields: [addaId], references: [id], onDelete: Cascade)
+  creatorId    String
+  creator      User             @relation("ActivityCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  promptText   String
+  promptTextKn String?
+  category     ActivityCategory @default(CUSTOM)
+  status       ActivityStatus   @default(ACTIVE)
+  expiresAt    DateTime
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  entries ActivityEntry[]
+
+  @@index([addaId, status])
+}
+
+// 12. ActivityEntry
+model ActivityEntry {
+  id         String   @id @default(uuid())
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content    String?
+  mediaUrl   String?
+  voteCount  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@unique([activityId, userId])
+  @@index([activityId])
+}
+
+// 13. VibeStatus
+model VibeStatus {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addaId     String?
+  adda       Adda?     @relation(fields: [addaId], references: [id], onDelete: Cascade)
+  mood       VibeMood
+  customNote String?
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([addaId])
+}
+
+// 14. Notification
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  dataJson  Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+// 15. UserBlock
+model UserBlock {
+  id        String   @id @default(uuid())
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+}
+
+// 16. UserReport
+model UserReport {
+  id                String       @id @default(uuid())
+  reporterId        String
+  reporter          User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUserId    String?
+  reportedUser      User?        @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
+  reportedMessageId String?
+  reportedMessage   Message?     @relation(fields: [reportedMessageId], references: [id], onDelete: SetNull)
+  reason            String
+  status            ReportStatus @default(PENDING)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+}
+
+// 17. MediaUpload
+model MediaUpload {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bucket    String
+  objectKey String   @unique
+  fileSize  Int
+  mimeType  String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+

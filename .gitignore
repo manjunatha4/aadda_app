@@ -1,0 +1,16 @@
+node_modules/
+.pnpm-store/
+dist/
+build/
+.next/
+.expo/
+.turbo/
+*.log
+.env
+.env.local
+.env.production
+coverage/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+uploads/

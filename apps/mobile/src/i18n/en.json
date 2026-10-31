@@ -1,0 +1,87 @@
+{
+  "common": {
+    "appName": "AADDA",
+    "tagline": "Your people. Your chaos.",
+    "subTagline": "Private hangout for close friend circles",
+    "save": "Save",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "loading": "Loading...",
+    "search": "Search...",
+    "error": "An error occurred",
+    "success": "Success",
+    "copy": "Copy",
+    "copied": "Copied!"
+  },
+  "auth": {
+    "welcomeTitle": "Welcome to AADDA 🔥",
+    "welcomeSubtitle": "Invite-only hangout for you and your inner circle",
+    "login": "Login",
+    "register": "Sign Up",
+    "usernameOrEmail": "Username or Email",
+    "displayName": "Your Display Name",
+    "password": "Password",
+    "district": "District (e.g. Bengaluru, Mysuru)",
+    "preferredLanguage": "Preferred Language",
+    "noAccount": "Don't have an account? Sign Up",
+    "hasAccount": "Already have an account? Login",
+    "invalidCredentials": "Invalid username or password"
+  },
+  "tabs": {
+    "addas": "Addas",
+    "chats": "Chats",
+    "chaos": "Chaos",
+    "profile": "Profile"
+  },
+  "addas": {
+    "title": "Your Addas",
+    "createAdda": "Create New Adda",
+    "joinAdda": "Join with Code",
+    "enterInviteCode": "Enter Invite Code (ADDA-XXXX)",
+    "namePlaceholder": "Adda Name (e.g. Katte Gang)",
+    "descPlaceholder": "Short description about this hangout...",
+    "members": "Members",
+    "generateInvite": "Generate Invite Code",
+    "activeVibes": "Active Vibes",
+    "activeChaos": "Live Chaos Challenge"
+  },
+  "chat": {
+    "typeMessage": "Type a message...",
+    "typing": "is typing...",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "reply": "Reply",
+    "reactions": "Reactions",
+    "delivered": "Delivered",
+    "read": "Read"
+  },
+  "vibe": {
+    "title": "Vibe Check ⚡",
+    "subtitle": "Broadcast your real-time vibe to your circle",
+    "mentallyOffline": "Mentally Offline 📴",
+    "needGossip": "Need Gossip 👀",
+    "deadInside": "Dead Inside 💀",
+    "chillMode": "Chill Mode ☕",
+    "mainCharacter": "Main Character 💅",
+    "batteryLow": "Social Battery 1% 🪫",
+    "customNotePlaceholder": "Add a custom note (optional)"
+  },
+  "chaos": {
+    "title": "Chaos Engine 🔥",
+    "subtitle": "Friend challenges & live chaotic voting",
+    "submitAnswer": "Submit Answer",
+    "vote": "Vote",
+    "votesCount": "votes",
+    "expiresIn": "Expires in",
+    "newChallenge": "Start New Challenge"
+  },
+  "profile": {
+    "myProfile": "My Profile",
+    "edit": "Edit",
+    "language": "Language",
+    "switchLang": "ಕನ್ನಡಕ್ಕೆ ಬದಲಿಸಿ",
+    "logout": "Log Out",
+    "verified": "Verified Member"
+  }
+}
+

@@ -1,0 +1,17 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+RUN npm install -g pnpm@12.16.1
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
+COPY packages/ ./packages/
+COPY apps/mobile/ ./apps/mobile/
+
+RUN pnpm install --frozen-lockfile || pnpm install
+RUN pnpm --filter @aadda/mobile run export:web || true
+
+FROM nginx:alpine AS runner
+COPY --from=builder /app/apps/mobile/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+

@@ -1,0 +1,20 @@
+{
+  "users": [
+    {
+      "id": "user-5b22b349",
+      "email": "manjunathr4601@gmail.com",
+      "username": "manjunathr4601",
+      "displayName": "Manjunathr4601",
+      "district": "Bengaluru",
+      "language": "kn",
+      "isVerified": true,
+      "createdAt": "2026-10-31T00:23:08.616Z"
+    }
+  ],
+  "addas": [],
+  "conversations": [],
+  "messages": [],
+  "vibes": [],
+  "challenges": [],
+  "invitations": []
+}

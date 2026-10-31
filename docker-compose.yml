@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aadda-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: aadda_user
+      POSTGRES_PASSWORD: aadda_secret_password
+      POSTGRES_DB: aadda_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aadda_user -d aadda_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: aadda-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: aadda-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: aadda_minio_admin
+      MINIO_ROOT_PASSWORD: aadda_minio_password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: aadda-api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: "postgresql://aadda_user:aadda_secret_password@postgres:5432/aadda_db?schema=public"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_ACCESS_SECRET: "aadda-ultra-secure-access-jwt-secret-key-32chars"
+      JWT_REFRESH_SECRET: "aadda-ultra-secure-refresh-jwt-secret-key-32chars"
+      ARGON2_SECRET: "aadda_pepper_key_kannada_chaos"
+      S3_ENDPOINT: "minio"
+      S3_PORT: 9000
+      S3_USE_SSL: "false"
+      S3_ACCESS_KEY: "aadda_minio_admin"
+      S3_SECRET_KEY: "aadda_minio_password"
+      S3_BUCKET_NAME: "aadda-media"
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
