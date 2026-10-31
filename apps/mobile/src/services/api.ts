@@ -1,5 +1,5 @@
 import { storage } from './storage';
-import { clientStore } from './clientStore';
+import { clientStore, SavedFolder, SavedItem } from './clientStore';
 
 declare const process: any;
 
@@ -44,7 +44,7 @@ class ApiClient {
     data?: any,
   ): Promise<T> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     try {
       const headers = await this.getHeaders();
@@ -71,7 +71,7 @@ class ApiClient {
       return await res.json();
     } catch (networkError: any) {
       clearTimeout(timeoutId);
-      // Seamless offline / client store fallback so the user is NEVER blocked by network errors
+      // Seamless fallback to client store engine
       return this.handleFallback<T>(method, endpoint, data);
     }
   }
@@ -145,13 +145,36 @@ class ApiClient {
       return msg as unknown as T;
     }
 
-    // 9. Vibe Check
-    if (endpoint.startsWith('/vibe')) {
-      return [] as unknown as T;
+    // 9. Folders & Folder Items (Requirement 3)
+    if (endpoint === '/folders' && method === 'GET') {
+      const f = await clientStore.getFolders();
+      return f as unknown as T;
     }
 
-    // 10. Chaos
-    if (endpoint.startsWith('/chaos')) {
+    if (endpoint === '/folders' && method === 'POST') {
+      const f = await clientStore.createFolder(data?.title, data?.emoji, data?.color);
+      return f as unknown as T;
+    }
+
+    if (endpoint.startsWith('/folders/') && endpoint.endsWith('/items')) {
+      const folderId = endpoint.replace('/folders/', '').replace('/items', '');
+      if (method === 'GET') {
+        const items = await clientStore.getFolderItems(folderId);
+        return items as unknown as T;
+      }
+      if (method === 'POST') {
+        const item = await clientStore.addFolderItem(
+          folderId,
+          data?.title,
+          data?.description,
+          data?.tag,
+        );
+        return item as unknown as T;
+      }
+    }
+
+    // 10. Vibe & Chaos
+    if (endpoint.startsWith('/vibe') || endpoint.startsWith('/chaos')) {
       return [] as unknown as T;
     }
 

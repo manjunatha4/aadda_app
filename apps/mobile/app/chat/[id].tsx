@@ -26,8 +26,6 @@ const STICKER_COLLECTION = [
   { id: 'crown', char: '👑', label: 'Boss' },
 ];
 
-const QUICK_REACTIONS = ['🔥', '❤️', '🤣', '🤙', '⚡', '☕'];
-
 export default function ChatScreen() {
   const { id: conversationId } = useLocalSearchParams<{ id: string }>();
   const { t, i18n } = useTranslation();
@@ -65,17 +63,40 @@ export default function ChatScreen() {
       .catch(() => {});
   }, [conversationId]);
 
-  // Setup Socket & Load History
+  // Setup Socket & Load History with multi-device background polling
   useEffect(() => {
     let socket: any = null;
 
-    const init = async () => {
+    const fetchHistory = async () => {
       try {
-        setLoading(true);
         const history = await api.get(`/messages/conversation/${conversationId}?limit=50`);
-        setMessages(conversationId, history || []);
+        if (Array.isArray(history)) {
+          setMessages(conversationId, history);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        socket = await socketService.connect();
+    fetchHistory();
+
+    // Cross-device synchronization interval for serverless / multi-device support
+    const syncInterval = setInterval(() => {
+      api.get(`/messages/conversation/${conversationId}?limit=50`)
+        .then((history) => {
+          if (Array.isArray(history)) {
+            setMessages(conversationId, history);
+          }
+        })
+        .catch(() => {});
+    }, 2500);
+
+    // Socket real-time connection
+    socketService.connect().then((s) => {
+      socket = s;
+      if (socket) {
         socket.emit(SocketEvents.JOIN_ROOM, { conversationId });
 
         socket.on(SocketEvents.NEW_MESSAGE, (msg: any) => {
@@ -101,18 +122,11 @@ export default function ChatScreen() {
             updateReaction(conversationId, data.messageId, data);
           }
         });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    if (conversationId) {
-      init();
-    }
+    }).catch(() => {});
 
     return () => {
+      clearInterval(syncInterval);
       if (socket) {
         socket.emit(SocketEvents.LEAVE_ROOM, { conversationId });
         socket.off(SocketEvents.NEW_MESSAGE);
@@ -126,7 +140,7 @@ export default function ChatScreen() {
     setInputText(text);
 
     const socket = socketService.getSocket();
-    if (!socket) return;
+    if (!socket || !socket.connected) return;
 
     socket.emit(SocketEvents.TYPING_START, { conversationId });
 
@@ -142,18 +156,24 @@ export default function ChatScreen() {
   const sendMessageContent = (content: string, mediaUrl?: string) => {
     if (!content.trim() && !mediaUrl) return;
 
+    // 1. Post to API / shared database
+    api.post('/messages', {
+      conversationId,
+      content: content.trim(),
+      mediaUrl,
+    }).then((msg) => {
+      addMessage(msg);
+    }).catch(() => {});
+
+    // 2. Real-time emit if socket connected
     const socket = socketService.getSocket();
-    if (socket) {
+    if (socket && socket.connected) {
       socket.emit(SocketEvents.TYPING_STOP, { conversationId });
       socket.emit(SocketEvents.SEND_MESSAGE, {
         conversationId,
         content: content.trim(),
         mediaUrl: mediaUrl || undefined,
         clientMessageId: `temp-${Date.now()}`,
-      });
-    } else {
-      api.post('/messages', { conversationId, content: content.trim(), mediaUrl }).then((msg) => {
-        addMessage(msg);
       });
     }
   };
@@ -205,7 +225,7 @@ export default function ChatScreen() {
 
   const handleToggleReaction = (messageId: string, emoji: string) => {
     const socket = socketService.getSocket();
-    if (socket) {
+    if (socket && socket.connected) {
       socket.emit(SocketEvents.ADD_REACTION, {
         messageId,
         conversationId,
@@ -220,7 +240,7 @@ export default function ChatScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={80}
-      style={{ flex: 1, backgroundColor: '#FFF6D6' }} // Warm aesthetic background matching reference image
+      style={{ flex: 1, backgroundColor: '#FFF6D6' }}
     >
       {Platform.OS === 'web' && (
         <input
@@ -232,7 +252,7 @@ export default function ChatScreen() {
         />
       )}
 
-      {/* Top Header matching reference image cd5d1b97.jpg */}
+      {/* Top Header matching reference image */}
       <View
         style={{
           paddingHorizontal: 16,
@@ -434,7 +454,7 @@ export default function ChatScreen() {
         </View>
       )}
 
-      {/* STICKER TRAY DRAWER (Electric Blue Card matching reference image cd5d1b97.jpg) */}
+      {/* STICKER TRAY DRAWER (Electric Blue Card matching reference image) */}
       {showStickers && (
         <View
           style={{
@@ -460,7 +480,7 @@ export default function ChatScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Sticker Grid matching reference image */}
+          {/* Sticker Grid */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', marginBottom: 16 }}>
             {STICKER_COLLECTION.map((stk) => (
               <TouchableOpacity
@@ -486,7 +506,7 @@ export default function ChatScreen() {
             ))}
           </View>
 
-          {/* Bottom Tabs Selector matching reference: [ABC] [🎨 STICKERS] [😊 SMILEYS] */}
+          {/* Bottom Tabs Selector */}
           <View
             style={{
               flexDirection: 'row',
@@ -565,7 +585,7 @@ export default function ChatScreen() {
         </View>
       )}
 
-      {/* Chat Input Bar matching reference image */}
+      {/* Chat Input Bar */}
       <View
         style={{
           backgroundColor: '#FFFFFF',

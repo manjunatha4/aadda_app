@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Platform, Share } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../src/services/api';
@@ -30,8 +30,9 @@ export default function CreateAddaScreen() {
     try {
       setCreating(true);
       setErrorMessage(null);
+      const fullName = `${selectedBadge} ${name.trim()}`;
       const res = await api.post('/addas', {
-        name: `${selectedBadge} ${name.trim()}`,
+        name: fullName,
         description: description.trim() || undefined,
       });
 
@@ -50,6 +51,23 @@ export default function CreateAddaScreen() {
       }
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!createdAdda?.inviteCode) return;
+    const shareMessage = `Join my room "${createdAdda.name}" on AADDA! Use secret invite code: ${createdAdda.inviteCode}`;
+    try {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({
+          title: createdAdda.name,
+          text: shareMessage,
+        });
+      } else {
+        copyCode();
+      }
+    } catch {
+      copyCode();
     }
   };
 
@@ -89,7 +107,7 @@ export default function CreateAddaScreen() {
               {createdAdda.name}
             </Text>
             <Text style={{ color: '#78716C', fontSize: 14, textAlign: 'center', marginTop: 4 }}>
-              {isKn ? 'ನಿಮ್ಮ ಹೊಸ ಅಡ್ಡಾ ಯಶಸ್ವಿಯಾಗಿ ಸೃಷ್ಟಿಯಾಗಿದೆ!' : 'Your room is ready for real users!'}
+              {isKn ? 'ನಿಮ್ಮ ಹೊಸ ಅಡ್ಡಾ ಯಶಸ್ವಿಯಾಗಿ ಸೃಷ್ಟಿಯಾಗಿದೆ!' : 'Your room is ready for real users across all devices!'}
             </Text>
 
             {/* Secret Code Box */}
@@ -106,12 +124,12 @@ export default function CreateAddaScreen() {
               }}
             >
               <Text style={{ color: '#78716C', fontSize: 12, fontWeight: '800', letterSpacing: 0.5 }}>
-                {isKn ? 'ಸ್ನೇಹಿತರಿಗಾಗಿ ಸೀಕ್ರೆಟ್ ಇನ್ವೈಟ್ ಕೋಡ್' : 'SECRET INVITE CODE FOR FRIENDS'}
+                {isKn ? 'ಸ್ನೇಹಿತರಿಗಾಗಿ ಸೀಕ್ರೆಟ್ ಇನ್ವೈಟ್ ಕೋಡ್' : 'SECRET ROOM JOINING CODE'}
               </Text>
               <Text
                 style={{
                   color: '#FF6464',
-                  fontSize: 30,
+                  fontSize: 32,
                   fontWeight: '900',
                   letterSpacing: 3,
                   marginVertical: 8,
@@ -120,20 +138,37 @@ export default function CreateAddaScreen() {
                 {createdAdda.inviteCode || 'ADDA-VIP'}
               </Text>
 
-              <TouchableOpacity
-                onPress={copyCode}
-                activeOpacity={0.8}
-                style={{
-                  backgroundColor: copied ? '#10B981' : '#18171C',
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 16,
-                }}
-              >
-                <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12 }}>
-                  {copied ? '✓ COPIED TO CLIPBOARD' : '📋 COPY INVITE CODE'}
-                </Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                <TouchableOpacity
+                  onPress={copyCode}
+                  activeOpacity={0.8}
+                  style={{
+                    backgroundColor: copied ? '#10B981' : '#18171C',
+                    paddingHorizontal: 16,
+                    paddingVertical: 9,
+                    borderRadius: 16,
+                  }}
+                >
+                  <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12 }}>
+                    {copied ? '✓ COPIED TO CLIPBOARD' : '📋 COPY ROOM CODE'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleShare}
+                  activeOpacity={0.8}
+                  style={{
+                    backgroundColor: '#3C97FF',
+                    paddingHorizontal: 16,
+                    paddingVertical: 9,
+                    borderRadius: 16,
+                  }}
+                >
+                  <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12 }}>
+                    🚀 SHARE
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Action Buttons */}

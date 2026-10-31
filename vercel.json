@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm --filter @aadda/shared run build && pnpm --filter @aadda/mobile run export:web",
+  "buildCommand": "NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter @aadda/shared run build && NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter @aadda/mobile run export:web",
   "outputDirectory": "apps/mobile/dist",
   "framework": null,
   "cleanUrls": true,
@@ -15,6 +15,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

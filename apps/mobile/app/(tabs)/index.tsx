@@ -50,11 +50,11 @@ export default function TodayScreen() {
   };
 
   const handleJoinByCode = async () => {
-    const code = inviteCode.trim();
+    const code = inviteCode.trim().toUpperCase();
     if (!code) {
       setJoinStatus({
         type: 'error',
-        message: isKn ? 'ದಯವಿಟ್ಟು ಇನ್ವಿಟೇಶನ್ ಕೋಡ್ ನಮೂದಿಸಿ' : 'Please enter invite code',
+        message: isKn ? 'ದಯವಿಟ್ಟು ಕೊಠಡಿ ಕೋಡ್ ನಮೂದಿಸಿ' : 'Please enter room code',
       });
       return;
     }
@@ -64,19 +64,19 @@ export default function TodayScreen() {
       const res = await api.post('/invitations/accept', { code });
       setJoinStatus({
         type: 'success',
-        message: `Welcome to ${res.adda?.name || 'the Adda'}! 🎉`,
+        message: `Welcome to ${res.adda?.name || 'the Room'}! 🎉`,
       });
       setInviteCode('');
       await loadData();
       if (res.conversationId) {
         setTimeout(() => {
           router.push(`/chat/${res.conversationId}`);
-        }, 1000);
+        }, 800);
       }
     } catch (e: any) {
       setJoinStatus({
         type: 'error',
-        message: e.message || 'Invalid or expired invite code',
+        message: e.message || (isKn ? 'ಅಮಾನ್ಯ ಕೊಠಡಿ ಕೋಡ್. ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.' : 'Invalid Room Code. Please check the code and try again.'),
       });
     } finally {
       setJoining(false);

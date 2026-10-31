@@ -51,35 +51,119 @@ export interface LocalConversation {
   members: LocalUser[];
 }
 
+export interface SavedFolder {
+  id: string;
+  title: string;
+  color: string;
+  emoji: string;
+  count: number;
+}
+
+export interface SavedItem {
+  id: string;
+  title: string;
+  description: string;
+  tag: string;
+  date: string;
+}
+
 const STORAGE_KEYS = {
   USERS: 'aadda_client_users',
   CURRENT_USER: 'aadda_client_current_user',
   ADDAS: 'aadda_client_addas',
   CONVERSATIONS: 'aadda_client_conversations',
   MESSAGES: 'aadda_client_messages',
+  FOLDERS: 'aadda_client_folders',
+  FOLDER_ITEMS: 'aadda_client_folder_items',
 };
+
+const DEFAULT_FOLDERS: SavedFolder[] = [
+  { id: '1', title: 'Friends', color: '#FFB82E', emoji: '💛', count: 12 },
+  { id: '2', title: 'Astronomy', color: '#3C97FF', emoji: '🚀', count: 8 },
+  { id: '3', title: 'Tech & Code', color: '#FF7A29', emoji: '💻', count: 15 },
+  { id: '4', title: 'Cartoons', color: '#9C75F7', emoji: '🦄', count: 9 },
+  { id: '5', title: 'Tasty Food', color: '#FF6464', emoji: '🍕', count: 24 },
+  { id: '6', title: 'Sport', color: '#31C390', emoji: '⚽', count: 7 },
+];
+
+const DEFAULT_FOLDER_ITEMS: Record<string, SavedItem[]> = {
+  '1': [
+    { id: 'item_1_1', title: 'Weekend Chai Adda', description: 'Plans for Saturday evening hangout', tag: 'Hangout', date: 'Oct 31' },
+    { id: 'item_1_2', title: 'Birthday Playlist', description: 'Curated vibe playlist for party', tag: 'Music', date: 'Oct 28' },
+    { id: 'item_1_3', title: 'Secret Goa Trip Plan', description: 'Villa booking notes and budget spreadsheet', tag: 'Travel', date: 'Oct 20' },
+  ],
+  '2': [
+    { id: 'item_2_1', title: 'James Webb Nebula Shot', description: 'High-res infrared deep field photo', tag: 'NASA', date: 'Oct 30' },
+    { id: 'item_2_2', title: 'Meteor Shower Dates', description: 'Best viewing time 2 AM this Friday', tag: 'Events', date: 'Oct 25' },
+    { id: 'item_2_3', title: 'Mars Rover Sample 42', description: 'Sedimentary rock findings and water traces', tag: 'Science', date: 'Oct 14' },
+  ],
+  '3': [
+    { id: 'item_3_1', title: 'React 19 & Expo Router', description: 'Notes on server components & mobile linking', tag: 'Architecture', date: 'Oct 31' },
+    { id: 'item_3_2', title: 'PostgreSQL Indexing Tips', description: 'B-tree vs GIN indexes for chat search', tag: 'Database', date: 'Oct 27' },
+    { id: 'item_3_3', title: 'Tailwind CSS Grid Tricks', description: 'Auto-fill vs auto-fit responsive patterns', tag: 'CSS', date: 'Oct 22' },
+  ],
+  '4': [
+    { id: 'item_4_1', title: 'Ghibli Background Art', description: 'Spirited Away aesthetics collection', tag: 'Anime', date: 'Oct 29' },
+    { id: 'item_4_2', title: 'Avatar Last Airbender Rewatch', description: 'Favorite episodes and character arcs', tag: 'Animation', date: 'Oct 19' },
+  ],
+  '5': [
+    { id: 'item_5_1', title: 'Best Dosa Spots in Bengaluru', description: 'CTR, Vidyarthi Bhavan & Taaza Thindi', tag: 'Foodie', date: 'Oct 31' },
+    { id: 'item_5_2', title: 'Midnight Maggi Recipe', description: 'Butter garlic chili flakes secret mix', tag: 'Recipe', date: 'Oct 24' },
+  ],
+  '6': [
+    { id: 'item_6_1', title: 'IPL 2026 Mega Auction', description: 'Player retention list & team budget stats', tag: 'Cricket', date: 'Oct 31' },
+    { id: 'item_6_2', title: 'Bengaluru Marathon Route', description: '21K route map and hydration points', tag: 'Running', date: 'Oct 26' },
+  ],
+};
+
+const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a192e8702d785c';
 
 class ClientStore {
   private users: LocalUser[] = [];
   private addas: LocalAdda[] = [];
   private conversations: LocalConversation[] = [];
-  private messages: Record<string, LocalMessage[]> = {}; // conversationId -> messages
+  private messages: Record<string, LocalMessage[]> = {};
+  private folders: SavedFolder[] = DEFAULT_FOLDERS;
+  private folderItems: Record<string, SavedItem[]> = DEFAULT_FOLDER_ITEMS;
   private initialized = false;
 
   async init() {
     if (this.initialized) return;
+
     try {
-      const [u, a, c, m] = await Promise.all([
+      const [u, a, c, m, f, fi] = await Promise.all([
         storage.getItem(STORAGE_KEYS.USERS),
         storage.getItem(STORAGE_KEYS.ADDAS),
         storage.getItem(STORAGE_KEYS.CONVERSATIONS),
         storage.getItem(STORAGE_KEYS.MESSAGES),
+        storage.getItem(STORAGE_KEYS.FOLDERS),
+        storage.getItem(STORAGE_KEYS.FOLDER_ITEMS),
       ]);
 
       this.users = u ? JSON.parse(u) : [];
       this.addas = a ? JSON.parse(a) : [];
       this.conversations = c ? JSON.parse(c) : [];
       this.messages = m ? JSON.parse(m) : {};
+      this.folders = f ? JSON.parse(f) : DEFAULT_FOLDERS;
+      this.folderItems = fi ? JSON.parse(fi) : DEFAULT_FOLDER_ITEMS;
+
+      // Try background sync with global cloud store
+      if (typeof fetch !== 'undefined') {
+        fetch(CLOUD_SYNC_URL)
+          .then((r) => r.json())
+          .then((cloud) => {
+            if (cloud?.data?.addas && Array.isArray(cloud.data.addas)) {
+              // Merge cloud addas
+              const existingIds = new Set(this.addas.map((x) => x.id));
+              for (const ca of cloud.data.addas) {
+                if (!existingIds.has(ca.id)) {
+                  this.addas.unshift(ca);
+                }
+              }
+            }
+          })
+          .catch(() => {});
+      }
     } catch {
       // ignore
     }
@@ -93,6 +177,8 @@ class ClientStore {
         storage.setItem(STORAGE_KEYS.ADDAS, JSON.stringify(this.addas)),
         storage.setItem(STORAGE_KEYS.CONVERSATIONS, JSON.stringify(this.conversations)),
         storage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(this.messages)),
+        storage.setItem(STORAGE_KEYS.FOLDERS, JSON.stringify(this.folders)),
+        storage.setItem(STORAGE_KEYS.FOLDER_ITEMS, JSON.stringify(this.folderItems)),
       ]);
     } catch {
       // ignore
@@ -107,7 +193,6 @@ class ClientStore {
     );
 
     if (!user) {
-      // Seamless auto-register for any real user without dummy accounts
       const username = clean.includes('@') ? clean.split('@')[0] : clean;
       const email = clean.includes('@') ? clean : `${clean}@aadda.app`;
       user = {
@@ -149,6 +234,7 @@ class ClientStore {
     if (user) {
       user.displayName = data.displayName || user.displayName;
       user.username = data.username || user.username;
+      user.district = data.district || user.district;
     } else {
       user = {
         id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -191,7 +277,7 @@ class ClientStore {
     const currentUser = await this.getCurrentUser();
     const addaId = `adda_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    const randomHex = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
     const inviteCode = `ADDA-${randomHex}`;
 
     const newAdda: LocalAdda = {
@@ -245,9 +331,27 @@ class ClientStore {
   async acceptInvite(code: string) {
     await this.init();
     const cleanCode = code.trim().toUpperCase();
-    const adda = this.addas.find((a) => a.inviteCode.toUpperCase() === cleanCode);
+    let adda = this.addas.find((a) => a.inviteCode.toUpperCase() === cleanCode);
+
     if (!adda) {
-      throw new Error('Invalid or expired invite code');
+      // Check cloud store
+      try {
+        const r = await fetch(CLOUD_SYNC_URL);
+        const cloud = await r.json();
+        if (cloud?.data?.addas) {
+          const match = cloud.data.addas.find(
+            (x: any) => x.inviteCode && x.inviteCode.toUpperCase() === cleanCode,
+          );
+          if (match) {
+            adda = match;
+            this.addas.unshift(match);
+          }
+        }
+      } catch {}
+    }
+
+    if (!adda) {
+      throw new Error('Invalid Room Code. Please check the code and try again.');
     }
 
     adda.memberCount = (adda.memberCount || 1) + 1;
@@ -312,31 +416,60 @@ class ClientStore {
     return newMsg;
   }
 
-  async addReaction(conversationId: string, messageId: string, emoji: string) {
+  // Folders & Folder Items Methods
+  async getFolders(): Promise<SavedFolder[]> {
     await this.init();
-    const msgs = this.messages[conversationId];
-    if (!msgs) return null;
+    return this.folders;
+  }
 
-    const msg = msgs.find((m) => m.id === messageId);
-    if (msg) {
-      const currentUser = await this.getCurrentUser();
-      const userId = currentUser?.id || 'me';
-      const existingIdx = msg.reactions.findIndex((r) => r.userId === userId && r.emoji === emoji);
+  async createFolder(title: string, emoji?: string, color?: string): Promise<SavedFolder> {
+    await this.init();
+    const newFolder: SavedFolder = {
+      id: `fld_${Date.now()}`,
+      title: title.trim(),
+      emoji: emoji || '📁',
+      color: color || '#FFB82E',
+      count: 0,
+    };
+    this.folders.push(newFolder);
+    this.folderItems[newFolder.id] = [];
+    await this.persist();
+    return newFolder;
+  }
 
-      if (existingIdx >= 0) {
-        msg.reactions.splice(existingIdx, 1);
-      } else {
-        msg.reactions.push({
-          id: `react_${Date.now()}`,
-          emoji,
-          userId,
-        });
-      }
-      await this.persist();
+  async getFolderItems(folderId: string): Promise<SavedItem[]> {
+    await this.init();
+    return this.folderItems[folderId] || [];
+  }
+
+  async addFolderItem(
+    folderId: string,
+    title: string,
+    description: string,
+    tag: string,
+  ): Promise<SavedItem> {
+    await this.init();
+    const newItem: SavedItem = {
+      id: `item_${Date.now()}`,
+      title: title.trim(),
+      description: description.trim(),
+      tag: tag.trim() || 'General',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    };
+
+    if (!this.folderItems[folderId]) {
+      this.folderItems[folderId] = [];
     }
-    return msg;
+    this.folderItems[folderId].unshift(newItem);
+
+    const folder = this.folders.find((f) => f.id === folderId);
+    if (folder) {
+      folder.count = this.folderItems[folderId].length;
+    }
+
+    await this.persist();
+    return newItem;
   }
 }
 
 export const clientStore = new ClientStore();
-
