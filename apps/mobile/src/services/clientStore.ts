@@ -125,7 +125,7 @@ const DEFAULT_FOLDER_ITEMS: Record<string, SavedItem[]> = {
   ],
 };
 
-const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a192e8702d785c';
+const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19413d89279c4';
 
 class ClientStore {
   private users: LocalUser[] = [];
@@ -454,29 +454,90 @@ class ClientStore {
     ];
 
     await this.persist();
+
+    // Cross-device cloud sync: ensure rooms are instantly joinable by friends
+    try {
+      const syncRes = await fetch(`${CLOUD_SYNC_URL}?_t=${Date.now()}`, { cache: 'no-store' });
+      if (syncRes.ok) {
+        const cloudObj = await syncRes.json();
+        const existingData = cloudObj?.data || {};
+        const cloudAddas = existingData.addas || [];
+        const cloudInvs = existingData.invitations || [];
+        const cloudConvs = existingData.conversations || [];
+
+        const updatedAddas = [newAdda, ...cloudAddas.filter((a: any) => a.id !== newAdda.id)];
+        const updatedInvs = [
+          { code: inviteCode, addaId, conversationId },
+          ...cloudInvs.filter((i: any) => i.code !== inviteCode),
+        ];
+        const updatedConvs = [newConv, ...cloudConvs.filter((c: any) => c.id !== newConv.id)];
+
+        await fetch(CLOUD_SYNC_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'aadda_room_store',
+            data: {
+              ...existingData,
+              addas: updatedAddas.slice(0, 100),
+              invitations: updatedInvs.slice(0, 100),
+              conversations: updatedConvs.slice(0, 50),
+            },
+          }),
+        });
+      }
+    } catch (e) {
+      console.warn('Cross-device room sync:', e);
+    }
+
     return newAdda;
   }
 
   async acceptInvite(code: string) {
     await this.init();
-    const cleanCode = code.trim().toUpperCase();
-    let adda = this.addas.find((a) => a.inviteCode.toUpperCase() === cleanCode);
+    const raw = code.trim().toUpperCase();
+    const cleanNoPrefix = raw.replace(/^ADDA-?/, '');
+    const variants = [raw, cleanNoPrefix, `ADDA-${cleanNoPrefix}`];
+
+    let adda = this.addas.find(
+      (a) => a.inviteCode && variants.includes(a.inviteCode.toUpperCase()),
+    );
 
     if (!adda) {
-      // Check cloud store
+      // Check cloud store with cache busting
       try {
-        const r = await fetch(CLOUD_SYNC_URL);
-        const cloud = await r.json();
-        if (cloud?.data?.addas) {
-          const match = cloud.data.addas.find(
-            (x: any) => x.inviteCode && x.inviteCode.toUpperCase() === cleanCode,
-          );
-          if (match) {
-            adda = match;
-            this.addas.unshift(match);
+        const r = await fetch(`${CLOUD_SYNC_URL}?_t=${Date.now()}`, { cache: 'no-store' });
+        if (r.ok) {
+          const cloud = await r.json();
+          if (cloud?.data?.addas) {
+            const match = cloud.data.addas.find(
+              (x: any) => x.inviteCode && variants.includes(x.inviteCode.toUpperCase()),
+            );
+            if (match) {
+              adda = match;
+              if (!this.addas.find((a) => a.id === match.id)) {
+                this.addas.unshift(match);
+              }
+              if (!this.conversations.find((c) => c.id === match.conversationId)) {
+                this.conversations.unshift({
+                  id: match.conversationId,
+                  type: 'ADDA',
+                  name: match.name,
+                  addaId: match.id,
+                  adda: match,
+                  members: [],
+                  lastMessage: {
+                    content: `Welcome to ${match.name}! 🎉`,
+                    createdAt: new Date().toISOString(),
+                  },
+                });
+              }
+            }
           }
         }
-      } catch {}
+      } catch (e) {
+        console.warn('Cloud store lookup warning:', e);
+      }
     }
 
     if (!adda) {

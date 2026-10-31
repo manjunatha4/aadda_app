@@ -102,8 +102,8 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
                   },
                   isFocused && Platform.OS === 'web'
                     ? ({
-                        boxShadow: '0 2px 8px rgba(99, 102, 241, 0.15)',
-                      } as any)
+                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.15)',
+                    } as any)
                     : {},
                 ]}
               >

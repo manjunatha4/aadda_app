@@ -44,7 +44,7 @@ class ApiClient {
     data?: any,
   ): Promise<T> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 9000);
 
     try {
       const headers = await this.getHeaders();

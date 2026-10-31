@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../src/services/api';
+import { clientStore } from '../src/services/clientStore';
 import {
   MainLayout,
   PageHeader,
@@ -41,10 +42,15 @@ export default function CreateAddaScreen() {
       setCreating(true);
       setErrorMessage(null);
       const fullName = `${selectedBadge} ${name.trim()}`;
-      const res = await api.post('/addas', {
-        name: fullName,
-        description: description.trim() || undefined,
-      });
+      let res;
+      try {
+        res = await api.post('/addas', {
+          name: fullName,
+          description: description.trim() || undefined,
+        });
+      } catch (apiErr) {
+        res = await clientStore.createAdda(fullName, description.trim() || undefined);
+      }
 
       setCreatedAdda(res);
       setToastMessage(isKn ? 'ರೂಮ್ ರಚಿಸಲಾಗಿದೆ! 🎉' : 'Room created successfully! 🎉');

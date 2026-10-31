@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Shared Cloud Database Object for Vercel Cross-Device Persistence
-const CLOUD_STORE_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a192e8702d785c';
+const CLOUD_STORE_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19413d89279c4';
 
 interface CloudData {
   users: any[];
@@ -90,12 +90,20 @@ async function saveToCloud(data: CloudData) {
   lastSyncTime = Date.now();
 
   try {
+    // Keep cloud payload lightweight to ensure sub-500ms response time
+    const syncPayload = {
+      users: (data.users || []).slice(0, 100),
+      addas: (data.addas || []).slice(0, 100),
+      invitations: (data.invitations || []).slice(0, 100),
+      conversations: (data.conversations || []).slice(0, 50),
+    };
+
     await fetch(CLOUD_STORE_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: 'aadda_room_store',
-        data,
+        data: syncPayload,
       }),
     });
   } catch (e) {
@@ -523,13 +531,16 @@ export default async function handler(req: any, res: any) {
         return json({ message: 'Please enter invite code' }, 400);
       }
 
-      // Check case-insensitive against store.addas and store.invitations
+      // Check case-insensitive against store.addas and store.invitations with prefix flexibility
+      const cleanNoPrefix = rawCode.replace(/^ADDA-?/, '');
+      const variants = [rawCode, cleanNoPrefix, `ADDA-${cleanNoPrefix}`];
+
       let targetAdda = store.addas.find(
-        (a) => a.inviteCode && a.inviteCode.toUpperCase() === rawCode,
+        (a) => a.inviteCode && variants.includes(a.inviteCode.toUpperCase()),
       );
 
       if (!targetAdda) {
-        const inv = store.invitations.find((i) => i.code && i.code.toUpperCase() === rawCode);
+        const inv = store.invitations.find((i) => i.code && variants.includes(i.code.toUpperCase()));
         if (inv) {
           targetAdda = store.addas.find((a) => a.id === inv.addaId);
         }

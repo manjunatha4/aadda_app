@@ -71,14 +71,21 @@ export default function TodayScreen() {
     try {
       setJoining(true);
       setJoinStatus(null);
-      const res = await api.post('/invitations/accept', { code });
+      let res;
+      try {
+        res = await api.post('/invitations/accept', { code });
+      } catch (apiErr) {
+        // Direct cloud fallback
+        res = await clientStore.acceptInvite(code);
+      }
+
       setJoinStatus({
         type: 'success',
-        message: `Welcome to ${res.adda?.name || 'the Room'}! 🎉`,
+        message: `Welcome to ${res?.adda?.name || 'the Room'}! 🎉`,
       });
       setInviteCode('');
       await loadData();
-      if (res.conversationId) {
+      if (res?.conversationId) {
         setTimeout(() => {
           router.push(`/chat/${res.conversationId}`);
         }, 800);
