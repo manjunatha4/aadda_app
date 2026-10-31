@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../src/services/api';
-import { Floating, Pulse } from '../src/components/AnimatedVisuals';
+import { Floating } from '../src/components/AnimatedVisuals';
 
 const BADGE_OPTIONS = ['🛖', '⚡', '☕', '🔥', '👑', '🍕', '🎮', '🚀', '💎', '🐸', '🍓', '🍦', '👅', '💡', '🛼'];
 
@@ -55,62 +54,67 @@ export default function CreateAddaScreen() {
   };
 
   return (
-    <LinearGradient colors={['#1F0E33', '#150924', '#0D0517']} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20, maxWidth: 520, width: '100%', alignSelf: 'center' }}>
+    <View style={{ flex: 1, backgroundColor: '#F5F2EB' }}>
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          padding: 20,
+          maxWidth: 500,
+          width: '100%',
+          alignSelf: 'center',
+          justifyContent: 'center',
+        }}
+        showsVerticalScrollIndicator={false}
+      >
         {createdAdda ? (
-          /* SUCCESS CELEBRATION VIEW WITH FLOATING ANIMATION */
-          <LinearGradient
-            colors={['#321752', '#1E0C33']}
+          /* SUCCESS CELEBRATION VIEW */
+          <View
             style={{
-              borderRadius: 28,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 30,
               padding: 24,
-              borderWidth: 2,
-              borderColor: '#D9FF67',
+              borderWidth: 1,
+              borderColor: '#E8E5DD',
               alignItems: 'center',
-              marginTop: 30,
-              shadowColor: '#D9FF67',
+              shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 16,
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
             }}
           >
-            <Floating distance={10} duration={2000}>
-              <Text style={{ fontSize: 56, marginBottom: 8 }}>🎉</Text>
+            <Floating distance={8} duration={2000}>
+              <Text style={{ fontSize: 52, marginBottom: 8 }}>🎉</Text>
             </Floating>
-            <Text style={{ color: '#D9FF67', fontSize: 26, fontWeight: '900', textAlign: 'center' }}>
+            <Text style={{ color: '#18171C', fontSize: 24, fontWeight: '900', textAlign: 'center' }}>
               {createdAdda.name}
             </Text>
-            <Text style={{ color: '#E8DFF5', opacity: 0.85, fontSize: 14, textAlign: 'center', marginTop: 6 }}>
-              {isKn ? 'ನಿಮ್ಮ ಹೊಸ ಅಡ್ಡಾ ಯಶಸ್ವಿಯಾಗಿ ಸೃಷ್ಟಿಯಾಗಿದೆ!' : 'Your exclusive room has been created!'}
+            <Text style={{ color: '#78716C', fontSize: 14, textAlign: 'center', marginTop: 4 }}>
+              {isKn ? 'ನಿಮ್ಮ ಹೊಸ ಅಡ್ಡಾ ಯಶಸ್ವಿಯಾಗಿ ಸೃಷ್ಟಿಯಾಗಿದೆ!' : 'Your room is ready for real users!'}
             </Text>
 
-            {/* Glowing Secret Code Box */}
-            <LinearGradient
-              colors={['#170828', '#110520']}
+            {/* Secret Code Box */}
+            <View
               style={{
-                borderRadius: 20,
-                padding: 20,
-                marginVertical: 22,
+                backgroundColor: '#F5F2EB',
+                borderRadius: 22,
+                padding: 18,
+                marginVertical: 20,
                 width: '100%',
                 alignItems: 'center',
-                borderWidth: 2,
-                borderColor: '#FF786B',
-                shadowColor: '#FF786B',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.35,
-                shadowRadius: 12,
+                borderWidth: 1.5,
+                borderColor: '#E5DFC8',
               }}
             >
-              <Text style={{ color: '#A592C4', fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 }}>
-                {isKn ? 'ಫ್ರೆಂಡ್ಸ್‌ಗಾಗಿ ಸೀಕ್ರೆಟ್ ಇನ್ವೈಟ್ ಕೋಡ್' : 'Secret Invite Code for Friends'}
+              <Text style={{ color: '#78716C', fontSize: 12, fontWeight: '800', letterSpacing: 0.5 }}>
+                {isKn ? 'ಸ್ನೇಹಿತರಿಗಾಗಿ ಸೀಕ್ರೆಟ್ ಇನ್ವೈಟ್ ಕೋಡ್' : 'SECRET INVITE CODE FOR FRIENDS'}
               </Text>
               <Text
                 style={{
-                  color: '#D9FF67',
-                  fontSize: 32,
+                  color: '#FF6464',
+                  fontSize: 30,
                   fontWeight: '900',
-                  letterSpacing: 4,
-                  marginVertical: 10,
+                  letterSpacing: 3,
+                  marginVertical: 8,
                 }}
               >
                 {createdAdda.inviteCode || 'ADDA-VIP'}
@@ -118,20 +122,19 @@ export default function CreateAddaScreen() {
 
               <TouchableOpacity
                 onPress={copyCode}
-                activeOpacity={0.85}
+                activeOpacity={0.8}
                 style={{
-                  backgroundColor: copied ? '#2ECC71' : '#FF786B',
-                  paddingHorizontal: 18,
-                  paddingVertical: 9,
-                  borderRadius: 20,
-                  marginTop: 4,
+                  backgroundColor: copied ? '#10B981' : '#18171C',
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 16,
                 }}
               >
-                <Text style={{ color: '#180B2E', fontWeight: '900', fontSize: 12 }}>
-                  {copied ? '✓ COPIED TO CLIPBOARD!' : '📋 COPY INVITE CODE'}
+                <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12 }}>
+                  {copied ? '✓ COPIED TO CLIPBOARD' : '📋 COPY INVITE CODE'}
                 </Text>
               </TouchableOpacity>
-            </LinearGradient>
+            </View>
 
             {/* Action Buttons */}
             <TouchableOpacity
@@ -145,154 +148,153 @@ export default function CreateAddaScreen() {
               activeOpacity={0.85}
               style={{
                 width: '100%',
-                borderRadius: 16,
-                overflow: 'hidden',
-                marginBottom: 12,
-                shadowColor: '#D9FF67',
+                backgroundColor: '#FF6464',
+                borderRadius: 18,
+                paddingVertical: 14,
+                alignItems: 'center',
+                marginBottom: 10,
+                shadowColor: '#FF6464',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
-                shadowRadius: 10,
+                shadowRadius: 8,
               }}
             >
-              <LinearGradient
-                colors={['#E5FF8F', '#D9FF67', '#AEEB2A']}
-                style={{
-                  paddingVertical: 16,
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: '#180B2E', fontWeight: '900', fontSize: 16 }}>
-                  {isKn ? 'ಚಾಟ್ ಪ್ರಾರಂಭಿಸಿ 💬' : 'Open Room Chat 💬'}
-                </Text>
-              </LinearGradient>
+              <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 15 }}>
+                {isKn ? 'ಚಾಟ್ ಪ್ರಾರಂಭಿಸಿ 💬' : 'Open Room Chat 💬'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => router.replace('/(tabs)')}
               style={{
-                backgroundColor: 'rgba(255,255,255,0.06)',
-                paddingVertical: 13,
+                paddingVertical: 12,
                 width: '100%',
-                borderRadius: 14,
                 alignItems: 'center',
-                borderWidth: 1.5,
-                borderColor: '#4A2576',
               }}
             >
-              <Text style={{ color: '#F4F0FF', fontWeight: '800', fontSize: 14 }}>
-                {isKn ? 'ಮುಖಪುಟಕ್ಕೆ ಹೋಗಿ' : 'Back to Addas List'}
+              <Text style={{ color: '#78716C', fontWeight: '800', fontSize: 14 }}>
+                {isKn ? 'ಮುಖಪುಟಕ್ಕೆ ಹೋಗಿ' : 'Back to Home'}
               </Text>
             </TouchableOpacity>
-          </LinearGradient>
+          </View>
         ) : (
           /* ROOM CREATION FORM */
-          <View>
+          <View
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 30,
+              padding: 24,
+              borderWidth: 1,
+              borderColor: '#E8E5DD',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.08,
+              shadowRadius: 10,
+            }}
+          >
             {/* Header */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-              <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
-                <Text style={{ color: '#D9FF67', fontSize: 24, fontWeight: '900' }}>←</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+              <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 10 }}>
+                <Text style={{ color: '#18171C', fontSize: 24, fontWeight: '900' }}>←</Text>
               </TouchableOpacity>
-              <Text style={{ color: '#D9FF67', fontSize: 24, fontWeight: '900' }}>
-                {isKn ? 'ಹೊಸ ಅಡ್ಡಾ ರಚಿಸಿ' : 'Create New Room'} 🛖
+              <Text style={{ color: '#18171C', fontSize: 22, fontWeight: '900' }}>
+                {isKn ? 'ಹೊಸ ಕೊಠಡಿ ರಚಿಸಿ' : 'Create New Room'}
               </Text>
             </View>
 
-            <Text style={{ color: '#E0D5F0', opacity: 0.8, fontSize: 13, marginBottom: 20 }}>
-              {isKn ? 'ನಿಮ್ಮ ಕ್ಲೋಸ್ ಫ್ರೆಂಡ್ಸ್‌ಗಾಗಿ ಪ್ರೈವೇಟ್ ರೂಮ್' : 'Invite-only digital sanctuary for your gang'}
+            <Text style={{ color: '#78716C', fontSize: 13, fontWeight: '600', marginBottom: 18 }}>
+              {isKn ? 'ನಿಮ್ಮ ಕ್ಲೋಸ್ ಫ್ರೆಂಡ್ಸ್‌ಗಾಗಿ ಪ್ರೈವೇಟ್ ರೂಮ್' : 'Invite-only hangout for your real friends & crew'}
             </Text>
 
             {errorMessage && (
               <View
                 style={{
-                  backgroundColor: '#FF5C4D',
+                  backgroundColor: '#FEE2E2',
                   padding: 12,
                   borderRadius: 14,
                   marginBottom: 16,
-                  borderWidth: 1,
-                  borderColor: '#FF786B',
                 }}
               >
-                <Text style={{ color: '#FFFFFF', fontWeight: '800', textAlign: 'center', fontSize: 13 }}>
+                <Text style={{ color: '#DC2626', fontWeight: '700', textAlign: 'center', fontSize: 13 }}>
                   ⚠️ {errorMessage}
                 </Text>
               </View>
             )}
 
             {/* Sticker / Badge Picker */}
-            <Text style={{ color: '#F4F0FF', fontSize: 13, fontWeight: '800', marginBottom: 10 }}>
-              {isKn ? 'ಅಡ್ಡಾ ಐಕಾನ್ / ಸ್ಟಿಕ್ಕರ್ ಆಯ್ಕೆಮಾಡಿ:' : 'Choose Room Badge / Sticker:'}
+            <Text style={{ color: '#18171C', fontSize: 13, fontWeight: '800', marginBottom: 10 }}>
+              {isKn ? 'ರೂಮ್ ಐಕಾನ್ / ಸ್ಟಿಕ್ಕರ್ ಆಯ್ಕೆಮಾಡಿ:' : 'Choose Room Badge / Sticker:'}
             </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', marginBottom: 22 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', marginBottom: 20 }}>
               {BADGE_OPTIONS.map((badge) => (
                 <TouchableOpacity
                   key={badge}
                   onPress={() => setSelectedBadge(badge)}
                   activeOpacity={0.8}
                   style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 26,
-                    backgroundColor: selectedBadge === badge ? '#D9FF67' : '#2A1444',
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: selectedBadge === badge ? '#FF6464' : '#F5F2EB',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    marginRight: 10,
+                    marginRight: 8,
                     borderWidth: 2,
-                    borderColor: selectedBadge === badge ? '#E5FF8F' : '#452270',
-                    shadowColor: selectedBadge === badge ? '#D9FF67' : 'transparent',
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: 8,
+                    borderColor: selectedBadge === badge ? '#FF6464' : '#E8E5DD',
                   }}
                 >
-                  <Text style={{ fontSize: 26 }}>{badge}</Text>
+                  <Text style={{ fontSize: 22 }}>{badge}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
 
             {/* Room Name */}
             <View style={{ marginBottom: 16 }}>
-              <Text style={{ color: '#F4F0FF', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
-                {isKn ? 'ಅಡ್ಡಾ ಹೆಸರು (Room Name) *' : 'Room Name *'}
+              <Text style={{ color: '#18171C', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
+                {isKn ? 'ರೂಮ್ ಹೆಸರು (Room Name) *' : 'Room Name *'}
               </Text>
               <TextInput
                 value={name}
                 onChangeText={setName}
-                placeholder={isKn ? 'ಉದಾ: ಕಟ್ಟಿಂಗ್ ಚಾಯ್ ಕ್ಲಬ್ / ನೈಟ್ ರೈಡರ್ಸ್' : 'e.g. Cutting Chai Club / Night Owls'}
-                placeholderTextColor="#7C6B94"
+                placeholder={isKn ? 'ಉದಾ: ಕಟ್ಟಿಂಗ್ ಚಾಯ್ ಕ್ಲಬ್' : 'e.g. Rager @Dunes / Chai Adda'}
+                placeholderTextColor="#A8A29E"
                 style={{
-                  backgroundColor: '#26143D',
-                  borderRadius: 14,
-                  padding: 14,
-                  color: '#FFFFFF',
-                  fontSize: 16,
-                  borderWidth: 1.5,
-                  borderColor: '#3E2063',
+                  backgroundColor: '#F5F2EB',
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  color: '#18171C',
+                  fontSize: 15,
+                  fontWeight: '700',
+                  borderWidth: 1,
+                  borderColor: '#E8E5DD',
                 }}
               />
             </View>
 
             {/* Description */}
-            <View style={{ marginBottom: 24 }}>
-              <Text style={{ color: '#F4F0FF', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
+            <View style={{ marginBottom: 22 }}>
+              <Text style={{ color: '#18171C', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
                 {isKn ? 'ವಿವರಣೆ (Description)' : 'Description (Optional)'}
               </Text>
               <TextInput
                 value={description}
                 onChangeText={setDescription}
-                placeholder={isKn ? 'ವೀಕೆಂಡ್ ರೋಸ್ಟ್, ಪ್ಲಾನ್‌ಗಳು ಮತ್ತು ಗಾಸಿಪ್...' : 'Roasts, gaming, gossip, and weekend vibes...'}
-                placeholderTextColor="#7C6B94"
+                placeholder={isKn ? 'ಪ್ಲಾನ್‌ಗಳು ಮತ್ತು ವೈಬ್ಸ್...' : 'Weekend plans, roasts, and hangouts...'}
+                placeholderTextColor="#A8A29E"
                 multiline
                 numberOfLines={3}
                 style={{
-                  backgroundColor: '#26143D',
-                  borderRadius: 14,
-                  padding: 14,
-                  color: '#FFFFFF',
-                  fontSize: 15,
-                  height: 90,
+                  backgroundColor: '#F5F2EB',
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  color: '#18171C',
+                  fontSize: 14,
+                  height: 80,
                   textAlignVertical: 'top',
-                  borderWidth: 1.5,
-                  borderColor: '#3E2063',
+                  borderWidth: 1,
+                  borderColor: '#E8E5DD',
                 }}
               />
             </View>
@@ -300,35 +302,29 @@ export default function CreateAddaScreen() {
             <TouchableOpacity
               onPress={handleCreate}
               disabled={creating}
-              activeOpacity={0.85}
+              activeOpacity={0.88}
               style={{
-                borderRadius: 16,
-                overflow: 'hidden',
-                shadowColor: '#D9FF67',
+                backgroundColor: '#FF6464',
+                borderRadius: 18,
+                paddingVertical: 15,
+                alignItems: 'center',
+                shadowColor: '#FF6464',
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.35,
-                shadowRadius: 10,
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
               }}
             >
-              <LinearGradient
-                colors={['#E5FF8F', '#D9FF67', '#AEEB2A']}
-                style={{
-                  paddingVertical: 16,
-                  alignItems: 'center',
-                }}
-              >
-                {creating ? (
-                  <ActivityIndicator color="#180B2E" />
-                ) : (
-                  <Text style={{ color: '#180B2E', fontSize: 16, fontWeight: '900' }}>
-                    {isKn ? 'ರೂಮ್ ಕ್ರಿಯೇಟ್ ಮಾಡಿ' : 'Create Room & Get Invite Code'} 🚀
-                  </Text>
-                )}
-              </LinearGradient>
+              {creating ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900' }}>
+                  {isKn ? 'ರೂಮ್ ಕ್ರಿಯೇಟ್ ಮಾಡಿ' : 'Create Room & Get Code'} 🚀
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }

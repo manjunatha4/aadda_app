@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../../src/stores/authStore';
-import { Floating, Pulse } from '../../src/components/AnimatedVisuals';
+import { Floating } from '../../src/components/AnimatedVisuals';
 
 export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
@@ -32,85 +31,87 @@ export default function ProfileScreen() {
   const isKn = i18n.language === 'kn';
 
   return (
-    <LinearGradient colors={['#1F0E33', '#150924', '#0D0517']} style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20, maxWidth: 520, width: '100%', alignSelf: 'center' }}>
-        {/* Profile Header Card */}
-        <LinearGradient
-          colors={['#351A57', '#200D36']}
+    <View style={{ flex: 1, backgroundColor: '#F5F2EB' }}>
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          padding: 20,
+          paddingBottom: 110,
+          maxWidth: 500,
+          width: '100%',
+          alignSelf: 'center',
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Profile Card */}
+        <View
           style={{
-            borderRadius: 24,
+            backgroundColor: '#FFFFFF',
+            borderRadius: 30,
             padding: 24,
             alignItems: 'center',
             marginBottom: 20,
-            borderWidth: 1.5,
-            borderColor: 'rgba(217, 255, 103, 0.4)',
-            shadowColor: '#D9FF67',
+            borderWidth: 1,
+            borderColor: '#E8E5DD',
+            shadowColor: '#000',
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 12,
+            shadowOpacity: 0.08,
+            shadowRadius: 10,
           }}
         >
-          <Pulse>
-            <LinearGradient
-              colors={['#E5FF8F', '#D9FF67', '#AEEB2A']}
-              style={{
-                width: 84,
-                height: 84,
-                borderRadius: 42,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: 14,
-                shadowColor: '#D9FF67',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.5,
-                shadowRadius: 14,
-              }}
-            >
-              <Text style={{ fontSize: 40 }}>⚡</Text>
-            </LinearGradient>
-          </Pulse>
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: '#FF6464',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 12,
+              borderWidth: 3,
+              borderColor: '#FFFFFF',
+              shadowColor: '#FF6464',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+            }}
+          >
+            <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: '900' }}>
+              {(user?.displayName || 'U').charAt(0).toUpperCase()}
+            </Text>
+          </View>
 
-          <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: '900', letterSpacing: -0.3 }}>
-            {user?.displayName || 'Adda Member'}
+          <Text style={{ color: '#18171C', fontSize: 24, fontWeight: '900', letterSpacing: -0.3 }}>
+            {user?.displayName || 'User'}
           </Text>
-          <Text style={{ color: '#D9FF67', fontSize: 14, fontWeight: '700', marginTop: 3 }}>
+          <Text style={{ color: '#78716C', fontSize: 14, fontWeight: '700', marginTop: 2 }}>
             @{user?.username || 'member'}
           </Text>
 
-          {user?.district && (
-            <View
-              style={{
-                backgroundColor: 'rgba(255, 120, 107, 0.15)',
-                paddingHorizontal: 14,
-                paddingVertical: 5,
-                borderRadius: 14,
-                marginTop: 12,
-                borderWidth: 1.5,
-                borderColor: '#FF786B',
-              }}
-            >
-              <Text style={{ color: '#FF786B', fontSize: 12, fontWeight: '800' }}>
-                📍 {user.district}
-              </Text>
-            </View>
-          )}
-
-          {user?.bio && (
-            <Text style={{ color: '#E8DFF5', opacity: 0.85, fontSize: 13, textAlign: 'center', marginTop: 12, lineHeight: 18 }}>
-              {user.bio}
+          <View
+            style={{
+              backgroundColor: '#F5F2EB',
+              paddingHorizontal: 12,
+              paddingVertical: 4,
+              borderRadius: 12,
+              marginTop: 10,
+            }}
+          >
+            <Text style={{ color: '#78716C', fontSize: 12, fontWeight: '800' }}>
+              📍 {user?.district || 'Bengaluru'}
             </Text>
-          )}
-        </LinearGradient>
+          </View>
+        </View>
 
         {/* Settings / Actions */}
-        <LinearGradient
-          colors={['#2B1445', '#1B0B2E']}
+        <View
           style={{
-            borderRadius: 20,
+            backgroundColor: '#FFFFFF',
+            borderRadius: 24,
             padding: 16,
-            marginBottom: 24,
-            borderWidth: 1.5,
-            borderColor: '#422068',
+            marginBottom: 20,
+            borderWidth: 1,
+            borderColor: '#E8E5DD',
           }}
         >
           {/* Language Switcher */}
@@ -121,29 +122,29 @@ export default function ProfileScreen() {
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
-              paddingVertical: 14,
+              paddingVertical: 12,
               borderBottomWidth: 1,
-              borderBottomColor: '#3B1B5C',
+              borderBottomColor: '#F5F2EB',
             }}
           >
-            <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '700' }}>
-              🌐 {t('profile.language')}
+            <Text style={{ color: '#18171C', fontSize: 15, fontWeight: '800' }}>
+              🌐 {isKn ? 'ಭಾಷೆ' : 'Language'}
             </Text>
             <View
               style={{
-                backgroundColor: '#D9FF67',
+                backgroundColor: '#F5F2EB',
                 paddingHorizontal: 12,
                 paddingVertical: 5,
                 borderRadius: 12,
               }}
             >
-              <Text style={{ color: '#180B2E', fontWeight: '900', fontSize: 12 }}>
+              <Text style={{ color: '#18171C', fontWeight: '800', fontSize: 12 }}>
                 {isKn ? 'ಕನ್ನಡ (KN)' : 'English (EN)'}
               </Text>
             </View>
           </TouchableOpacity>
 
-          {/* Vibe check trigger */}
+          {/* Vibe check modal */}
           <TouchableOpacity
             onPress={() => router.push('/modal/vibe')}
             activeOpacity={0.8}
@@ -151,44 +152,33 @@ export default function ProfileScreen() {
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
-              paddingVertical: 14,
+              paddingVertical: 12,
             }}
           >
-            <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '700' }}>
-              ⚡ {t('vibe.title')}
+            <Text style={{ color: '#18171C', fontSize: 15, fontWeight: '800' }}>
+              ⚡ {isKn ? 'ವೈಬ್ ಅಪ್‌ಡೇಟ್' : 'Update Vibe'}
             </Text>
-            <Text style={{ color: '#FF786B', fontWeight: '800', fontSize: 13 }}>
-              {isKn ? 'ಬದಲಿಸಿ' : 'Change'} &gt;
-            </Text>
+            <Text style={{ color: '#A8A29E', fontSize: 16, fontWeight: '800' }}>›</Text>
           </TouchableOpacity>
-        </LinearGradient>
+        </View>
 
-        {/* Log out Button */}
+        {/* Logout Button */}
         <TouchableOpacity
           onPress={handleLogout}
           disabled={loggingOut}
           activeOpacity={0.85}
           style={{
-            borderRadius: 16,
-            overflow: 'hidden',
-            marginTop: 'auto',
-            borderWidth: 1.5,
-            borderColor: '#FF5C4D',
+            backgroundColor: '#FEE2E2',
+            borderRadius: 18,
+            paddingVertical: 14,
+            alignItems: 'center',
           }}
         >
-          <View
-            style={{
-              backgroundColor: 'rgba(255, 92, 77, 0.15)',
-              paddingVertical: 14,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: '#FF5C4D', fontWeight: '900', fontSize: 15 }}>
-              {loggingOut ? 'Logging out...' : `${t('profile.logout')} 🚪`}
-            </Text>
-          </View>
+          <Text style={{ color: '#DC2626', fontWeight: '900', fontSize: 14 }}>
+            {loggingOut ? '...' : (isKn ? 'ಲಾಗ್ ಔಟ್' : 'Log Out')}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }

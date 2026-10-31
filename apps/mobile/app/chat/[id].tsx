@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../../src/services/api';
 import { socketService } from '../../src/services/socket';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -11,27 +10,23 @@ import { MessageBubble } from '../../src/components/MessageBubble';
 import { Floating } from '../../src/components/AnimatedVisuals';
 import { SocketEvents } from '@aadda/shared';
 
-// Gen-Z Sticker Tray
+// Gen-Z Sticker Collection matching the reference image
 const STICKER_COLLECTION = [
   { id: 'icecream', char: '🍦', label: 'Chill' },
   { id: 'strawberry', char: '🍓', label: 'Sweet' },
-  { id: 'frog', char: '🐸', label: 'Vibe' },
+  { id: 'alien', char: '🐸', label: 'Vibe' },
   { id: 'lightning', char: '⚡', label: 'Hyped' },
   { id: 'tongue', char: '👅', label: 'Sassy' },
   { id: 'lightbulb', char: '💡', label: 'Idea' },
   { id: 'diamond', char: '💎', label: 'Priceless' },
   { id: 'skate', char: '🛼', label: 'Rollin' },
+  { id: 'shaka', char: '🤙', label: 'Hangout' },
   { id: 'cat', char: '🐱', label: 'Yeah!' },
-  { id: 'octopus', char: '🐙', label: 'Chaos' },
   { id: 'fire', char: '🔥', label: 'Lit' },
-  { id: 'skull', char: '💀', label: 'Dead' },
   { id: 'crown', char: '👑', label: 'Boss' },
-  { id: 'pizza', char: '🍕', label: 'Treat' },
-  { id: 'coffee', char: '☕', label: 'Chai' },
-  { id: 'shaka', char: '🤙', label: 'Call me' },
 ];
 
-const REACTION_EMOJIS = ['🔥', '🤣', '👑', '❤️', '💀', '☕'];
+const QUICK_REACTIONS = ['🔥', '❤️', '🤣', '🤙', '⚡', '☕'];
 
 export default function ChatScreen() {
   const { id: conversationId } = useLocalSearchParams<{ id: string }>();
@@ -48,11 +43,13 @@ export default function ChatScreen() {
     updateReaction,
   } = useChatStore();
 
+  const [conversationInfo, setConversationInfo] = useState<any>(null);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
   const [showStickers, setShowStickers] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [stickerTab, setStickerTab] = useState<'stickers' | 'smileys' | 'abc'>('stickers');
   const fileInputRef = useRef<any>(null);
   const typingTimeoutRef = useRef<any>(null);
 
@@ -60,6 +57,13 @@ export default function ChatScreen() {
   const currentTyping = typingUsers[conversationId] || [];
 
   const isKn = i18n.language === 'kn';
+
+  // Load conversation details
+  useEffect(() => {
+    api.get(`/conversations/${conversationId}`)
+      .then((res) => setConversationInfo(res))
+      .catch(() => {});
+  }, [conversationId]);
 
   // Setup Socket & Load History
   useEffect(() => {
@@ -210,11 +214,13 @@ export default function ChatScreen() {
     }
   };
 
+  const roomTitle = (conversationInfo?.adda?.name || conversationInfo?.name || 'RAGER @DUNES').toUpperCase();
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={80}
-      style={{ flex: 1, backgroundColor: '#130824' }}
+      style={{ flex: 1, backgroundColor: '#FFF6D6' }} // Warm aesthetic background matching reference image
     >
       {Platform.OS === 'web' && (
         <input
@@ -226,183 +232,149 @@ export default function ChatScreen() {
         />
       )}
 
-      {/* Cosmic Gradient Header */}
-      <LinearGradient
-        colors={['#2D144A', '#1C0D30']}
+      {/* Top Header matching reference image cd5d1b97.jpg */}
+      <View
         style={{
           paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderBottomWidth: 1.5,
-          borderBottomColor: '#43216E',
+          paddingVertical: 14,
+          backgroundColor: '#FFFFFF',
+          borderBottomWidth: 1,
+          borderBottomColor: '#EBE5D3',
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 4,
         }}
       >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: '#F5F2EB',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ color: '#18171C', fontSize: 18, fontWeight: '900' }}>‹</Text>
+        </TouchableOpacity>
+
+        {/* Room Title with Navigation Arrow */}
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
-            <Text style={{ color: '#D9FF67', fontSize: 22, fontWeight: '900' }}>←</Text>
-          </TouchableOpacity>
-          <View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900' }}>
-                {isKn ? 'ಅಡ್ಡಾ ಚಾಟ್ ರೂಮ್' : 'Adda Circle'} 🌙✨
-              </Text>
-            </View>
-            <Text style={{ color: '#D9FF67', fontSize: 11, fontWeight: '700' }}>
-              {isKn ? 'ಎಂಡ್-ಟು-ಎಂಡ್ ಪ್ರೈವೇಟ್ ಸ್ಪೇಸ್' : 'End-to-End Encrypted Hangout'}
-            </Text>
-          </View>
-        </View>
-
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity
-            onPress={handleOpenGallery}
+          <Text
+            numberOfLines={1}
             style={{
-              backgroundColor: 'rgba(255, 120, 107, 0.15)',
-              paddingHorizontal: 11,
-              paddingVertical: 5,
-              borderRadius: 14,
-              borderWidth: 1.5,
-              borderColor: '#FF786B',
+              color: '#18171C',
+              fontSize: 16,
+              fontWeight: '900',
+              letterSpacing: 0.5,
+              maxWidth: 220,
             }}
           >
-            <Text style={{ color: '#FF786B', fontWeight: '800', fontSize: 12 }}>
-              🖼️ Photo
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setShowStickers(!showStickers)}
-            style={{
-              backgroundColor: showStickers ? '#D9FF67' : 'rgba(217, 255, 103, 0.15)',
-              paddingHorizontal: 11,
-              paddingVertical: 5,
-              borderRadius: 14,
-              borderWidth: 1.5,
-              borderColor: '#D9FF67',
-            }}
-          >
-            <Text style={{ color: showStickers ? '#180B2E' : '#D9FF67', fontWeight: '800', fontSize: 12 }}>
-              🎨 {showStickers ? 'Close' : 'Stickers'}
-            </Text>
-          </TouchableOpacity>
+            {roomTitle}
+          </Text>
+          <Text style={{ color: '#3C97FF', fontSize: 16, fontWeight: '900', marginLeft: 6 }}>›</Text>
         </View>
-      </LinearGradient>
 
-      {/* Messages List with Subtle Ambient Glow */}
+        {/* Right Info Avatar */}
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: '#3C97FF',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 14 }}>
+            {roomTitle.charAt(0)}
+          </Text>
+        </View>
+      </View>
+
+      {/* Center "TODAY" Date Divider Capsule */}
+      <View style={{ alignItems: 'center', marginVertical: 10 }}>
+        <View
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.7)',
+            borderRadius: 12,
+            paddingHorizontal: 12,
+            paddingVertical: 3,
+            borderWidth: 1,
+            borderColor: '#E8E2CD',
+          }}
+        >
+          <Text style={{ color: '#8C8573', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 }}>
+            TODAY
+          </Text>
+        </View>
+      </View>
+
+      {/* Messages List */}
       {loading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color="#D9FF67" />
+          <ActivityIndicator color="#3C97FF" />
         </View>
       ) : (
         <FlatList
           inverted
           data={currentMessages}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+          contentContainerStyle={{ padding: 14, paddingBottom: 20 }}
           renderItem={({ item }) => {
             const isMe = item.senderId === user?.id;
             const isSingleSticker = !item.mediaUrl && item.content.length <= 4 && /\p{Extended_Pictographic}/u.test(item.content);
 
-            return (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: isMe ? 'flex-end' : 'flex-start',
-                  marginBottom: 14,
-                  alignItems: 'flex-end',
-                }}
-              >
-                {!isMe && (
-                  <View
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 17,
-                      backgroundColor: '#FF786B',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      marginRight: 8,
-                      marginBottom: 2,
-                      shadowColor: '#FF786B',
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: 0.4,
-                      shadowRadius: 6,
-                    }}
-                  >
-                    <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 13 }}>
-                      {(item.sender?.displayName || 'U')[0].toUpperCase()}
-                    </Text>
-                  </View>
-                )}
-
-                <View style={{ maxWidth: '80%' }}>
-                  {!isMe && (
-                    <Text style={{ color: '#A592C4', fontSize: 11, fontWeight: '700', marginLeft: 4, marginBottom: 3 }}>
-                      {item.sender?.displayName || 'User'}
-                    </Text>
-                  )}
-
-                  {isSingleSticker ? (
-                    <Floating distance={6} duration={2400}>
-                      <TouchableOpacity
-                        onPress={() => handleToggleReaction(item.id, '❤️')}
-                        style={{ padding: 4 }}
-                      >
-                        <Text style={{ fontSize: 52 }}>{item.content}</Text>
-                      </TouchableOpacity>
-                    </Floating>
-                  ) : (
-                    <MessageBubble
-                      id={item.id}
-                      content={item.content}
-                      mediaUrl={item.mediaUrl}
-                      senderName={item.sender?.displayName || 'User'}
-                      isMe={isMe}
-                      createdAt={item.createdAt}
-                      replyTo={item.replyTo}
-                      reactions={item.reactions}
-                      onAddReaction={(emoji) => handleToggleReaction(item.id, emoji)}
-                    />
-                  )}
+            if (isSingleSticker) {
+              return (
+                <View
+                  style={{
+                    alignSelf: isMe ? 'flex-end' : 'flex-start',
+                    marginVertical: 6,
+                    paddingHorizontal: 12,
+                  }}
+                >
+                  <Floating distance={5} duration={2200}>
+                    <TouchableOpacity
+                      onPress={() => handleToggleReaction(item.id, '❤️')}
+                      style={{ padding: 4 }}
+                    >
+                      <Text style={{ fontSize: 52 }}>{item.content}</Text>
+                    </TouchableOpacity>
+                  </Floating>
                 </View>
+              );
+            }
 
-                {isMe && (
-                  <View
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 17,
-                      backgroundColor: '#D9FF67',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      marginLeft: 8,
-                      marginBottom: 2,
-                      shadowColor: '#D9FF67',
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: 0.4,
-                      shadowRadius: 6,
-                    }}
-                  >
-                    <Text style={{ color: '#180B2E', fontWeight: '900', fontSize: 13 }}>
-                      {(user?.displayName || 'ME')[0].toUpperCase()}
-                    </Text>
-                  </View>
-                )}
-              </View>
+            return (
+              <MessageBubble
+                id={item.id}
+                content={item.content}
+                mediaUrl={item.mediaUrl}
+                senderName={item.sender?.displayName || 'User'}
+                isMe={isMe}
+                createdAt={item.createdAt}
+                replyTo={item.replyTo}
+                reactions={item.reactions}
+                onAddReaction={(emoji) => handleToggleReaction(item.id, emoji)}
+              />
             );
           }}
           ListEmptyComponent={
             <View style={{ alignItems: 'center', marginTop: 80, transform: [{ scaleY: -1 }] }}>
-              <Floating distance={8} duration={2400}>
-                <Text style={{ fontSize: 48, marginBottom: 8 }}>✨</Text>
+              <Floating distance={6} duration={2400}>
+                <Text style={{ fontSize: 44, marginBottom: 8 }}>💬</Text>
               </Floating>
-              <Text style={{ color: '#D9FF67', fontSize: 18, fontWeight: '900' }}>
-                {isKn ? 'ಮಾತನಾಡಲು ಶುರುಮಾಡಿ!' : 'Start the Chaos!'}
+              <Text style={{ color: '#18171C', fontSize: 18, fontWeight: '900' }}>
+                {isKn ? 'ಮಾತನಾಡಲು ಶುರುಮಾಡಿ!' : 'Start the conversation!'}
               </Text>
-              <Text style={{ color: '#A592C4', fontSize: 13, textAlign: 'center', marginTop: 4 }}>
-                {isKn ? 'ಸಂದೇಶ, ಸ್ಟಿಕ್ಕರ್ ಅಥವಾ ಗ್ಯಾಲರಿ ಇಮೇಜ್ ಕಳುಹಿಸಿ' : 'Drop a message, sticker, or image from your gallery'}
+              <Text style={{ color: '#8C8573', fontSize: 13, textAlign: 'center', marginTop: 4 }}>
+                {isKn ? 'ಸಂದೇಶ, ಸ್ಟಿಕ್ಕರ್ ಅಥವಾ ಗ್ಯಾಲರಿ ಚಿತ್ರ ಕಳುಹಿಸಿ' : 'Send a message, tap stickers, or share a photo'}
               </Text>
             </View>
           }
@@ -411,8 +383,8 @@ export default function ChatScreen() {
 
       {/* Typing indicator */}
       {currentTyping.length > 0 && (
-        <View style={{ paddingHorizontal: 16, paddingVertical: 5, backgroundColor: 'rgba(38, 20, 61, 0.9)' }}>
-          <Text style={{ color: '#D9FF67', fontSize: 11, fontStyle: 'italic', fontWeight: '700' }}>
+        <View style={{ paddingHorizontal: 18, paddingVertical: 4 }}>
+          <Text style={{ color: '#3C97FF', fontSize: 11, fontStyle: 'italic', fontWeight: '700' }}>
             💬 {currentTyping.join(', ')} {isKn ? 'ಬರೆಯುತ್ತಿದ್ದಾರೆ...' : 'is typing...'}
           </Text>
         </View>
@@ -422,10 +394,10 @@ export default function ChatScreen() {
       {selectedImage && (
         <View
           style={{
-            backgroundColor: '#24103D',
+            backgroundColor: '#FFFFFF',
             padding: 12,
-            borderTopWidth: 1.5,
-            borderTopColor: '#3E1C66',
+            borderTopWidth: 1,
+            borderTopColor: '#EBE5D3',
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -434,14 +406,14 @@ export default function ChatScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Image
               source={{ uri: selectedImage }}
-              style={{ width: 56, height: 56, borderRadius: 10, marginRight: 12, borderWidth: 1.5, borderColor: '#D9FF67' }}
+              style={{ width: 52, height: 52, borderRadius: 12, marginRight: 12, borderWidth: 1.5, borderColor: '#3C97FF' }}
             />
             <View>
-              <Text style={{ color: '#D9FF67', fontWeight: '800', fontSize: 13 }}>
-                🖼️ Ready to send photo
+              <Text style={{ color: '#18171C', fontWeight: '800', fontSize: 13 }}>
+                🖼️ Ready to send
               </Text>
-              <Text style={{ color: '#A592C4', fontSize: 11 }}>
-                Type an optional caption or hit send
+              <Text style={{ color: '#8C8573', fontSize: 11 }}>
+                Tap send to share with the room
               </Text>
             </View>
           </View>
@@ -449,7 +421,7 @@ export default function ChatScreen() {
           <TouchableOpacity
             onPress={() => setSelectedImage(null)}
             style={{
-              backgroundColor: '#FF5C4D',
+              backgroundColor: '#FF6464',
               width: 28,
               height: 28,
               borderRadius: 14,
@@ -462,169 +434,220 @@ export default function ChatScreen() {
         </View>
       )}
 
-      {/* STICKER TRAY DRAWER with Electric Blue Gradient */}
+      {/* STICKER TRAY DRAWER (Electric Blue Card matching reference image cd5d1b97.jpg) */}
       {showStickers && (
-        <LinearGradient
-          colors={['#1D4ED8', '#1E3A8A']}
+        <View
           style={{
-            borderTopLeftRadius: 26,
-            borderTopRightRadius: 26,
-            padding: 16,
-            borderWidth: 2,
-            borderColor: '#60A5FA',
+            backgroundColor: '#2563EB',
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            paddingTop: 16,
+            paddingBottom: 20,
+            paddingHorizontal: 16,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 10,
           }}
         >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 14 }}>
-              🔥 {isKn ? 'ಮೂಡ್ ಸ್ಟಿಕ್ಕರ್‌ಗಳು' : 'Gen-Z Mood Stickers'}
+          {/* Header row inside drawer */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 14, letterSpacing: 0.5 }}>
+              STICKERS
             </Text>
             <TouchableOpacity onPress={() => setShowStickers(false)}>
-              <Text style={{ color: '#D9FF67', fontWeight: '900', fontSize: 12 }}>✕ Close</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.8)', fontWeight: '900', fontSize: 13 }}>✕ Done</Text>
             </TouchableOpacity>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row' }}>
+          {/* Sticker Grid matching reference image */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', marginBottom: 16 }}>
             {STICKER_COLLECTION.map((stk) => (
               <TouchableOpacity
                 key={stk.id}
                 onPress={() => sendSticker(stk.char)}
+                activeOpacity={0.7}
                 style={{
+                  width: '22%',
+                  aspectRatio: 1,
                   backgroundColor: 'rgba(255,255,255,0.12)',
-                  borderRadius: 16,
-                  padding: 12,
+                  borderRadius: 18,
                   alignItems: 'center',
-                  marginRight: 10,
-                  borderWidth: 1.5,
-                  borderColor: 'rgba(255,255,255,0.25)',
+                  justifyContent: 'center',
+                  marginVertical: 6,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255,255,255,0.2)',
                 }}
               >
-                <Text style={{ fontSize: 32 }}>{stk.char}</Text>
-                <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800', marginTop: 4 }}>
-                  {stk.label}
-                </Text>
+                <Floating distance={3} duration={2200}>
+                  <Text style={{ fontSize: 32 }}>{stk.char}</Text>
+                </Floating>
               </TouchableOpacity>
             ))}
-          </ScrollView>
-        </LinearGradient>
-      )}
+          </View>
 
-      {/* Quick Reaction Bar */}
-      <View
-        style={{
-          flexDirection: 'row',
-          paddingHorizontal: 12,
-          paddingVertical: 6,
-          backgroundColor: '#120722',
-          justifyContent: 'space-around',
-          borderTopWidth: 1,
-          borderTopColor: '#250E42',
-        }}
-      >
-        {REACTION_EMOJIS.map((emoji) => (
-          <TouchableOpacity
-            key={emoji}
-            onPress={() => {
-              if (currentMessages.length > 0) {
-                handleToggleReaction(currentMessages[0].id, emoji);
-              }
+          {/* Bottom Tabs Selector matching reference: [ABC] [🎨 STICKERS] [😊 SMILEYS] */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0,0,0,0.15)',
+              borderRadius: 20,
+              padding: 4,
+              alignSelf: 'center',
             }}
           >
-            <Text style={{ fontSize: 19 }}>{emoji}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+            <TouchableOpacity
+              onPress={() => {
+                setShowStickers(false);
+                setStickerTab('abc');
+              }}
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 6,
+                borderRadius: 16,
+                backgroundColor: stickerTab === 'abc' ? '#FFFFFF' : 'transparent',
+              }}
+            >
+              <Text
+                style={{
+                  color: stickerTab === 'abc' ? '#2563EB' : '#FFFFFF',
+                  fontSize: 11,
+                  fontWeight: '800',
+                }}
+              >
+                ABC
+              </Text>
+            </TouchableOpacity>
 
-      {/* Chat Input Bar */}
-      <LinearGradient
-        colors={['#24103D', '#160927']}
+            <TouchableOpacity
+              onPress={() => setStickerTab('stickers')}
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 6,
+                borderRadius: 16,
+                backgroundColor: stickerTab === 'stickers' ? '#FFFFFF' : 'transparent',
+                marginHorizontal: 4,
+              }}
+            >
+              <Text
+                style={{
+                  color: stickerTab === 'stickers' ? '#2563EB' : '#FFFFFF',
+                  fontSize: 13,
+                  fontWeight: '800',
+                }}
+              >
+                🎨
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setStickerTab('smileys')}
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 6,
+                borderRadius: 16,
+                backgroundColor: stickerTab === 'smileys' ? '#FFFFFF' : 'transparent',
+              }}
+            >
+              <Text
+                style={{
+                  color: stickerTab === 'smileys' ? '#2563EB' : '#FFFFFF',
+                  fontSize: 13,
+                  fontWeight: '800',
+                }}
+              >
+                😊
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Chat Input Bar matching reference image */}
+      <View
         style={{
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#EBE5D3',
+          paddingHorizontal: 12,
+          paddingVertical: 10,
           flexDirection: 'row',
           alignItems: 'center',
-          padding: 10,
-          borderTopWidth: 1.5,
-          borderTopColor: '#3E1C66',
         }}
       >
         {/* Gallery Image Picker Button */}
         <TouchableOpacity
           onPress={handleOpenGallery}
+          activeOpacity={0.7}
           style={{
-            backgroundColor: 'rgba(255, 120, 107, 0.18)',
-            width: 42,
-            height: 42,
-            borderRadius: 21,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: '#F5F2EB',
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: 6,
-            borderWidth: 1.5,
-            borderColor: '#FF786B',
+            marginRight: 8,
           }}
         >
-          <Text style={{ fontSize: 20 }}>🖼️</Text>
+          <Text style={{ fontSize: 18 }}>📷</Text>
         </TouchableOpacity>
+
+        {/* Input Field Capsule: SAY SOMETHING... */}
+        <TextInput
+          value={inputText}
+          onChangeText={handleInputChange}
+          placeholder={selectedImage ? 'Add a caption...' : 'SAY SOMETHING...'}
+          placeholderTextColor="#A39C8D"
+          onSubmitEditing={handleSend}
+          style={{
+            flex: 1,
+            backgroundColor: '#F5F2EB',
+            borderRadius: 22,
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            color: '#18171C',
+            fontSize: 14,
+            fontWeight: '600',
+            marginRight: 8,
+          }}
+        />
 
         {/* Sticker Tray Toggle Icon */}
         <TouchableOpacity
           onPress={() => setShowStickers(!showStickers)}
+          activeOpacity={0.7}
           style={{
-            backgroundColor: showStickers ? '#D9FF67' : 'rgba(217, 255, 103, 0.18)',
-            width: 42,
-            height: 42,
-            borderRadius: 21,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: showStickers ? '#2563EB' : '#F5F2EB',
             justifyContent: 'center',
             alignItems: 'center',
             marginRight: 8,
-            borderWidth: 1.5,
-            borderColor: '#D9FF67',
           }}
         >
-          <Text style={{ fontSize: 20 }}>😊</Text>
+          <Text style={{ fontSize: 18 }}>{showStickers ? '✕' : '😊'}</Text>
         </TouchableOpacity>
-
-        {/* Input Field */}
-        <TextInput
-          value={inputText}
-          onChangeText={handleInputChange}
-          placeholder={selectedImage ? (isKn ? 'ಕ್ಯಾಪ್ಷನ್ ಬರೆಯಿರಿ...' : 'Add a caption...') : (isKn ? 'ಸಂದೇಶ ಕಳುಹಿಸಿ...' : 'Drop your chaos...')}
-          placeholderTextColor="#8C7D9E"
-          onSubmitEditing={handleSend}
-          style={{
-            flex: 1,
-            backgroundColor: '#120722',
-            borderRadius: 22,
-            paddingHorizontal: 16,
-            paddingVertical: 10,
-            color: '#FFFFFF',
-            fontSize: 15,
-            marginRight: 8,
-            borderWidth: 1.5,
-            borderColor: '#3E1C66',
-          }}
-        />
 
         {/* Send Button */}
         <TouchableOpacity
           onPress={handleSend}
           disabled={!inputText.trim() && !selectedImage}
-          activeOpacity={0.85}
+          activeOpacity={0.8}
           style={{
-            borderRadius: 21,
-            overflow: 'hidden',
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: (inputText.trim() || selectedImage) ? '#2563EB' : '#E0DDD3',
+            justifyContent: 'center',
+            alignItems: 'center',
           }}
         >
-          <LinearGradient
-            colors={(inputText.trim() || selectedImage) ? ['#E5FF8F', '#D9FF67'] : ['#3A1F5E', '#2B1449']}
-            style={{
-              width: 42,
-              height: 42,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 18 }}>🚀</Text>
-          </LinearGradient>
+          <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900' }}>↑</Text>
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
     </KeyboardAvoidingView>
   );
 }

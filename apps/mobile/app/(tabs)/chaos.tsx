@@ -2,10 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, RefreshControl, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../../src/services/api';
 import { ChaosCard } from '../../src/components/ChaosCard';
-import { Floating, Pulse } from '../../src/components/AnimatedVisuals';
+import { Floating } from '../../src/components/AnimatedVisuals';
+
+const SAVED_FOLDERS = [
+  { id: '1', title: 'Friends', color: '#FFB82E', emoji: '💛', count: '12 items' },
+  { id: '2', title: 'Astronomy', color: '#3C97FF', emoji: '🚀', count: '8 items' },
+  { id: '3', title: 'Tech & Code', color: '#FF7A29', emoji: '💻', count: '15 items' },
+  { id: '4', title: 'Cartoons', color: '#9C75F7', emoji: '🦄', count: '9 items' },
+  { id: '5', title: 'Tasty food', color: '#FF6464', emoji: '🍕', count: '24 items' },
+  { id: '6', title: 'Sport', color: '#31C390', emoji: '⚽', count: '7 items' },
+];
 
 const SAMPLE_CHALLENGES = [
   {
@@ -38,7 +46,7 @@ export default function ChaosScreen() {
 
   const [challenges, setChallenges] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [preset, setPreset] = useState<any>(null);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
 
   const isKn = i18n.language === 'kn';
 
@@ -53,8 +61,6 @@ export default function ChaosScreen() {
       }
 
       setChallenges(allChallenges.length > 0 ? allChallenges : SAMPLE_CHALLENGES);
-      const p = await api.get('/chaos/presets').catch(() => null);
-      setPreset(p);
     } catch (e) {
       setChallenges(SAMPLE_CHALLENGES);
     }
@@ -73,12 +79,11 @@ export default function ChaosScreen() {
   const handleVote = async (entryId: string) => {
     try {
       await api.post(`/chaos/vote/${entryId}`).catch(() => {});
-      // Optimistic local update
       setChallenges((prev) =>
         prev.map((c) => ({
           ...c,
           entries: c.entries?.map((e: any) =>
-            e.id === entryId ? { ...e, voteCount: (e.voteCount || 0) + 1 } : e,
+            e.id === entryId ? { ...e, voteCount: e.voteCount + 1 } : e,
           ),
         })),
       );
@@ -88,63 +93,115 @@ export default function ChaosScreen() {
   };
 
   return (
-    <LinearGradient colors={['#1F0E33', '#150924', '#0D0517']} style={{ flex: 1, padding: 16 }}>
-      {/* Animated Hero Banner */}
-      <LinearGradient
-        colors={['#FF6E67', '#FF9A3D']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          borderRadius: 22,
-          padding: 20,
-          marginBottom: 18,
-          shadowColor: '#FF6E67',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.35,
-          shadowRadius: 10,
-        }}
-      >
+    <ScrollView
+      style={{ flex: 1, backgroundColor: '#F5F2EB' }}
+      contentContainerStyle={{ padding: 18, paddingBottom: 110 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#FFB82E" />
+      }
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header matching reference Screen 2 */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Floating distance={6} duration={1800}>
-            <Text style={{ fontSize: 32, marginRight: 8 }}>🔥</Text>
-          </Floating>
-          <Text style={{ color: '#180B2E', fontSize: 22, fontWeight: '900', letterSpacing: -0.3 }}>
-            {t('chaos.title')}
+          <Text style={{ color: '#18171C', fontSize: 32, fontWeight: '900', letterSpacing: -0.5 }}>
+            {isKn ? 'ಉಳಿಸಲಾಗಿದೆ' : 'Saved'}
           </Text>
-        </View>
-
-        <Text style={{ color: '#2C0E05', fontSize: 13, fontWeight: '700', marginTop: 4 }}>
-          {t('chaos.subtitle')}
-        </Text>
-
-        {preset && (
-          <View style={{ marginTop: 12, backgroundColor: 'rgba(255,255,255,0.92)', padding: 10, borderRadius: 12 }}>
-            <Text style={{ color: '#180B2E', fontWeight: '800', fontSize: 12 }}>
-              💡 Preset: {isKn && preset.promptTextKn ? preset.promptTextKn : preset.promptText}
+          <View
+            style={{
+              backgroundColor: '#E6E1D4',
+              borderRadius: 14,
+              paddingHorizontal: 10,
+              paddingVertical: 3,
+              marginLeft: 10,
+            }}
+          >
+            <Text style={{ color: '#686055', fontSize: 13, fontWeight: '700' }}>
+              {SAVED_FOLDERS.length} {isKn ? 'ಫೋಲ್ಡರ್‌ಗಳು' : 'folders'} +
             </Text>
           </View>
-        )}
-      </LinearGradient>
+        </View>
 
-      <FlatList
-        data={challenges}
-        keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#D9FF67" />
-        }
-        renderItem={({ item }) => (
-          <ChaosCard
-            promptText={item.promptText}
-            promptTextKn={item.promptTextKn}
-            category={item.category}
-            expiresAt={item.expiresAt}
-            entries={item.entries}
-            isKannada={isKn}
-            onVote={handleVote}
-            onSubmitAnswer={() => router.push(`/chaos/${item.id}`)}
-          />
-        )}
-      />
-    </LinearGradient>
+        <Floating distance={4} duration={2400}>
+          <Text style={{ fontSize: 26 }}>🐸</Text>
+        </Floating>
+      </View>
+
+      {/* Colorful Folder Cards Grid matching reference Screen 2 */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 24 }}>
+        {SAVED_FOLDERS.map((folder) => {
+          const isSelected = selectedFolder === folder.id;
+          return (
+            <TouchableOpacity
+              key={folder.id}
+              onPress={() => setSelectedFolder(isSelected ? null : folder.id)}
+              activeOpacity={0.85}
+              style={{
+                width: '48%',
+                backgroundColor: folder.color,
+                borderRadius: 22,
+                padding: 14,
+                marginBottom: 12,
+                shadowColor: folder.color,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.25,
+                shadowRadius: 6,
+                elevation: 3,
+                borderTopLeftRadius: 10, // Playful folder tab shape
+              }}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <Text style={{ fontSize: 22 }}>{folder.emoji}</Text>
+                <View
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.3)',
+                    borderRadius: 10,
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                  }}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>
+                    {folder.count}
+                  </Text>
+                </View>
+              </View>
+              <Text
+                style={{
+                  color: '#FFFFFF',
+                  fontSize: 16,
+                  fontWeight: '900',
+                  letterSpacing: -0.2,
+                }}
+              >
+                {folder.title}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Daily Chaos / Burning Polls Section */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <Text style={{ color: '#18171C', fontSize: 20, fontWeight: '900' }}>
+          🔥 {isKn ? 'ಕೇಯಾಸ್ ಪೋಲ್‌ಗಳು' : 'Daily Chaos Polls'}
+        </Text>
+        <Text style={{ color: '#78716C', fontSize: 12, fontWeight: '700' }}>
+          {challenges.length} active
+        </Text>
+      </View>
+
+      {challenges.map((c) => (
+        <ChaosCard
+          key={c.id}
+          id={c.id}
+          promptText={isKn && c.promptTextKn ? c.promptTextKn : c.promptText}
+          category={c.category}
+          expiresAt={c.expiresAt}
+          entries={c.entries || []}
+          onVote={handleVote}
+          onSubmitEntry={(text) => {}}
+        />
+      ))}
+    </ScrollView>
   );
 }

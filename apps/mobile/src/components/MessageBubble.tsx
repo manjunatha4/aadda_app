@@ -43,123 +43,225 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <View
       style={{
-        alignSelf: isMe ? 'flex-end' : 'flex-start',
-        maxWidth: '82%',
+        flexDirection: 'row',
+        justifyContent: isMe ? 'flex-end' : 'flex-start',
+        alignItems: 'flex-end',
         marginVertical: 4,
+        paddingHorizontal: 8,
       }}
     >
+      {/* Receiver Avatar circle on the left */}
       {!isMe && (
-        <Text style={{ color: '#D9FF67', fontSize: 11, fontWeight: '700', marginLeft: 4, marginBottom: 2 }}>
-          {senderName}
-        </Text>
+        <View
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: '#FF6B6B',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: 8,
+            marginBottom: 2,
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 3,
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
+            {senderName.charAt(0).toUpperCase()}
+          </Text>
+        </View>
       )}
 
-      <View
-        style={{
-          backgroundColor: isMe ? '#FFFFFF' : '#352454',
-          borderRadius: 20,
-          borderBottomRightRadius: isMe ? 4 : 20,
-          borderBottomLeftRadius: isMe ? 20 : 4,
-          padding: mediaUrl ? 6 : 14,
-          borderWidth: isMe ? 0 : 1,
-          borderColor: '#4A3370',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.12,
-          shadowRadius: 4,
-        }}
-      >
-        {replyTo && (
-          <View
-            style={{
-              borderLeftWidth: 3,
-              borderLeftColor: isMe ? '#24183B' : '#FF786B',
-              paddingLeft: 6,
-              marginBottom: 6,
-              opacity: 0.8,
-            }}
-          >
-            <Text style={{ color: isMe ? '#24183B' : '#FF786B', fontSize: 11, fontWeight: '700' }}>
-              {replyTo.sender.displayName}
-            </Text>
-            <Text
-              numberOfLines={1}
-              style={{ color: isMe ? '#24183B' : '#F4F0FF', fontSize: 11 }}
-            >
-              {replyTo.content}
-            </Text>
-          </View>
-        )}
-
-        {/* Gallery Image Display */}
-        {mediaUrl && (
-          <View style={{ borderRadius: 16, overflow: 'hidden', marginBottom: content ? 8 : 2 }}>
-            <Image
-              source={{ uri: mediaUrl }}
-              style={{
-                width: 240,
-                height: 200,
-                borderRadius: 14,
-                backgroundColor: '#1E1430',
-              }}
-              resizeMode="cover"
-            />
-          </View>
-        )}
-
-        {/* Text Content */}
-        {Boolean(content) && (
+      <View style={{ maxWidth: '80%' }}>
+        {/* Sender Name for other users */}
+        {!isMe && (
           <Text
             style={{
-              color: isMe ? '#24183B' : '#FFFFFF',
-              fontSize: 15,
-              lineHeight: 20,
-              fontWeight: '500',
-              paddingHorizontal: mediaUrl ? 6 : 0,
+              color: '#4B5563',
+              fontSize: 11,
+              fontWeight: '700',
+              marginLeft: 8,
+              marginBottom: 3,
             }}
           >
-            {content}
+            {senderName}
           </Text>
         )}
 
-        <Text
+        {/* Message Bubble Card */}
+        <View
           style={{
-            color: isMe ? '#8C7D9E' : '#A392B8',
-            fontSize: 10,
-            alignSelf: 'flex-end',
-            marginTop: 4,
-            paddingRight: mediaUrl ? 6 : 0,
+            backgroundColor: isMe ? '#2563EB' : '#FFFFFF',
+            borderRadius: 22,
+            borderBottomRightRadius: isMe ? 4 : 22,
+            borderBottomLeftRadius: isMe ? 22 : 4,
+            paddingHorizontal: mediaUrl ? 6 : 14,
+            paddingVertical: mediaUrl ? 6 : 10,
+            borderWidth: isMe ? 0 : 1,
+            borderColor: '#E5E7EB',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 6,
           }}
         >
-          {timeStr}
-        </Text>
-      </View>
-
-      {/* Reaction Badges */}
-      {Object.keys(reactionCounts).length > 0 && (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: -6, marginLeft: isMe ? 0 : 8, alignSelf: isMe ? 'flex-end' : 'flex-start' }}>
-          {Object.entries(reactionCounts).map(([emoji, count]) => (
-            <TouchableOpacity
-              key={emoji}
-              onPress={() => onAddReaction && onAddReaction(emoji)}
+          {/* Reply context */}
+          {replyTo && (
+            <View
               style={{
-                backgroundColor: '#24183B',
-                borderWidth: 1,
-                borderColor: '#D9FF67',
-                borderRadius: 12,
-                paddingHorizontal: 6,
-                paddingVertical: 2,
-                marginRight: 4,
-                flexDirection: 'row',
-                alignItems: 'center',
+                borderLeftWidth: 3,
+                borderLeftColor: isMe ? '#93C5FD' : '#FF6B6B',
+                paddingLeft: 8,
+                marginBottom: 6,
+                opacity: 0.85,
               }}
             >
-              <Text style={{ fontSize: 11 }}>{emoji}</Text>
-              <Text style={{ color: '#D9FF67', fontSize: 10, fontWeight: '700', marginLeft: 3 }}>
-                {count}
+              <Text style={{ color: isMe ? '#BFDBFE' : '#FF6B6B', fontSize: 11, fontWeight: '800' }}>
+                {replyTo.sender.displayName}
               </Text>
-            </TouchableOpacity>
-          ))}
+              <Text
+                numberOfLines={1}
+                style={{ color: isMe ? '#DBEAFE' : '#4B5563', fontSize: 11 }}
+              >
+                {replyTo.content}
+              </Text>
+            </View>
+          )}
+
+          {/* Gallery Image Display */}
+          {mediaUrl && (
+            <View style={{ borderRadius: 16, overflow: 'hidden', marginBottom: content ? 8 : 2 }}>
+              <Image
+                source={{ uri: mediaUrl }}
+                style={{
+                  width: 240,
+                  height: 200,
+                  borderRadius: 14,
+                  backgroundColor: '#F3F4F6',
+                }}
+                resizeMode="cover"
+              />
+            </View>
+          )}
+
+          {/* Text Content */}
+          {Boolean(content) && (
+            <Text
+              style={{
+                color: isMe ? '#FFFFFF' : '#1F2937',
+                fontSize: 15,
+                lineHeight: 21,
+                fontWeight: '500',
+                paddingHorizontal: mediaUrl ? 6 : 2,
+              }}
+            >
+              {content}
+            </Text>
+          )}
+
+          {/* Time & Badges */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              marginTop: 4,
+              paddingRight: mediaUrl ? 6 : 2,
+            }}
+          >
+            {isMe && (
+              <View
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.25)',
+                  paddingHorizontal: 5,
+                  paddingVertical: 1,
+                  borderRadius: 6,
+                  marginRight: 6,
+                }}
+              >
+                <Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '800' }}>OC</Text>
+              </View>
+            )}
+            <Text
+              style={{
+                color: isMe ? 'rgba(255,255,255,0.7)' : '#9CA3AF',
+                fontSize: 10,
+                fontWeight: '600',
+              }}
+            >
+              {timeStr}
+            </Text>
+          </View>
+        </View>
+
+        {/* Reaction Badges */}
+        {Object.keys(reactionCounts).length > 0 && (
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              marginTop: -8,
+              marginLeft: isMe ? 0 : 8,
+              alignSelf: isMe ? 'flex-end' : 'flex-start',
+            }}
+          >
+            {Object.entries(reactionCounts).map(([emoji, count]) => (
+              <TouchableOpacity
+                key={emoji}
+                onPress={() => onAddReaction && onAddReaction(emoji)}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderWidth: 1.5,
+                  borderColor: '#E5E7EB',
+                  borderRadius: 14,
+                  paddingHorizontal: 7,
+                  paddingVertical: 2,
+                  marginRight: 4,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                }}
+              >
+                <Text style={{ fontSize: 11 }}>{emoji}</Text>
+                <Text style={{ color: '#1F2937', fontSize: 10, fontWeight: '800', marginLeft: 3 }}>
+                  {count}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+
+      {/* Sender Avatar circle on the right */}
+      {isMe && (
+        <View
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: '#2563EB',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginLeft: 8,
+            marginBottom: 2,
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 3,
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>
+            {senderName.charAt(0).toUpperCase()}
+          </Text>
         </View>
       )}
     </View>
