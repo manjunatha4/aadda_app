@@ -50,3 +50,26 @@ export interface VibeStatusDto {
     expiresAt: string;
     createdAt: string;
 }
+export type ChaosPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type ChaosStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+export interface DailyChaosItem {
+    id: string;
+    userId: string;
+    title: string;
+    description?: string;
+    date: string;
+    deadline?: string;
+    priority: ChaosPriority;
+    category: string;
+    tags: string[];
+    status: ChaosStatus;
+    completedAt?: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+export interface DailyChaosStats {
+    total: number;
+    pending: number;
+    inProgress: number;
+    completed: number;
+}

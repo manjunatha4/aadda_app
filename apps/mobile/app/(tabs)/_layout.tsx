@@ -1,7 +1,130 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { View, Text, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native';
+
+const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
+  index: { active: '🏠', inactive: '🏠' },
+  chaos: { active: '⚡', inactive: '⚡' },
+  chats: { active: '💬', inactive: '💬' },
+  profile: { active: '👤', inactive: '👤' },
+};
+
+function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
+  return (
+    <View
+      style={{
+        position: Platform.OS === 'web' ? ('fixed' as any) : 'absolute',
+        bottom: 24,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        pointerEvents: 'box-none',
+      }}
+    >
+      <View
+        style={[
+          {
+            width: '92%',
+            maxWidth: 360,
+            height: 64,
+            borderRadius: 36,
+            backgroundColor: 'rgba(22, 22, 28, 0.82)',
+            borderWidth: 1.2,
+            borderColor: 'rgba(255, 255, 255, 0.18)',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 8,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.35,
+            shadowRadius: 24,
+            elevation: 16,
+          },
+          Platform.OS === 'web'
+            ? ({
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                boxShadow: '0 14px 40px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25)',
+              } as any)
+            : {},
+        ]}
+      >
+        {state.routes.map((route: any, index: number) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === index;
+          const icons = TAB_ICONS[route.name] || { active: '✨', inactive: '✨' };
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              testID={options.tabBarTestID}
+              onPress={onPress}
+              activeOpacity={0.7}
+              style={{
+                flex: 1,
+                flexGrow: 1,
+                flexShrink: 0,
+                flexBasis: 0,
+                height: 64,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <View
+                style={[
+                  {
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: isFocused ? 'rgba(255, 255, 255, 0.18)' : 'transparent',
+                    borderWidth: isFocused ? 1 : 0,
+                    borderColor: isFocused ? 'rgba(255, 255, 255, 0.32)' : 'transparent',
+                  },
+                  isFocused && Platform.OS === 'web'
+                    ? ({
+                        boxShadow: '0 2px 12px rgba(255, 255, 255, 0.12)',
+                      } as any)
+                    : {},
+                ]}
+              >
+                <Text
+                  style={{
+                    fontSize: 22,
+                    opacity: isFocused ? 1 : 0.65,
+                    transform: [{ scale: isFocused ? 1.08 : 1 }],
+                  }}
+                >
+                  {isFocused ? icons.active : icons.inactive}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 export default function TabLayout() {
   const { t, i18n } = useTranslation();
@@ -9,117 +132,33 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <FloatingGlassTabBar {...props} />}
       screenOptions={{
-        headerShown: false, // Let each screen have its custom styled header
-        tabBarStyle: {
-          position: 'absolute',
-          bottom: Platform.OS === 'web' ? 20 : 24,
-          left: 20,
-          right: 20,
-          backgroundColor: '#1C1C1F',
-          borderRadius: 36,
-          height: 64,
-          paddingBottom: 0,
-          paddingTop: 0,
-          borderTopWidth: 0,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.35,
-          shadowRadius: 16,
-          elevation: 12,
-          justifyContent: 'center',
-          alignItems: 'center',
-          maxWidth: 480,
-          alignSelf: 'center',
-          marginHorizontal: 'auto' as any,
-        },
-        tabBarShowLabel: false,
-        tabBarActiveTintColor: '#FFFFFF',
-        tabBarInactiveTintColor: '#71717A',
+        headerShown: false,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: isKn ? 'ಇಂದು' : 'Today',
-          tabBarIcon: ({ focused }) => (
-            <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: focused ? '#2E2E33' : 'transparent',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 20 }}>🏠</Text>
-            </View>
-          ),
         }}
       />
       <Tabs.Screen
         name="chaos"
         options={{
-          title: isKn ? 'ಉಳಿಸಲಾಗಿದೆ' : 'Saved',
-          tabBarIcon: ({ focused }) => (
-            <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: focused ? '#2E2E33' : 'transparent',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 20 }}>📂</Text>
-            </View>
-          ),
+          title: isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್' : 'Daily Chaos',
         }}
       />
       <Tabs.Screen
         name="chats"
         options={{
           title: isKn ? 'ಚಾಟ್‌ಗಳು' : 'Chats',
-          tabBarIcon: ({ focused }) => (
-            <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: focused ? '#FF6464' : 'transparent',
-                alignItems: 'center',
-                justifyContent: 'center',
-                shadowColor: focused ? '#FF6464' : 'transparent',
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.4,
-                shadowRadius: 6,
-              }}
-            >
-              <Text style={{ fontSize: 20 }}>💬</Text>
-            </View>
-          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: isKn ? 'ಪ್ರೊಫೈಲ್' : 'Profile',
-          tabBarIcon: ({ focused }) => (
-            <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: focused ? '#2E2E33' : 'transparent',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 20 }}>👤</Text>
-            </View>
-          ),
         }}
       />
     </Tabs>

@@ -1,21 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
 import { useAuthStore } from '../../src/stores/authStore';
+import {
+  MainLayout,
+  PageHeader,
+  GlassCard,
+  PrimaryButton,
+  SecondaryButton,
+  ConfirmationDialog,
+  LoadingState,
+  ToastNotification,
+  DS_TOKENS,
+} from '../../src/components/DesignSystem';
 
 export default function AddaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
 
   const [adda, setAdda] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaving, setLeaving] = useState(false);
-  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const isKn = i18n.language === 'kn';
 
@@ -42,245 +54,180 @@ export default function AddaDetailScreen() {
       navigator.clipboard.writeText(code);
     }
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setToastMessage(isKn ? 'ಕೋಡ್ ನಕಲಿಸಲಾಗಿದೆ!' : 'Secret code copied to clipboard!');
+    setTimeout(() => {
+      setCopied(false);
+      setToastMessage(null);
+    }, 2500);
   };
 
-  const handleLeaveAdda = async () => {
+  const handleConfirmLeave = async () => {
     try {
       setLeaving(true);
-      await api.delete(`/addas/${id}/leave`);
+      await api.delete(`/addas/${id}/leave`).catch(() => {});
       router.replace('/(tabs)');
     } catch (e: any) {
       console.error(e);
+      router.replace('/(tabs)');
     } finally {
       setLeaving(false);
+      setShowLeaveConfirm(false);
     }
   };
 
   if (loading || !adda) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#24183B', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator color="#D9FF67" size="large" />
-      </View>
+      <MainLayout>
+        <LoadingState message={isKn ? 'ರೂಮ್ ವಿವರ ಲೋಡ್ ಆಗುತ್ತಿದೆ...' : 'Loading room details...'} />
+      </MainLayout>
     );
   }
 
-  const activeInvite = adda.inviteCode || (adda.invitations && adda.invitations[0]?.code) || 'ADDA-VIP';
+  const activeInvite = adda.inviteCode || 'ADDA-VIP';
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: '#24183B', padding: 16 }}>
-      {/* Adda Header Card */}
-      <View
-        style={{
-          backgroundColor: '#352454',
-          borderRadius: 20,
-          padding: 20,
-          marginBottom: 16,
-          borderWidth: 1.5,
-          borderColor: '#47326B',
-        }}
-      >
-        <Text style={{ color: '#D9FF67', fontSize: 24, fontWeight: '900' }}>
-          {adda.name}
-        </Text>
-        {adda.description ? (
-          <Text style={{ color: '#F4F0FF', opacity: 0.85, fontSize: 14, marginTop: 6, lineHeight: 20 }}>
-            {adda.description}
-          </Text>
-        ) : null}
+    <MainLayout>
+      <ToastNotification
+        visible={Boolean(toastMessage)}
+        message={toastMessage || ''}
+        onDismiss={() => setToastMessage(null)}
+      />
 
-        {/* Secret Invite Code Card */}
-        <View
-          style={{
-            backgroundColor: '#160E24',
-            borderRadius: 14,
-            padding: 14,
-            marginTop: 16,
-            borderWidth: 1.5,
-            borderColor: '#FF786B',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <View>
-            <Text style={{ color: '#8C7D9E', fontSize: 11, fontWeight: '800' }}>
-              🔑 {isKn ? 'ಇನ್ವಿಟೇಶನ್ ಕೋಡ್' : 'Invite Code for Friends'}
-            </Text>
-            <Text style={{ color: '#D9FF67', fontSize: 22, fontWeight: '900', letterSpacing: 2, marginTop: 2 }}>
-              {activeInvite}
-            </Text>
-          </View>
+      {/* Page Header */}
+      <PageHeader
+        title={adda.name}
+        subtitle={isKn ? 'ಕೊಠಡಿ ವಿವರಗಳು ಮತ್ತು ಸದಸ್ಯರು' : 'Room details, members, and channel settings'}
+        actions={
+          <SecondaryButton
+            title={isKn ? '‹ ಹಿಂತಿರುಗಿ' : '‹ Back'}
+            onPress={() => router.back()}
+          />
+        }
+      />
 
-          <TouchableOpacity
-            onPress={() => copyCode(activeInvite)}
-            style={{
-              backgroundColor: copied ? '#4CD964' : '#FF786B',
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 10,
-            }}
-          >
-            <Text style={{ color: '#24183B', fontWeight: '900', fontSize: 12 }}>
-              {copied ? '✓ COPIED' : '📋 COPY'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Action Button: Open Chat */}
-        <TouchableOpacity
-          onPress={() => {
-            if (adda.conversationId) {
-              router.push(`/chat/${adda.conversationId}`);
-            } else if (adda.conversation?.id) {
-              router.push(`/chat/${adda.conversation.id}`);
-            }
-          }}
-          style={{
-            backgroundColor: '#D9FF67',
-            paddingVertical: 14,
-            borderRadius: 12,
-            alignItems: 'center',
-            marginTop: 16,
-          }}
-        >
-          <Text style={{ color: '#24183B', fontWeight: '900', fontSize: 15 }}>
-            {isKn ? 'ಚಾಟ್ ಪ್ರಾರಂಭಿಸಿ 💬' : 'Open Room Chat 💬'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Members List */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900' }}>
-          {isKn ? 'ಸದಸ್ಯರು' : 'Members'} ({adda.members?.length || 1})
-        </Text>
-      </View>
-
-      {adda.members?.map((m: any) => (
-        <View
-          key={m.id || m.userId}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            backgroundColor: '#352454',
-            padding: 12,
-            borderRadius: 14,
-            marginBottom: 8,
-            borderWidth: 1,
-            borderColor: '#47326B',
-          }}
-        >
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: '#160E24',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginRight: 12,
-              borderWidth: 1,
-              borderColor: '#D9FF67',
-            }}
-          >
-            <Text style={{ fontSize: 18 }}>👤</Text>
-          </View>
-
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 14 }}>
-              {m.user?.displayName || m.displayName || 'Friend'}
-            </Text>
-            <Text style={{ color: '#8C7D9E', fontSize: 12 }}>
-              @{m.user?.username || m.username || 'member'}
-            </Text>
-          </View>
-
-          <View
-            style={{
-              backgroundColor: m.role === 'OWNER' ? '#D9FF67' : '#160E24',
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 8,
-            }}
-          >
-            <Text
+      <View style={{ maxWidth: 640, width: '100%', alignSelf: 'center', gap: 16 }}>
+        {/* Room Information Glass Card */}
+        <GlassCard elevated>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+            <View
               style={{
-                color: m.role === 'OWNER' ? '#24183B' : '#F4F0FF',
-                fontSize: 10,
-                fontWeight: '800',
-              }}
-            >
-              {m.role || 'MEMBER'}
-            </Text>
-          </View>
-        </View>
-      ))}
-
-      {/* Leave Room Option */}
-      {!confirmLeave ? (
-        <TouchableOpacity
-          onPress={() => setConfirmLeave(true)}
-          style={{
-            marginTop: 24,
-            padding: 14,
-            borderRadius: 12,
-            borderWidth: 1.5,
-            borderColor: '#FF5C4D',
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ color: '#FF5C4D', fontWeight: '800', fontSize: 14 }}>
-            {isKn ? 'ಈ ಅಡ್ಡಾ ತೊರೆಯಿರಿ' : 'Leave Room'} 🚪
-          </Text>
-        </TouchableOpacity>
-      ) : (
-        <View
-          style={{
-            marginTop: 24,
-            backgroundColor: '#351C24',
-            padding: 16,
-            borderRadius: 14,
-            borderWidth: 1.5,
-            borderColor: '#FF5C4D',
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 14, marginBottom: 12 }}>
-            {isKn ? 'ಖಚಿತವಾಗಿ ಅಡ್ಡಾ ತೊರೆಯಲು ಬಯಸುವಿರಾ?' : 'Are you sure you want to leave?'}
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 10, width: '100%' }}>
-            <TouchableOpacity
-              onPress={() => setConfirmLeave(false)}
-              style={{
-                flex: 1,
-                backgroundColor: '#352454',
-                paddingVertical: 12,
-                borderRadius: 10,
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                backgroundColor: 'rgba(124, 58, 237, 0.2)',
+                borderWidth: 1.5,
+                borderColor: '#7C3AED',
                 alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Text style={{ color: '#F4F0FF', fontWeight: '700' }}>Cancel</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleLeaveAdda}
-              disabled={leaving}
-              style={{
-                flex: 1,
-                backgroundColor: '#FF5C4D',
-                paddingVertical: 12,
-                borderRadius: 10,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: '#FFFFFF', fontWeight: '900' }}>
-                {leaving ? '...' : 'Yes, Leave'}
+              <Text style={{ fontSize: 26 }}>
+                {adda.name?.match(/[\p{Emoji}\u200d]+/gu)?.[0] || '🛖'}
               </Text>
-            </TouchableOpacity>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 20, fontWeight: '900' }}>
+                {adda.name}
+              </Text>
+              <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: '600', marginTop: 2 }}>
+                👥 {adda.memberCount || 1} {isKn ? 'ಸದಸ್ಯರು' : 'members'} · Created {new Date(adda.createdAt || Date.now()).toLocaleDateString()}
+              </Text>
+            </View>
           </View>
-        </View>
-      )}
-    </ScrollView>
+
+          {Boolean(adda.description) && (
+            <Text style={{ color: '#CBD5E1', fontSize: 14, lineHeight: 20, marginTop: 4 }}>
+              {adda.description}
+            </Text>
+          )}
+
+          {/* Secret Invite Code Box */}
+          <View
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.45)',
+              borderRadius: 18,
+              padding: 16,
+              marginTop: 18,
+              borderWidth: 1.2,
+              borderColor: 'rgba(124, 58, 237, 0.35)',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <View>
+              <Text style={{ color: '#C4B5FD', fontSize: 11, fontWeight: '800', letterSpacing: 0.8 }}>
+                {isKn ? 'ಇನ್ವೈಟ್ ಕೋಡ್' : 'SECRET INVITE CODE'}
+              </Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '900', letterSpacing: 2, marginTop: 4 }}>
+                {activeInvite}
+              </Text>
+            </View>
+
+            <PrimaryButton
+              title={copied ? '✓ COPIED' : '📋 Copy'}
+              onPress={() => copyCode(activeInvite)}
+              variant={copied ? 'emerald' : 'purple'}
+            />
+          </View>
+        </GlassCard>
+
+        {/* Enter Chat Action */}
+        <GlassCard style={{ padding: 18 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800' }}>
+                {isKn ? 'ರೂಮ್ ಚಾಟ್‌ಗೆ ಪ್ರವೇಶಿಸಿ' : 'Join Conversation'}
+              </Text>
+              <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                {isKn ? 'ನೈಜ ಸಮಯದಲ್ಲಿ ಸಂದೇಶ ಕಳುಹಿಸಿ' : 'Real-time group chat and sticker reactions'}
+              </Text>
+            </View>
+            <PrimaryButton
+              title={isKn ? 'ಚಾಟ್ ತೆರೆಯಿರಿ →' : 'Open Chat →'}
+              onPress={() => {
+                if (adda.conversationId) {
+                  router.push(`/chat/${adda.conversationId}`);
+                }
+              }}
+            />
+          </View>
+        </GlassCard>
+
+        {/* Leave Room Option */}
+        <GlassCard style={{ padding: 18, borderColor: 'rgba(239, 68, 68, 0.25)' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text style={{ color: '#F87171', fontSize: 15, fontWeight: '800' }}>
+                {isKn ? 'ರೂಮ್‌ನಿಂದ ನಿರ್ಗಮಿಸಿ' : 'Leave this Room'}
+              </Text>
+              <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                {isKn ? 'ನೀವು ನಂತರ ಕೋಡ್ ಬಳಸಿ ಮತ್ತೆ ಸೇರಬಹುದು' : 'You can rejoin later using the invite code'}
+              </Text>
+            </View>
+            <SecondaryButton
+              title={isKn ? 'ನಿರ್ಗಮಿಸಿ' : 'Leave'}
+              onPress={() => setShowLeaveConfirm(true)}
+            />
+          </View>
+        </GlassCard>
+      </View>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        visible={showLeaveConfirm}
+        title={isKn ? 'ರೂಮ್‌ನಿಂದ ಹೊರಡಬೇಕೆ?' : `Leave "${adda.name}"?`}
+        message={
+          isKn
+            ? 'ನೀವು ಈ ಕೊಠಡಿಯಿಂದ ನಿರ್ಗಮಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?'
+            : 'Are you sure you want to leave this room? You can always rejoin using the invite code.'
+        }
+        confirmText={isKn ? 'ನಿರ್ಗಮಿಸಿ' : 'Leave Room'}
+        cancelText={isKn ? 'ರದ್ದು' : 'Cancel'}
+        destructive
+        onConfirm={handleConfirmLeave}
+        onCancel={() => setShowLeaveConfirm(false)}
+      />
+    </MainLayout>
   );
 }

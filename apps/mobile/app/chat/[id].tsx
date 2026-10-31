@@ -240,7 +240,7 @@ export default function ChatScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={80}
-      style={{ flex: 1, backgroundColor: '#FFF6D6' }}
+      style={{ flex: 1, backgroundColor: '#0B0B10' }}
     >
       {Platform.OS === 'web' && (
         <input
@@ -252,22 +252,23 @@ export default function ChatScreen() {
         />
       )}
 
-      {/* Top Header matching reference image */}
+      {/* Top Header */}
       <View
-        style={{
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-          backgroundColor: '#FFFFFF',
-          borderBottomWidth: 1,
-          borderBottomColor: '#EBE5D3',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-        }}
+        style={[
+          {
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            backgroundColor: 'rgba(15, 15, 22, 0.9)',
+            borderBottomWidth: 1,
+            borderBottomColor: 'rgba(255, 255, 255, 0.12)',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          },
+          Platform.OS === 'web'
+            ? ({ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' } as any)
+            : {},
+        ]}
       >
         <TouchableOpacity
           onPress={() => router.back()}
@@ -275,30 +276,37 @@ export default function ChatScreen() {
             width: 36,
             height: 36,
             borderRadius: 18,
-            backgroundColor: '#F5F2EB',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
             justifyContent: 'center',
             alignItems: 'center',
           }}
         >
-          <Text style={{ color: '#18171C', fontSize: 18, fontWeight: '900' }}>‹</Text>
+          <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900' }}>‹</Text>
         </TouchableOpacity>
 
-        {/* Room Title with Navigation Arrow */}
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        {/* Room Title */}
+        <TouchableOpacity
+          onPress={() => {
+            if (conversationInfo?.addaId) {
+              router.push(`/adda/${conversationInfo.addaId}`);
+            }
+          }}
+          style={{ flexDirection: 'row', alignItems: 'center' }}
+        >
           <Text
             numberOfLines={1}
             style={{
-              color: '#18171C',
+              color: '#FFFFFF',
               fontSize: 16,
               fontWeight: '900',
-              letterSpacing: 0.5,
+              letterSpacing: 0.3,
               maxWidth: 220,
             }}
           >
             {roomTitle}
           </Text>
-          <Text style={{ color: '#3C97FF', fontSize: 16, fontWeight: '900', marginLeft: 6 }}>›</Text>
-        </View>
+          <Text style={{ color: '#7C3AED', fontSize: 16, fontWeight: '900', marginLeft: 6 }}>›</Text>
+        </TouchableOpacity>
 
         {/* Right Info Avatar */}
         <View
@@ -306,7 +314,7 @@ export default function ChatScreen() {
             width: 36,
             height: 36,
             borderRadius: 18,
-            backgroundColor: '#3C97FF',
+            backgroundColor: '#7C3AED',
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -321,15 +329,15 @@ export default function ChatScreen() {
       <View style={{ alignItems: 'center', marginVertical: 10 }}>
         <View
           style={{
-            backgroundColor: 'rgba(255,255,255,0.7)',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
             borderRadius: 12,
             paddingHorizontal: 12,
             paddingVertical: 3,
             borderWidth: 1,
-            borderColor: '#E8E2CD',
+            borderColor: 'rgba(255, 255, 255, 0.12)',
           }}
         >
-          <Text style={{ color: '#8C8573', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 }}>
+          <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 }}>
             TODAY
           </Text>
         </View>
@@ -587,15 +595,20 @@ export default function ChatScreen() {
 
       {/* Chat Input Bar */}
       <View
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: '#EBE5D3',
-          paddingHorizontal: 12,
-          paddingVertical: 10,
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
+        style={[
+          {
+            backgroundColor: 'rgba(15, 15, 22, 0.94)',
+            borderTopWidth: 1,
+            borderTopColor: 'rgba(255, 255, 255, 0.12)',
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            flexDirection: 'row',
+            alignItems: 'center',
+          },
+          Platform.OS === 'web'
+            ? ({ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' } as any)
+            : {},
+        ]}
       >
         {/* Gallery Image Picker Button */}
         <TouchableOpacity
@@ -605,7 +618,9 @@ export default function ChatScreen() {
             width: 40,
             height: 40,
             borderRadius: 20,
-            backgroundColor: '#F5F2EB',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.12)',
             justifyContent: 'center',
             alignItems: 'center',
             marginRight: 8,
@@ -618,16 +633,18 @@ export default function ChatScreen() {
         <TextInput
           value={inputText}
           onChangeText={handleInputChange}
-          placeholder={selectedImage ? 'Add a caption...' : 'SAY SOMETHING...'}
-          placeholderTextColor="#A39C8D"
+          placeholder={selectedImage ? 'Add a caption...' : 'Say something...'}
+          placeholderTextColor="#64748B"
           onSubmitEditing={handleSend}
           style={{
             flex: 1,
-            backgroundColor: '#F5F2EB',
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.14)',
             borderRadius: 22,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            color: '#18171C',
+            color: '#FFFFFF',
             fontSize: 14,
             fontWeight: '600',
             marginRight: 8,
@@ -642,7 +659,9 @@ export default function ChatScreen() {
             width: 40,
             height: 40,
             borderRadius: 20,
-            backgroundColor: showStickers ? '#2563EB' : '#F5F2EB',
+            backgroundColor: showStickers ? '#7C3AED' : 'rgba(255, 255, 255, 0.08)',
+            borderWidth: 1,
+            borderColor: showStickers ? '#7C3AED' : 'rgba(255, 255, 255, 0.12)',
             justifyContent: 'center',
             alignItems: 'center',
             marginRight: 8,
@@ -660,7 +679,7 @@ export default function ChatScreen() {
             width: 40,
             height: 40,
             borderRadius: 20,
-            backgroundColor: (inputText.trim() || selectedImage) ? '#2563EB' : '#E0DDD3',
+            backgroundColor: (inputText.trim() || selectedImage) ? '#7C3AED' : 'rgba(255, 255, 255, 0.1)',
             justifyContent: 'center',
             alignItems: 'center',
           }}

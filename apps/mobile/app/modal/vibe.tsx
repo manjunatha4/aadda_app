@@ -1,159 +1,148 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
+import {
+  MainLayout,
+  PageHeader,
+  GlassCard,
+  PrimaryButton,
+  SecondaryButton,
+  InputField,
+  ToastNotification,
+  DS_TOKENS,
+} from '../../src/components/DesignSystem';
 
 const VIBE_OPTIONS = [
-  { mood: 'CHILL_MODE', labelKn: 'ಚಿಲ್ ಮೋಡ್', labelEn: 'Chill Mode', emoji: '☕', desc: 'ಫಿಲ್ಟರ್ ಕಾಫಿ & ರಿಲ್ಯಾಕ್ಸ್' },
-  { mood: 'NEED_GOSSIP', labelKn: 'ಗಾಸಿಪ್ ಬೇಕು', labelEn: 'Need Gossip', emoji: '👀', desc: 'ಬ್ರೇಕಿಂಗ್ ನ್ಯೂಸ್ ಹೇಳಿ' },
-  { mood: 'MENTALLY_OFFLINE', labelKn: 'ಮೆಂಟಲಿ ಆಫ್‌ಲೈನ್', labelEn: 'Mentally Offline', emoji: '📴', desc: 'ಯಾರೂ ಕಾಲ್ ಮಾಡ್ಬೇಡಿ' },
-  { mood: 'DEAD_INSIDE', labelKn: 'ಡೆಡ್ ಇನ್‌ಸೈಡ್', labelEn: 'Dead Inside', emoji: '💀', desc: 'ಸೋಮವಾರದ ಹ್ಯಾಂಗೊವರ್' },
-  { mood: 'MAIN_CHARACTER', labelKn: 'ಮೇನ್ ಕ್ಯಾರೆಕ್ಟರ್', labelEn: 'Main Character', emoji: '💅', desc: 'ಇವತ್ತು ನಾನೇ ಹೀರೋ' },
-  { mood: 'BATTERY_LOW', labelKn: 'ಬ್ಯಾಟರಿ 1%', labelEn: 'Social Battery 1%', emoji: '🪫', desc: 'ಎನರ್ಜಿ ಶೂನ್ಯ' },
+  { mood: 'CHILL_MODE', labelKn: 'ಚಿಲ್ ಮೋಡ್', labelEn: 'Chill Mode', emoji: '☕', desc: 'Relaxing with filter coffee' },
+  { mood: 'NEED_GOSSIP', labelKn: 'ಗಾಸಿಪ್ ಬೇಕು', labelEn: 'Need Gossip', emoji: '👀', desc: 'Tell me the tea' },
+  { mood: 'MENTALLY_OFFLINE', labelKn: 'ಮೆಂಟಲಿ ಆಫ್‌ಲೈನ್', labelEn: 'Mentally Offline', emoji: '📴', desc: 'DND mode on' },
+  { mood: 'DEAD_INSIDE', labelKn: 'ಡೆಡ್ ಇನ್‌ಸೈಡ್', labelEn: 'Dead Inside', emoji: '💀', desc: 'Monday blues' },
+  { mood: 'MAIN_CHARACTER', labelKn: 'ಮೇನ್ ಕ್ಯಾರೆಕ್ಟರ್', labelEn: 'Main Character', emoji: '💅', desc: 'Unstoppable vibe' },
+  { mood: 'BATTERY_LOW', labelKn: 'ಬ್ಯಾಟರಿ 1%', labelEn: 'Social Battery 1%', emoji: '🪫', desc: 'Recharging energy' },
 ];
 
 export default function VibeModal() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const router = useRouter();
 
   const [selectedMood, setSelectedMood] = useState('CHILL_MODE');
   const [customNote, setCustomNote] = useState('');
-  const [durationHours, setDurationHours] = useState(4);
   const [saving, setSaving] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const isKn = i18n.language === 'kn';
 
   const handleSaveVibe = async () => {
     try {
       setSaving(true);
-      setStatusMsg(null);
       await api.post('/vibe', {
         mood: selectedMood,
         customNote: customNote.trim() || undefined,
-        durationHours,
       });
-      setStatusMsg('✓ Vibe check updated!');
+      setToastMessage(isKn ? 'ವೈಬ್ ಅಪ್‌ಡೇಟ್ ಆಗಿದೆ! ⚡' : 'Vibe updated successfully! ⚡');
       setTimeout(() => {
         router.back();
-      }, 800);
+      }, 700);
     } catch (e: any) {
-      setStatusMsg(`⚠️ ${e.message || 'Failed to update vibe'}`);
+      setToastMessage(e.message || 'Failed to update vibe');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: '#24183B', padding: 20 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 10 }}>
-          <Text style={{ color: '#D9FF67', fontSize: 24, fontWeight: '900' }}>←</Text>
-        </TouchableOpacity>
-        <Text style={{ color: '#D9FF67', fontSize: 24, fontWeight: '900' }}>
-          {isKn ? 'ನಿಮ್ಮ ವೈಬ್ ಹಾಕಿ' : 'Set Your Vibe'} ⚡
-        </Text>
-      </View>
+    <MainLayout>
+      <ToastNotification
+        visible={Boolean(toastMessage)}
+        message={toastMessage || ''}
+        onDismiss={() => setToastMessage(null)}
+      />
 
-      <Text style={{ color: '#F4F0FF', opacity: 0.8, fontSize: 13, marginBottom: 20 }}>
-        {isKn ? 'ನಿಮ್ಮ ಸರ್ಕಲ್‌ಗೆ ನೀವು ಹೇಗಿದ್ದೀರಿ ಎಂದು ತಿಳಿಸಿ' : 'Let your circle know your current wavelength'}
-      </Text>
+      <PageHeader
+        title={isKn ? 'ನಿಮ್ಮ ವೈಬ್ ಹಾಕಿ' : 'Update Your Vibe'}
+        subtitle={isKn ? 'ನಿಮ್ಮ ಸ್ನೇಹಿತರಿಗೆ ನಿಮ್ಮ ಪ್ರಸ್ತುತ ವೈಬ್ ತಿಳಿಸಿ' : 'Let your circle know your current wavelength and mood'}
+        actions={
+          <SecondaryButton
+            title={isKn ? '‹ ಹಿಂತಿರುಗಿ' : '‹ Back'}
+            onPress={() => router.back()}
+          />
+        }
+      />
 
-      {statusMsg && (
-        <View style={{ backgroundColor: statusMsg.startsWith('✓') ? '#2ECC71' : '#FF5C4D', padding: 12, borderRadius: 12, marginBottom: 16 }}>
-          <Text style={{ color: '#FFFFFF', fontWeight: '800', textAlign: 'center', fontSize: 13 }}>
-            {statusMsg}
-          </Text>
+      <View style={{ maxWidth: 540, width: '100%', alignSelf: 'center', gap: 14 }}>
+        {/* Vibe Selection Cards Grid */}
+        <View style={{ gap: 10 }}>
+          {VIBE_OPTIONS.map((opt) => {
+            const isSelected = selectedMood === opt.mood;
+            return (
+              <GlassCard
+                key={opt.mood}
+                onPress={() => setSelectedMood(opt.mood)}
+                style={{
+                  padding: 14,
+                  backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.25)' : DS_TOKENS.colors.bgCard,
+                  borderColor: isSelected ? '#7C3AED' : DS_TOKENS.colors.borderSubtle,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <Text style={{ fontSize: 24 }}>{opt.emoji}</Text>
+                    <View>
+                      <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '800' }}>
+                        {isKn ? opt.labelKn : opt.labelEn}
+                      </Text>
+                      <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                        {opt.desc}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      borderWidth: 2,
+                      borderColor: isSelected ? '#7C3AED' : '#64748B',
+                      backgroundColor: isSelected ? '#7C3AED' : 'transparent',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {isSelected && <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '900' }}>✓</Text>}
+                  </View>
+                </View>
+              </GlassCard>
+            );
+          })}
         </View>
-      )}
 
-      {/* Mood Selector Grid */}
-      <View style={{ marginBottom: 20 }}>
-        {VIBE_OPTIONS.map((opt) => {
-          const isSelected = selectedMood === opt.mood;
-          return (
-            <TouchableOpacity
-              key={opt.mood}
-              onPress={() => setSelectedMood(opt.mood)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: isSelected ? '#D9FF67' : '#352454',
-                padding: 14,
-                borderRadius: 14,
-                marginBottom: 10,
-                borderWidth: 2,
-                borderColor: isSelected ? '#C7F54B' : '#47326B',
-              }}
-            >
-              <Text style={{ fontSize: 26, marginRight: 12 }}>{opt.emoji}</Text>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    color: isSelected ? '#24183B' : '#FFFFFF',
-                    fontSize: 16,
-                    fontWeight: '800',
-                  }}
-                >
-                  {isKn ? opt.labelKn : opt.labelEn}
-                </Text>
-                <Text
-                  style={{
-                    color: isSelected ? '#352454' : '#8C7D9E',
-                    fontSize: 12,
-                    marginTop: 2,
-                  }}
-                >
-                  {opt.desc}
-                </Text>
-              </View>
-              {isSelected && <Text style={{ fontSize: 18 }}>✓</Text>}
-            </TouchableOpacity>
-          );
-        })}
+        {/* Custom Note Input */}
+        <GlassCard>
+          <InputField
+            label={isKn ? 'ಕಸ್ಟಮ್ ಸಂದೇಶ (ಐಚ್ಛಿಕ)' : 'Custom Status Note (Optional)'}
+            value={customNote}
+            onChangeText={setCustomNote}
+            placeholder={isKn ? 'ಉದಾ: 5 ಗಂಟೆಯ ನಂತರ ಲಭ್ಯ...' : 'e.g. Free for chai after 5 PM...'}
+          />
+
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+            <SecondaryButton
+              title={isKn ? 'ರದ್ದು' : 'Cancel'}
+              onPress={() => router.back()}
+              style={{ flex: 1 }}
+            />
+            <PrimaryButton
+              title={isKn ? 'ವೈಬ್ ಸೆಟ್ ಮಾಡಿ ⚡' : 'Set Vibe ⚡'}
+              onPress={handleSaveVibe}
+              loading={saving}
+              style={{ flex: 1 }}
+            />
+          </View>
+        </GlassCard>
       </View>
-
-      {/* Custom Note */}
-      <View style={{ marginBottom: 24 }}>
-        <Text style={{ color: '#F4F0FF', fontSize: 13, fontWeight: '700', marginBottom: 6 }}>
-          {isKn ? 'ಕಸ್ಟಮ್ ಸಂದೇಶ (Custom Status)' : 'Custom Status Note (Optional)'}
-        </Text>
-        <TextInput
-          value={customNote}
-          onChangeText={setCustomNote}
-          placeholder={isKn ? 'ಉದಾ: CTR ಮಸಾಲೆ ದೋಸೆ ಮೂಡ್...' : 'e.g. Filter coffee + rain vibe...'}
-          placeholderTextColor="#8C7D9E"
-          style={{
-            backgroundColor: '#352454',
-            borderRadius: 12,
-            padding: 12,
-            color: '#FFFFFF',
-            fontSize: 14,
-            borderWidth: 1.5,
-            borderColor: '#47326B',
-          }}
-        />
-      </View>
-
-      <TouchableOpacity
-        onPress={handleSaveVibe}
-        disabled={saving}
-        style={{
-          backgroundColor: '#FF786B',
-          paddingVertical: 14,
-          borderRadius: 12,
-          alignItems: 'center',
-        }}
-      >
-        {saving ? (
-          <ActivityIndicator color="#24183B" />
-        ) : (
-          <Text style={{ color: '#24183B', fontSize: 16, fontWeight: '900' }}>
-            {isKn ? 'ವೈಬ್ ಅಪ್‌ಡೇಟ್ ಮಾಡಿ' : 'Update My Vibe'} ⚡
-          </Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+    </MainLayout>
   );
 }

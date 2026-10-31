@@ -1,4 +1,5 @@
 import { storage } from './storage';
+import { DailyChaosItem, DailyChaosStats, ChaosPriority, ChaosStatus } from '@aadda/shared';
 
 export interface LocalUser {
   id: string;
@@ -75,6 +76,7 @@ const STORAGE_KEYS = {
   MESSAGES: 'aadda_client_messages',
   FOLDERS: 'aadda_client_folders',
   FOLDER_ITEMS: 'aadda_client_folder_items',
+  DAILY_CHAOS: 'aadda_client_daily_chaos',
 };
 
 const DEFAULT_FOLDERS: SavedFolder[] = [
@@ -125,19 +127,21 @@ class ClientStore {
   private messages: Record<string, LocalMessage[]> = {};
   private folders: SavedFolder[] = DEFAULT_FOLDERS;
   private folderItems: Record<string, SavedItem[]> = DEFAULT_FOLDER_ITEMS;
+  private dailyChaos: Record<string, DailyChaosItem[]> = {};
   private initialized = false;
 
   async init() {
     if (this.initialized) return;
 
     try {
-      const [u, a, c, m, f, fi] = await Promise.all([
+      const [u, a, c, m, f, fi, dc] = await Promise.all([
         storage.getItem(STORAGE_KEYS.USERS),
         storage.getItem(STORAGE_KEYS.ADDAS),
         storage.getItem(STORAGE_KEYS.CONVERSATIONS),
         storage.getItem(STORAGE_KEYS.MESSAGES),
         storage.getItem(STORAGE_KEYS.FOLDERS),
         storage.getItem(STORAGE_KEYS.FOLDER_ITEMS),
+        storage.getItem(STORAGE_KEYS.DAILY_CHAOS),
       ]);
 
       this.users = u ? JSON.parse(u) : [];
@@ -146,6 +150,7 @@ class ClientStore {
       this.messages = m ? JSON.parse(m) : {};
       this.folders = f ? JSON.parse(f) : DEFAULT_FOLDERS;
       this.folderItems = fi ? JSON.parse(fi) : DEFAULT_FOLDER_ITEMS;
+      this.dailyChaos = dc ? JSON.parse(dc) : {};
 
       // Try background sync with global cloud store
       if (typeof fetch !== 'undefined') {
@@ -158,6 +163,20 @@ class ClientStore {
               for (const ca of cloud.data.addas) {
                 if (!existingIds.has(ca.id)) {
                   this.addas.unshift(ca);
+                }
+              }
+            }
+            if (cloud?.data?.dailyChaos && typeof cloud.data.dailyChaos === 'object') {
+              for (const [uid, items] of Object.entries(cloud.data.dailyChaos)) {
+                if (Array.isArray(items)) {
+                  const localItems = this.dailyChaos[uid] || [];
+                  const existingItemIds = new Set(localItems.map((x) => x.id));
+                  for (const ci of items as DailyChaosItem[]) {
+                    if (!existingItemIds.has(ci.id)) {
+                      localItems.push(ci);
+                    }
+                  }
+                  this.dailyChaos[uid] = localItems;
                 }
               }
             }
@@ -179,10 +198,19 @@ class ClientStore {
         storage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(this.messages)),
         storage.setItem(STORAGE_KEYS.FOLDERS, JSON.stringify(this.folders)),
         storage.setItem(STORAGE_KEYS.FOLDER_ITEMS, JSON.stringify(this.folderItems)),
+        storage.setItem(STORAGE_KEYS.DAILY_CHAOS, JSON.stringify(this.dailyChaos)),
       ]);
     } catch {
       // ignore
     }
+  }
+
+  async findUserByLogin(login: string) {
+    await this.init();
+    const clean = login.trim().toLowerCase();
+    return this.users.find(
+      (u) => u.email.toLowerCase() === clean || u.username.toLowerCase() === clean,
+    );
   }
 
   async login(login: string) {
@@ -469,6 +497,142 @@ class ClientStore {
 
     await this.persist();
     return newItem;
+  }
+
+  // -------------------------------------------------------------
+  // DAILY CHAOS METHODS
+  // -------------------------------------------------------------
+  async getDailyChaos(
+    userId?: string,
+    filters?: {
+      status?: string;
+      priority?: string;
+      category?: string;
+      date?: string;
+      search?: string;
+    },
+  ): Promise<{ items: DailyChaosItem[]; stats: DailyChaosStats }> {
+    await this.init();
+    const uid = userId || this.users[0]?.id || 'usr_default';
+    let userItems = [...(this.dailyChaos[uid] || [])];
+
+    const stats: DailyChaosStats = {
+      total: userItems.length,
+      pending: userItems.filter((i) => i.status === 'PENDING').length,
+      inProgress: userItems.filter((i) => i.status === 'IN_PROGRESS').length,
+      completed: userItems.filter((i) => i.status === 'COMPLETED').length,
+    };
+
+    if (filters?.status && filters.status !== 'ALL') {
+      userItems = userItems.filter((i) => i.status === filters.status);
+    }
+    if (filters?.priority && filters.priority !== 'ALL') {
+      userItems = userItems.filter((i) => i.priority === filters.priority);
+    }
+    if (filters?.category && filters.category !== 'ALL') {
+      userItems = userItems.filter((i) => i.category === filters.category);
+    }
+    if (filters?.date) {
+      userItems = userItems.filter((i) => i.date === filters.date);
+    }
+    if (filters?.search) {
+      const q = filters.search.toLowerCase().trim();
+      userItems = userItems.filter(
+        (i) =>
+          i.title?.toLowerCase().includes(q) ||
+          i.description?.toLowerCase().includes(q) ||
+          i.tags?.some((t) => t.toLowerCase().includes(q)),
+      );
+    }
+
+    userItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return { items: userItems, stats };
+  }
+
+  async createDailyChaos(
+    userId: string,
+    data: {
+      title: string;
+      description?: string;
+      date?: string;
+      deadline?: string;
+      priority?: ChaosPriority;
+      category?: string;
+      tags?: string[];
+      status?: ChaosStatus;
+    },
+  ): Promise<DailyChaosItem> {
+    await this.init();
+    const uid = userId || this.users[0]?.id || 'usr_default';
+    const newItem: DailyChaosItem = {
+      id: `chaos_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId: uid,
+      title: data.title.trim(),
+      description: data.description?.trim() || '',
+      date: data.date || new Date().toISOString().split('T')[0],
+      deadline: data.deadline || '',
+      priority: data.priority || 'MEDIUM',
+      category: data.category?.trim() || 'General',
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      status: data.status || 'PENDING',
+      completedAt: data.status === 'COMPLETED' ? new Date().toISOString() : null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (!this.dailyChaos[uid]) {
+      this.dailyChaos[uid] = [];
+    }
+    this.dailyChaos[uid].unshift(newItem);
+    await this.persist();
+    return newItem;
+  }
+
+  async updateDailyChaos(
+    userId: string,
+    id: string,
+    updates: Partial<DailyChaosItem>,
+  ): Promise<DailyChaosItem> {
+    await this.init();
+    const uid = userId || this.users[0]?.id || 'usr_default';
+    const items = this.dailyChaos[uid] || [];
+    const index = items.findIndex((i) => i.id === id);
+
+    if (index === -1) {
+      throw new Error('Chaos entry not found');
+    }
+
+    const existing = items[index];
+    const nextStatus = updates.status !== undefined ? updates.status : existing.status;
+    const isNowCompleted = nextStatus === 'COMPLETED';
+
+    const updated: DailyChaosItem = {
+      ...existing,
+      ...updates,
+      status: nextStatus,
+      completedAt: isNowCompleted ? (existing.completedAt || new Date().toISOString()) : null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    items[index] = updated;
+    await this.persist();
+    return updated;
+  }
+
+  async deleteDailyChaos(userId: string, id: string): Promise<boolean> {
+    await this.init();
+    const uid = userId || this.users[0]?.id || 'usr_default';
+    const items = this.dailyChaos[uid] || [];
+    const index = items.findIndex((i) => i.id === id);
+
+    if (index === -1) {
+      return false;
+    }
+
+    items.splice(index, 1);
+    await this.persist();
+    return true;
   }
 }
 

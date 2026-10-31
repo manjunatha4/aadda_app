@@ -1,41 +1,52 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, RefreshControl, TextInput, ScrollView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, RefreshControl, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
 import { useAuthStore } from '../../src/stores/authStore';
-import { Floating } from '../../src/components/AnimatedVisuals';
+import {
+  MainLayout,
+  PageHeader,
+  GlassCard,
+  PrimaryButton,
+  SecondaryButton,
+  InputField,
+  EmptyState,
+  LoadingState,
+  ToastNotification,
+  DS_TOKENS,
+} from '../../src/components/DesignSystem';
 
 export default function TodayScreen() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
 
   const [addas, setAddas] = useState<any[]>([]);
-  const [vibes, setVibes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
   const [joining, setJoining] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [joinStatus, setJoinStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const isKn = i18n.language === 'kn';
 
-  // Format dynamic date like "• Dec '21 / Wednesday"
+  // Format dynamic date
   const now = new Date();
   const dateFormatted = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const dayFormatted = now.toLocaleDateString('en-US', { weekday: 'long' });
 
   const loadData = async () => {
     try {
-      const [addasRes, vibesRes] = await Promise.all([
-        api.get('/addas').catch(() => []),
-        api.get('/vibe/circle').catch(() => []),
-      ]);
+      const addasRes = await api.get('/addas').catch(() => []);
       setAddas(addasRes || []);
-      setVibes(vibesRes || []);
     } catch (e) {
       console.error(e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -46,7 +57,6 @@ export default function TodayScreen() {
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadData();
-    setRefreshing(false);
   };
 
   const handleJoinByCode = async () => {
@@ -88,179 +98,162 @@ export default function TodayScreen() {
       navigator.clipboard.writeText(code);
     }
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+    setToastMessage(isKn ? 'ಕೋಡ್ ನಕಲಿಸಲಾಗಿದೆ!' : `Copied code ${code} to clipboard!`);
+    setTimeout(() => {
+      setCopiedId(null);
+      setToastMessage(null);
+    }, 2500);
   };
 
   const displayName = user?.displayName || user?.username || 'Friend';
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: '#141416' }}
-      contentContainerStyle={{ padding: 18, paddingBottom: 110 }}
+    <MainLayout
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#FFA500" />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#7C3AED" />
       }
-      showsVerticalScrollIndicator={false}
     >
-      {/* Top Header matching reference Screen 1 */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <Text style={{ color: '#FFFFFF', fontSize: 36, fontWeight: '900', letterSpacing: -0.5 }}>
-          {isKn ? 'ಇಂದು' : 'Today'}
-        </Text>
+      <ToastNotification
+        visible={Boolean(toastMessage)}
+        message={toastMessage || ''}
+        onDismiss={() => setToastMessage(null)}
+      />
 
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF7A29', marginRight: 6 }} />
-          <Text style={{ color: '#A1A1AA', fontSize: 13, fontWeight: '700' }}>
-            • {dateFormatted} / {dayFormatted}
-          </Text>
-        </View>
-      </View>
+      {/* Top Header */}
+      <PageHeader
+        title={isKn ? 'ಇಂದು' : 'Dashboard'}
+        subtitle={`${dateFormatted} · ${dayFormatted}`}
+        badge={`${addas.length} ${isKn ? 'ರೂಮ್ಸ್' : 'rooms'}`}
+        actions={
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <SecondaryButton
+              title={isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್' : 'Daily Chaos'}
+              icon="⚡"
+              onPress={() => router.push('/(tabs)/chaos')}
+            />
+            <PrimaryButton
+              title={isKn ? '+ ಹೊಸ ರೂಮ್' : '+ Create Room'}
+              icon="🛖"
+              onPress={() => router.push('/create-adda')}
+            />
+          </View>
+        }
+      />
 
-      {/* Hero Greeting Card with Playful Sticker Accents */}
-      <View
-        style={{
-          backgroundColor: '#1E1E22',
-          borderRadius: 28,
-          padding: 22,
-          marginBottom: 20,
-          borderWidth: 1,
-          borderColor: '#2A2A30',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <Text style={{ color: '#E4E4E7', fontSize: 17, lineHeight: 26, fontWeight: '600', maxWidth: '85%' }}>
-          Hi, <Text style={{ color: '#FFFFFF', fontWeight: '900' }}>{displayName}</Text>! Today you're going to{' '}
-          <Text style={{ color: '#FF7A29', fontWeight: '800' }}>hangout</Text>, connect with your squad, and bring your real vibes.
-        </Text>
-
-        {/* Floating playful 3D sticker icons from the reference image */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 14 }}>
-          <Floating distance={5} duration={2400}>
+      {/* Hero Welcome Glass Card */}
+      <GlassCard elevated style={{ marginBottom: 20 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <View
               style={{
-                backgroundColor: '#2A2A32',
-                borderRadius: 16,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                marginRight: 8,
-                flexDirection: 'row',
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: 'rgba(124, 58, 237, 0.25)',
+                borderWidth: 1.5,
+                borderColor: '#7C3AED',
                 alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Text style={{ fontSize: 18, marginRight: 6 }}>🐸</Text>
-              <Text style={{ color: '#D4D4D8', fontSize: 12, fontWeight: '700' }}>Chillin'</Text>
+              <Text style={{ fontSize: 20 }}>👋</Text>
             </View>
-          </Floating>
-
-          <Floating distance={4} duration={2100} delay={300}>
-            <View
-              style={{
-                backgroundColor: '#2A2A32',
-                borderRadius: 16,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                marginRight: 8,
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 18, marginRight: 6 }}>🛵</Text>
-              <Text style={{ color: '#D4D4D8', fontSize: 12, fontWeight: '700' }}>On the move</Text>
+            <View>
+              <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900' }}>
+                {isKn ? `ನಮಸ್ಕಾರ, ${displayName}!` : `Welcome back, ${displayName}!`}
+              </Text>
+              <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: '600' }}>
+                {isKn ? 'ನಿಮ್ಮ ಸ್ನೇಹಿತರೊಂದಿಗೆ ಸಂಪರ್ಕದಲ್ಲಿರಿ ಮತ್ತು ವೈಬ್ ಹಂಚಿಕೊಳ್ಳಿ' : 'Real-time hangouts and collaborative daily chaos'}
+              </Text>
             </View>
-          </Floating>
-
-          <Floating distance={6} duration={2600} delay={600}>
-            <View
-              style={{
-                backgroundColor: '#2A2A32',
-                borderRadius: 16,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 18, marginRight: 6 }}>🍦</Text>
-              <Text style={{ color: '#D4D4D8', fontSize: 12, fontWeight: '700' }}>Sweet</Text>
-            </View>
-          </Floating>
+          </View>
         </View>
 
-        {/* Quick action: Create Adda button */}
-        <TouchableOpacity
-          onPress={() => router.push('/create-adda')}
-          activeOpacity={0.85}
-          style={{
-            marginTop: 18,
-            backgroundColor: '#FF6464',
-            borderRadius: 18,
-            paddingVertical: 12,
-            alignItems: 'center',
-            shadowColor: '#FF6464',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-          }}
-        >
-          <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 14 }}>
-            + {isKn ? 'ಹೊಸ ರೂಮ್ / ಅಡ್ಡಾ ರಚಿಸಿ' : 'Create New Room'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Secret Invite Code Join Box */}
-      <View
-        style={{
-          backgroundColor: '#1E1E22',
-          borderRadius: 24,
-          padding: 18,
-          marginBottom: 20,
-          borderWidth: 1,
-          borderColor: '#2A2A30',
-        }}
-      >
-        <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '800', marginBottom: 10 }}>
-          🔑 {isKn ? 'ಇನ್ವಿಟೇಶನ್ ಕೋಡ್ ಮೂಲಕ ಸೇರಿ' : 'Join with Invite Code'}
-        </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TextInput
-            value={inviteCode}
-            onChangeText={(txt) => setInviteCode(txt.toUpperCase())}
-            placeholder={isKn ? 'ಕೋಡ್ ನಮೂದಿಸಿ (ಉದಾ: ADDA-XYZ)' : 'Enter Code (e.g. ADDA-XYZ)'}
-            placeholderTextColor="#71717A"
-            autoCapitalize="characters"
-            style={{
-              flex: 1,
-              backgroundColor: '#141416',
-              borderRadius: 14,
-              paddingHorizontal: 14,
-              paddingVertical: 10,
-              color: '#FFFFFF',
-              fontSize: 14,
-              fontWeight: '700',
-              borderWidth: 1,
-              borderColor: '#2D2D35',
-              marginRight: 10,
-            }}
-          />
+        {/* Quick action buttons row */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
           <TouchableOpacity
-            onPress={handleJoinByCode}
-            disabled={joining}
-            activeOpacity={0.8}
+            onPress={() => router.push('/(tabs)/chaos')}
             style={{
-              backgroundColor: '#3C97FF',
-              borderRadius: 14,
-              paddingHorizontal: 18,
-              paddingVertical: 11,
+              backgroundColor: 'rgba(124, 58, 237, 0.16)',
+              borderWidth: 1,
+              borderColor: 'rgba(124, 58, 237, 0.35)',
+              borderRadius: DS_TOKENS.radii.pill,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: 6,
             }}
           >
-            <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 13 }}>
-              {joining ? '...' : (isKn ? 'ಸೇರಿ' : 'Join')}
+            <Text style={{ fontSize: 13 }}>⚡</Text>
+            <Text style={{ color: '#C4B5FD', fontSize: 12, fontWeight: '800' }}>
+              {isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್ ಟಾಸ್ಕ್ ಟ್ರ್ಯಾಕರ್' : 'Daily Chaos Tasks'}
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/chats')}
+            style={{
+              backgroundColor: 'rgba(56, 189, 248, 0.12)',
+              borderWidth: 1,
+              borderColor: 'rgba(56, 189, 248, 0.3)',
+              borderRadius: DS_TOKENS.radii.pill,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <Text style={{ fontSize: 13 }}>💬</Text>
+            <Text style={{ color: '#7DD3FC', fontSize: 12, fontWeight: '800' }}>
+              {isKn ? 'ಸಕ್ರಿಯ ಚಾಟ್‌ಗಳು' : 'Active Chats'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/profile')}
+            style={{
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              borderWidth: 1,
+              borderColor: 'rgba(16, 185, 129, 0.3)',
+              borderRadius: DS_TOKENS.radii.pill,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <Text style={{ fontSize: 13 }}>📍</Text>
+            <Text style={{ color: '#6EE7B7', fontSize: 12, fontWeight: '800' }}>
+              {user?.district || 'Bengaluru'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </GlassCard>
+
+      {/* Secret Invite Code Join Box */}
+      <GlassCard style={{ marginBottom: 20 }}>
+        <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '800', marginBottom: 10 }}>
+          🔑 {isKn ? 'ಸೀಕ್ರೆಟ್ ಕೋಡ್ ಮೂಲಕ ರೂಮ್‌ಗೆ ಸೇರಿ' : 'Join a Room with Secret Code'}
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <InputField
+              value={inviteCode}
+              onChangeText={(txt) => setInviteCode(txt.toUpperCase())}
+              placeholder={isKn ? 'ಕೋಡ್ ನಮೂದಿಸಿ (ಉದಾ: ADDA-XYZ)' : 'Enter Code (e.g. ADDA-XYZ)'}
+              autoCapitalize="characters"
+              style={{ marginBottom: 0 }}
+            />
+          </View>
+          <PrimaryButton
+            title={joining ? '...' : (isKn ? 'ಸೇರಿ' : 'Join')}
+            onPress={handleJoinByCode}
+            disabled={joining}
+            style={{ paddingVertical: 11 }}
+          />
         </View>
 
         {joinStatus && (
@@ -275,123 +268,105 @@ export default function TodayScreen() {
             {joinStatus.message}
           </Text>
         )}
+      </GlassCard>
+
+      {/* Active Rooms Section */}
+      <View style={{ marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '900' }}>
+          {isKn ? 'ನಿಮ್ಮ ರೂಮ್ಸ್‌ಗಳು' : 'Your Rooms & Addas'}
+        </Text>
+        <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '700' }}>
+          {addas.length} {isKn ? 'ಸಕ್ರಿಯ' : 'active'}
+        </Text>
       </View>
 
-      {/* White Clean Container: "From your addas / chats" matching reference Screen 1 */}
-      <View
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: 30,
-          padding: 20,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
-        }}
-      >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <Text style={{ color: '#18181B', fontSize: 18, fontWeight: '900' }}>
-            {isKn ? 'ನಿಮ್ಮ ಅಡ್ಡಾಗಳು' : 'From your addas'}
-          </Text>
-          <View
-            style={{
-              backgroundColor: '#F4F4F5',
-              borderRadius: 12,
-              paddingHorizontal: 10,
-              paddingVertical: 3,
-            }}
-          >
-            <Text style={{ color: '#71717A', fontSize: 12, fontWeight: '800' }}>
-              {addas.length} {isKn ? 'ಕೊಠಡಿಗಳು' : 'rooms'}
-            </Text>
-          </View>
-        </View>
-
-        {addas.length === 0 ? (
-          <View style={{ alignItems: 'center', paddingVertical: 20 }}>
-            <Text style={{ fontSize: 36, marginBottom: 8 }}>🛖</Text>
-            <Text style={{ color: '#18181B', fontSize: 16, fontWeight: '800' }}>
-              {isKn ? 'ಇನ್ನೂ ಯಾವುದೇ ಕೊಠಡಿಗಳಿಲ್ಲ' : 'No rooms joined yet'}
-            </Text>
-            <Text style={{ color: '#71717A', fontSize: 13, textAlign: 'center', marginTop: 4 }}>
-              {isKn ? 'ಮೇಲಿರುವ ಬಟನ್ ಒತ್ತಿ ಹೊಸ ಅಡ್ಡಾ ಸೃಷ್ಟಿಸಿ!' : 'Tap Create New Room above to start your circle!'}
-            </Text>
-          </View>
-        ) : (
-          addas.map((adda, idx) => (
-            <TouchableOpacity
+      {loading ? (
+        <LoadingState message={isKn ? 'ರೂಮ್ಸ್ ಲೋಡ್ ಆಗುತ್ತಿದೆ...' : 'Loading your rooms...'} />
+      ) : addas.length === 0 ? (
+        <EmptyState
+          icon="🛖"
+          title={isKn ? 'ಯಾವುದೇ ರೂಮ್ ಇಲ್ಲ' : 'No rooms joined yet'}
+          description={
+            isKn
+              ? 'ಹೊಸ ರೂಮ್ ರಚಿಸಿ ಅಥವಾ ನಿಮ್ಮ ಸ್ನೇಹಿತರು ಹಂಚಿಕೊಂಡ ಕೋಡ್ ಬಳಸಿ ಸೇರಿ!'
+              : 'Create your first room or join one using an invite code shared by friends!'
+          }
+          actionLabel={isKn ? '+ ಹೊಸ ರೂಮ್ ರಚಿಸಿ' : '+ Create Your First Room'}
+          onAction={() => router.push('/create-adda')}
+        />
+      ) : (
+        <View style={{ gap: 12 }}>
+          {addas.map((adda) => (
+            <GlassCard
               key={adda.id}
-              onPress={() => router.push(adda.conversationId ? `/chat/${adda.conversationId}` : `/adda/${adda.id}`)}
-              activeOpacity={0.7}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 12,
-                borderBottomWidth: idx === addas.length - 1 ? 0 : 1,
-                borderBottomColor: '#F4F4F5',
+              onPress={() => {
+                if (adda.conversationId) {
+                  router.push(`/chat/${adda.conversationId}`);
+                } else {
+                  router.push(`/adda/${adda.id}`);
+                }
               }}
+              style={{ padding: 16 }}
             >
-              {/* Member Avatar Circle */}
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: ['#FF6464', '#FFA834', '#3C97FF', '#9C75F7', '#31C390'][idx % 5],
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: 14,
-                }}
-              >
-                <Text style={{ fontSize: 20 }}>
-                  {adda.name?.match(/[\p{Emoji}\u200d]+/gu)?.[0] || '🛖'}
-                </Text>
-              </View>
-
-              <View style={{ flex: 1, paddingRight: 8 }}>
-                <Text
-                  numberOfLines={1}
-                  style={{ color: '#18181B', fontSize: 15, fontWeight: '800', marginBottom: 2 }}
-                >
-                  {adda.name}
-                </Text>
-                <Text
-                  numberOfLines={1}
-                  style={{ color: '#71717A', fontSize: 13, fontWeight: '500' }}
-                >
-                  {adda.memberCount || 1} {isKn ? 'ಸದಸ್ಯರು' : 'members'} • {adda.description || 'Active circle'}
-                </Text>
-              </View>
-
-              {/* Code copy or arrow */}
-              {adda.inviteCode ? (
-                <TouchableOpacity
-                  onPress={() => copyCode(adda.inviteCode, adda.id)}
-                  style={{
-                    backgroundColor: copiedId === adda.id ? '#D1FAE5' : '#F4F4F5',
-                    borderRadius: 12,
-                    paddingHorizontal: 9,
-                    paddingVertical: 5,
-                    marginRight: 6,
-                  }}
-                >
-                  <Text
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 12 }}>
+                  <View
                     style={{
-                      color: copiedId === adda.id ? '#059669' : '#3F3F46',
-                      fontSize: 11,
-                      fontWeight: '800',
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      borderWidth: 1,
+                      borderColor: DS_TOKENS.colors.borderSubtle,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 12,
                     }}
                   >
-                    {copiedId === adda.id ? 'Copied!' : adda.inviteCode}
-                  </Text>
-                </TouchableOpacity>
-              ) : null}
+                    <Text style={{ fontSize: 20 }}>
+                      {adda.name?.match(/[\p{Emoji}\u200d]+/gu)?.[0] || '🛖'}
+                    </Text>
+                  </View>
 
-              <Text style={{ color: '#A1A1AA', fontSize: 16, fontWeight: '800' }}>›</Text>
-            </TouchableOpacity>
-          ))
-        )}
-      </View>
-    </ScrollView>
+                  <View style={{ flex: 1 }}>
+                    <Text numberOfLines={1} style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '900' }}>
+                      {adda.name}
+                    </Text>
+                    <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                      👥 {adda.memberCount || 1} {isKn ? 'ಸದಸ್ಯರು' : 'members'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Invite Code Badge & Copy */}
+                {Boolean(adda.inviteCode) && (
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      copyCode(adda.inviteCode, adda.id);
+                    }}
+                    style={{
+                      backgroundColor: copiedId === adda.id ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                      borderWidth: 1,
+                      borderColor: copiedId === adda.id ? '#10B981' : DS_TOKENS.colors.borderSubtle,
+                      borderRadius: DS_TOKENS.radii.pill,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <Text style={{ color: copiedId === adda.id ? '#10B981' : '#E2E8F0', fontSize: 11, fontWeight: '800' }}>
+                      {copiedId === adda.id ? '✓ COPIED' : `🔑 ${adda.inviteCode}`}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </GlassCard>
+          ))}
+        </View>
+      )}
+    </MainLayout>
   );
 }

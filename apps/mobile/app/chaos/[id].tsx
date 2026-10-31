@@ -1,20 +1,32 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
+import {
+  MainLayout,
+  PageHeader,
+  GlassCard,
+  PrimaryButton,
+  SecondaryButton,
+  InputField,
+  ToastNotification,
+} from '../../src/components/DesignSystem';
 
 export default function ChaosResponseScreen() {
   const { id: activityId } = useLocalSearchParams<{ id: string }>();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const router = useRouter();
 
   const [responseContent, setResponseContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const isKn = i18n.language === 'kn';
 
   const handleSubmit = async () => {
     if (!responseContent.trim()) {
-      Alert.alert(t('common.error'), 'ನಿಮ್ಮ ಉತ್ತರವನ್ನು ಬರೆಯಿರಿ (Please enter your submission)');
+      setToastMessage(isKn ? 'ದಯವಿಟ್ಟು ನಿಮ್ಮ ಉತ್ತರ ಬರೆಯಿರಿ' : 'Please enter your response');
       return;
     }
 
@@ -24,64 +36,60 @@ export default function ChaosResponseScreen() {
         activityId,
         content: responseContent.trim(),
       });
-      Alert.alert(t('common.success'), 'Chaos submission recorded! 🔥');
-      router.back();
+      setToastMessage(isKn ? 'ಉತ್ತರ ದಾಖಲಾಗಿದೆ! 🔥' : 'Submission recorded! 🔥');
+      setTimeout(() => router.back(), 700);
     } catch (e: any) {
-      Alert.alert(t('common.error'), e.message || 'Submission failed');
+      setToastMessage(e.message || 'Submission failed');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#24183B', padding: 20 }}>
-      <Text style={{ color: '#D9FF67', fontSize: 22, fontWeight: '900', marginBottom: 6 }}>
-        {t('chaos.submitAnswer')} 🔥
-      </Text>
-      <Text style={{ color: '#F4F0FF', opacity: 0.8, fontSize: 13, marginBottom: 20 }}>
-        Be funny, be unfiltered, be chaotic!
-      </Text>
-
-      <TextInput
-        value={responseContent}
-        onChangeText={setResponseContent}
-        placeholder="ನಿಮ್ಮ ಉತ್ತರವನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ..."
-        placeholderTextColor="#8C7D9E"
-        multiline
-        numberOfLines={4}
-        style={{
-          backgroundColor: '#352454',
-          borderRadius: 14,
-          padding: 16,
-          color: '#FFFFFF',
-          fontSize: 16,
-          height: 120,
-          textAlignVertical: 'top',
-          borderWidth: 1.5,
-          borderColor: '#47326B',
-          marginBottom: 20,
-        }}
+    <MainLayout>
+      <ToastNotification
+        visible={Boolean(toastMessage)}
+        message={toastMessage || ''}
+        onDismiss={() => setToastMessage(null)}
       />
 
-      <TouchableOpacity
-        onPress={handleSubmit}
-        disabled={submitting}
-        style={{
-          backgroundColor: '#D9FF67',
-          paddingVertical: 14,
-          borderRadius: 12,
-          alignItems: 'center',
-        }}
-      >
-        {submitting ? (
-          <ActivityIndicator color="#24183B" />
-        ) : (
-          <Text style={{ color: '#24183B', fontWeight: '800', fontSize: 15 }}>
-            Submit & Roast 🚀
-          </Text>
-        )}
-      </TouchableOpacity>
-    </View>
+      <PageHeader
+        title={isKn ? 'ಕೆಯೋಸ್ ಪ್ರತಿಕ್ರಿಯೆ' : 'Daily Challenge Entry'}
+        subtitle={isKn ? 'ನಿಮ್ಮ ಉತ್ತರವನ್ನು ಇಲ್ಲಿ ಸಲ್ಲಿಸಿ' : 'Submit your quick entry for this daily challenge'}
+        actions={
+          <SecondaryButton
+            title={isKn ? '‹ ಹಿಂತಿರುಗಿ' : '‹ Back'}
+            onPress={() => router.back()}
+          />
+        }
+      />
+
+      <View style={{ maxWidth: 540, width: '100%', alignSelf: 'center' }}>
+        <GlassCard elevated>
+          <InputField
+            label={isKn ? 'ನಿಮ್ಮ ಉತ್ತರ (Response) *' : 'Your Response *'}
+            value={responseContent}
+            onChangeText={setResponseContent}
+            placeholder={isKn ? 'ನಿಮ್ಮ ಉತ್ತರವನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ...' : 'Type your answer or action note here...'}
+            multiline
+            numberOfLines={4}
+          />
+
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+            <SecondaryButton
+              title={isKn ? 'ರದ್ದು' : 'Cancel'}
+              onPress={() => router.back()}
+              style={{ flex: 1 }}
+            />
+            <PrimaryButton
+              title={isKn ? 'ಸಲ್ಲಿಸಿ 🔥' : 'Submit Entry 🔥'}
+              onPress={handleSubmit}
+              loading={submitting}
+              style={{ flex: 1 }}
+            />
+          </View>
+        </GlassCard>
+      </View>
+    </MainLayout>
   );
 }
-

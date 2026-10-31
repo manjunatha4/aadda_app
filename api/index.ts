@@ -14,6 +14,7 @@ interface CloudData {
   folders: any[];
   folderItems: Record<string, any[]>;
   invitations: any[];
+  dailyChaos: Record<string, any[]>;
 }
 
 // In-memory cache for fast response times
@@ -22,6 +23,7 @@ let memoryCache: CloudData = {
   addas: [],
   conversations: [],
   messages: {},
+  dailyChaos: {},
   folders: [
     { id: '1', title: 'Friends', color: '#FFB82E', emoji: '💛', count: 12 },
     { id: '2', title: 'Astronomy', color: '#3C97FF', emoji: '🚀', count: 8 },
@@ -500,13 +502,164 @@ export default async function handler(req: any, res: any) {
     }
 
     // -------------------------------------------------------------
-    // VIBE CHECK & CHAOS
+    // DAILY CHAOS FULL PRODUCTION CRUD & REAL STATS
     // -------------------------------------------------------------
-    if (pathname.startsWith('/vibe')) {
-      return json([]);
+    if (pathname === '/chaos' || pathname.startsWith('/chaos/')) {
+      if (!store.dailyChaos) {
+        store.dailyChaos = {};
+      }
+
+      // Helper to identify user from header or query or body
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.replace('Bearer ', '').trim();
+      const queryParams = new URL(req.url || '', 'http://localhost').searchParams;
+      const currentUserId =
+        token.replace('token_', '') ||
+        queryParams.get('userId') ||
+        body.userId ||
+        store.users[0]?.id ||
+        'usr_default';
+
+      if (!store.dailyChaos[currentUserId]) {
+        store.dailyChaos[currentUserId] = [];
+      }
+
+      // 1. LIST & FILTER CHAOS ENTRIES
+      if (pathname === '/chaos' && method === 'GET') {
+        let userItems = [...store.dailyChaos[currentUserId]];
+
+        // Calculate REAL statistics across all user records before filtering
+        const stats = {
+          total: userItems.length,
+          pending: userItems.filter((i) => i.status === 'PENDING').length,
+          inProgress: userItems.filter((i) => i.status === 'IN_PROGRESS').length,
+          completed: userItems.filter((i) => i.status === 'COMPLETED').length,
+        };
+
+        // Filter by status
+        const statusFilter = queryParams.get('status');
+        if (statusFilter && statusFilter !== 'ALL') {
+          userItems = userItems.filter((i) => i.status === statusFilter);
+        }
+
+        // Filter by priority
+        const priorityFilter = queryParams.get('priority');
+        if (priorityFilter && priorityFilter !== 'ALL') {
+          userItems = userItems.filter((i) => i.priority === priorityFilter);
+        }
+
+        // Filter by category
+        const categoryFilter = queryParams.get('category');
+        if (categoryFilter && categoryFilter !== 'ALL') {
+          userItems = userItems.filter((i) => i.category === categoryFilter);
+        }
+
+        // Filter by date
+        const dateFilter = queryParams.get('date');
+        if (dateFilter) {
+          userItems = userItems.filter((i) => i.date === dateFilter);
+        }
+
+        // Search in title, description, and tags
+        const searchQuery = queryParams.get('search');
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase().trim();
+          userItems = userItems.filter(
+            (i) =>
+              i.title?.toLowerCase().includes(q) ||
+              i.description?.toLowerCase().includes(q) ||
+              i.tags?.some((t: string) => t.toLowerCase().includes(q)),
+          );
+        }
+
+        // Sort: newest first
+        userItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+        return json({ items: userItems, stats });
+      }
+
+      // 2. CREATE CHAOS ENTRY
+      if (pathname === '/chaos' && method === 'POST') {
+        const title = (body.title || '').trim();
+        if (!title) {
+          return json({ message: 'Title is required' }, 400);
+        }
+
+        const newChaosItem = {
+          id: `chaos_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          userId: currentUserId,
+          title,
+          description: (body.description || '').trim(),
+          date: body.date || new Date().toISOString().split('T')[0],
+          deadline: body.deadline || '',
+          priority: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(body.priority)
+            ? body.priority
+            : 'MEDIUM',
+          category: (body.category || 'General').trim(),
+          tags: Array.isArray(body.tags) ? body.tags : [],
+          status: ['PENDING', 'IN_PROGRESS', 'COMPLETED'].includes(body.status)
+            ? body.status
+            : 'PENDING',
+          completedAt: body.status === 'COMPLETED' ? new Date().toISOString() : null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        store.dailyChaos[currentUserId].unshift(newChaosItem);
+        await saveToCloud(store);
+        return json(newChaosItem, 201);
+      }
+
+      // 3. UPDATE / TOGGLE CHAOS ENTRY
+      if (pathname.startsWith('/chaos/') && method === 'PATCH') {
+        const chaosId = pathname.replace('/chaos/', '').split('?')[0];
+        const userItems = store.dailyChaos[currentUserId];
+        const itemIndex = userItems.findIndex((i) => i.id === chaosId);
+
+        if (itemIndex === -1) {
+          return json({ message: 'Chaos entry not found' }, 404);
+        }
+
+        const existing = userItems[itemIndex];
+        const nextStatus = body.status !== undefined ? body.status : existing.status;
+        const isNowCompleted = nextStatus === 'COMPLETED';
+
+        const updated = {
+          ...existing,
+          title: body.title !== undefined ? body.title.trim() : existing.title,
+          description: body.description !== undefined ? body.description.trim() : existing.description,
+          date: body.date !== undefined ? body.date : existing.date,
+          deadline: body.deadline !== undefined ? body.deadline : existing.deadline,
+          priority: body.priority !== undefined ? body.priority : existing.priority,
+          category: body.category !== undefined ? body.category : existing.category,
+          tags: body.tags !== undefined ? (Array.isArray(body.tags) ? body.tags : existing.tags) : existing.tags,
+          status: nextStatus,
+          completedAt: isNowCompleted ? (existing.completedAt || new Date().toISOString()) : null,
+          updatedAt: new Date().toISOString(),
+        };
+
+        userItems[itemIndex] = updated;
+        await saveToCloud(store);
+        return json(updated);
+      }
+
+      // 4. DELETE CHAOS ENTRY
+      if (pathname.startsWith('/chaos/') && method === 'DELETE') {
+        const chaosId = pathname.replace('/chaos/', '').split('?')[0];
+        const userItems = store.dailyChaos[currentUserId];
+        const itemIndex = userItems.findIndex((i) => i.id === chaosId);
+
+        if (itemIndex === -1) {
+          return json({ message: 'Chaos entry not found' }, 404);
+        }
+
+        userItems.splice(itemIndex, 1);
+        await saveToCloud(store);
+        return json({ success: true, id: chaosId });
+      }
     }
 
-    if (pathname.startsWith('/chaos')) {
+    if (pathname.startsWith('/vibe')) {
       return json([]);
     }
 

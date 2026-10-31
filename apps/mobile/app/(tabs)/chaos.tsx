@@ -1,782 +1,712 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, RefreshControl, ScrollView, TextInput, Modal, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, TouchableOpacity, RefreshControl, Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
-import { SavedFolder, SavedItem } from '../../src/services/clientStore';
-import { ChaosCard } from '../../src/components/ChaosCard';
-import { Floating } from '../../src/components/AnimatedVisuals';
+import { useAuthStore } from '../../src/stores/authStore';
+import { DailyChaosItem, DailyChaosStats, ChaosPriority, ChaosStatus } from '@aadda/shared';
+import {
+  MainLayout,
+  PageHeader,
+  GlassCard,
+  PrimaryButton,
+  SecondaryButton,
+  InputField,
+  Modal,
+  Dropdown,
+  EmptyState,
+  LoadingState,
+  ErrorState,
+  ConfirmationDialog,
+  ToastNotification,
+  DS_TOKENS,
+} from '../../src/components/DesignSystem';
 
-const SAMPLE_CHALLENGES = [
-  {
-    id: 'ch-1',
-    promptText: 'Most likely to order Swiggy at 2 AM and sleep before it arrives',
-    promptTextKn: 'ರಾತ್ರಿ 2 ಗಂಟೆಗೆ ಸ್ವಿಗ್ಗಿ ಆರ್ಡರ್ ಮಾಡಿ ಡೆಲಿವರಿ ಬರೋ ಮುಂಚೆ ನಿದ್ರೆ ಹೋಗುವವರು ಯಾರು?',
-    category: 'MOST_LIKELY_TO',
-    expiresAt: new Date(Date.now() + 86400000).toISOString(),
-    entries: [
-      { id: 'e1', content: 'Alex 100% does this every weekend', voteCount: 14, user: { displayName: 'Kavya' } },
-      { id: 'e2', content: 'Me tbh, happened yesterday 😂', voteCount: 9, user: { displayName: 'Alex' } },
-    ],
-  },
-  {
-    id: 'ch-2',
-    promptText: 'Describe your best friend using only ONE dramatic word',
-    promptTextKn: 'ನಿಮ್ಮ ಬೆಸ್ಟ್ ಫ್ರೆಂಡ್‌ನ ಒಂದೇ ನಾಟಕೀಯ ಪದದಲ್ಲಿ ವಿವರಿಸಿ',
-    category: 'ONE_WORD_ROAST',
-    expiresAt: new Date(Date.now() + 172800000).toISOString(),
-    entries: [
-      { id: 'e3', content: 'Unpredictable 🌪️', voteCount: 18, user: { displayName: 'Rahul' } },
-      { id: 'e4', content: 'Drama-Queen 💅', voteCount: 12, user: { displayName: 'Pooja' } },
-    ],
-  },
+const PRIORITY_OPTIONS = [
+  { label: 'Low', value: 'LOW', color: '#10B981', emoji: '🟢' },
+  { label: 'Medium', value: 'MEDIUM', color: '#38BDF8', emoji: '🔵' },
+  { label: 'High', value: 'HIGH', color: '#F59E0B', emoji: '🟡' },
+  { label: 'Critical', value: 'CRITICAL', color: '#EF4444', emoji: '🔴' },
 ];
 
-const FOLDER_COLORS = ['#FFB82E', '#3C97FF', '#FF7A29', '#9C75F7', '#FF6464', '#31C390', '#EC4899', '#8B5CF6'];
-const FOLDER_EMOJIS = ['📁', '💛', '🚀', '💻', '🦄', '🍕', '⚽', '🎵', '📚', '🎮', '✈️', '🎬', '💡'];
+const CATEGORY_OPTIONS = [
+  { label: 'General', value: 'General', emoji: '⚡' },
+  { label: 'Work & Code', value: 'Work & Code', emoji: '💻' },
+  { label: 'Personal', value: 'Personal', emoji: '🌟' },
+  { label: 'Health', value: 'Health', emoji: '🏃' },
+  { label: 'Hangout', value: 'Hangout', emoji: '☕' },
+  { label: 'Challenge', value: 'Challenge', emoji: '🔥' },
+];
 
-export default function ChaosScreen() {
-  const { t, i18n } = useTranslation();
-  const router = useRouter();
+const STATUS_FILTERS: Array<{ label: string; value: string }> = [
+  { label: 'All Tasks', value: 'ALL' },
+  { label: 'Pending', value: 'PENDING' },
+  { label: 'In Progress', value: 'IN_PROGRESS' },
+  { label: 'Completed', value: 'COMPLETED' },
+];
 
-  const [folders, setFolders] = useState<SavedFolder[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<SavedFolder | null>(null);
-  const [folderItems, setFolderItems] = useState<SavedItem[]>([]);
-  const [searchItemQuery, setSearchItemQuery] = useState('');
-  const [selectedItemDetail, setSelectedItemDetail] = useState<SavedItem | null>(null);
-
-  // New Folder Modal
-  const [showNewFolderModal, setShowNewFolderModal] = useState(false);
-  const [newFolderTitle, setNewFolderTitle] = useState('');
-  const [newFolderEmoji, setNewFolderEmoji] = useState('📁');
-  const [newFolderColor, setNewFolderColor] = useState('#FFB82E');
-
-  // Add Item Modal
-  const [showAddItemModal, setShowAddItemModal] = useState(false);
-  const [newItemTitle, setNewItemTitle] = useState('');
-  const [newItemDescription, setNewItemDescription] = useState('');
-  const [newItemTag, setNewItemTag] = useState('');
-
-  const [challenges, setChallenges] = useState<any[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
-
+export default function DailyChaosScreen() {
+  const { i18n } = useTranslation();
   const isKn = i18n.language === 'kn';
+  const user = useAuthStore((state) => state.user);
 
-  const loadData = async () => {
+  // Data state
+  const [items, setItems] = useState<DailyChaosItem[]>([]);
+  const [stats, setStats] = useState<DailyChaosStats>({
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    completed: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Filters state
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [priorityFilter, setPriorityFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Creation & Edit Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingItem, setEditingItem] = useState<DailyChaosItem | null>(null);
+  const [formTitle, setFormTitle] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
+  const [formDeadline, setFormDeadline] = useState('22:00');
+  const [formPriority, setFormPriority] = useState<ChaosPriority>('MEDIUM');
+  const [formCategory, setFormCategory] = useState('General');
+  const [formTags, setFormTags] = useState('');
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // Delete dialog state
+  const [deleteTarget, setDeleteTarget] = useState<DailyChaosItem | null>(null);
+
+  // Toast state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+
+  const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToastMessage(msg);
+    setToastType(type);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Fetch real chaos records from backend API / database
+  const loadChaos = async () => {
     try {
-      const fList = await api.get('/folders').catch(() => []);
-      if (Array.isArray(fList) && fList.length > 0) {
-        setFolders(fList);
-      }
+      setErrorMessage(null);
+      const params = new URLSearchParams();
+      if (statusFilter !== 'ALL') params.set('status', statusFilter);
+      if (priorityFilter !== 'ALL') params.set('priority', priorityFilter);
+      if (searchQuery.trim()) params.set('search', searchQuery.trim());
 
-      const addas = await api.get('/addas').catch(() => []);
-      const allChallenges: any[] = [];
-      for (const a of addas) {
-        const cList = await api.get(`/chaos/adda/${a.id}`).catch(() => []);
-        allChallenges.push(...cList);
+      const url = `/chaos?${params.toString()}`;
+      const res = await api.get(url);
+
+      if (res && Array.isArray(res.items)) {
+        setItems(res.items);
+        if (res.stats) {
+          setStats(res.stats);
+        }
+      } else if (Array.isArray(res)) {
+        setItems(res);
       }
-      setChallenges(allChallenges.length > 0 ? allChallenges : SAMPLE_CHALLENGES);
-    } catch {
-      setChallenges(SAMPLE_CHALLENGES);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to fetch Daily Chaos records');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadChaos();
+  }, [statusFilter, priorityFilter, searchQuery]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadData();
-    if (selectedFolder) {
-      await openFolder(selectedFolder);
-    }
-    setRefreshing(false);
+    await loadChaos();
   };
 
-  // Open folder detail view
-  const openFolder = async (folder: SavedFolder) => {
-    setSelectedFolder(folder);
+  // Open modal for Create
+  const handleOpenCreateModal = () => {
+    setEditingItem(null);
+    setFormTitle('');
+    setFormDescription('');
+    setFormDate(new Date().toISOString().split('T')[0]);
+    setFormDeadline('22:00');
+    setFormPriority('MEDIUM');
+    setFormCategory('General');
+    setFormTags('');
+    setFormError(null);
+    setModalVisible(true);
+  };
+
+  // Open modal for Edit
+  const handleOpenEditModal = (item: DailyChaosItem) => {
+    setEditingItem(item);
+    setFormTitle(item.title);
+    setFormDescription(item.description || '');
+    setFormDate(item.date || new Date().toISOString().split('T')[0]);
+    setFormDeadline(item.deadline || '');
+    setFormPriority(item.priority || 'MEDIUM');
+    setFormCategory(item.category || 'General');
+    setFormTags(item.tags?.join(', ') || '');
+    setFormError(null);
+    setModalVisible(true);
+  };
+
+  // Save (Create or Update)
+  const handleSaveChaos = async () => {
+    if (!formTitle.trim()) {
+      setFormError(isKn ? 'ದಯವಿಟ್ಟು ಶೀರ್ಷಿಕೆ ನಮೂದಿಸಿ' : 'Please enter a task title');
+      return;
+    }
+
     try {
-      const items = await api.get(`/folders/${folder.id}/items`).catch(() => []);
-      setFolderItems(Array.isArray(items) ? items : []);
-    } catch {
-      setFolderItems([]);
+      setFormSubmitting(true);
+      setFormError(null);
+
+      const parsedTags = formTags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      if (editingItem) {
+        // Update
+        await api.patch(`/chaos/${editingItem.id}`, {
+          title: formTitle.trim(),
+          description: formDescription.trim(),
+          date: formDate,
+          deadline: formDeadline,
+          priority: formPriority,
+          category: formCategory,
+          tags: parsedTags,
+        });
+        showToast(isKn ? 'ಕೆಯೋಸ್ ನವೀಕರಿಸಲಾಗಿದೆ! ✓' : 'Chaos entry updated successfully! ✓');
+      } else {
+        // Create
+        await api.post('/chaos', {
+          title: formTitle.trim(),
+          description: formDescription.trim(),
+          date: formDate,
+          deadline: formDeadline,
+          priority: formPriority,
+          category: formCategory,
+          tags: parsedTags,
+          status: 'PENDING',
+        });
+        showToast(isKn ? 'ಹೊಸ ಕೆಯೋಸ್ ಸೇರಿಸಲಾಗಿದೆ! 🎉' : 'Daily Chaos created successfully! 🎉');
+      }
+
+      setModalVisible(false);
+      await loadChaos();
+    } catch (err: any) {
+      setFormError(err.message || 'Failed to save chaos task');
+    } finally {
+      setFormSubmitting(false);
     }
   };
 
-  // Create new folder
-  const handleCreateFolder = async () => {
-    if (!newFolderTitle.trim()) return;
+  // Toggle complete / status
+  const handleToggleStatus = async (item: DailyChaosItem) => {
+    const nextStatus: ChaosStatus = item.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
     try {
-      const created = await api.post('/folders', {
-        title: newFolderTitle.trim(),
-        emoji: newFolderEmoji,
-        color: newFolderColor,
-      });
-      setFolders((prev) => [...prev, created]);
-      setNewFolderTitle('');
-      setShowNewFolderModal(false);
-    } catch (e: any) {
-      Alert.alert('Error', e.message || 'Could not create folder');
-    }
-  };
-
-  // Add new item inside folder
-  const handleAddItem = async () => {
-    if (!selectedFolder || !newItemTitle.trim()) return;
-    try {
-      const createdItem = await api.post(`/folders/${selectedFolder.id}/items`, {
-        title: newItemTitle.trim(),
-        description: newItemDescription.trim(),
-        tag: newItemTag.trim() || 'General',
-      });
-
-      setFolderItems((prev) => [createdItem, ...prev]);
-
-      // Update folder count locally
-      setFolders((prev) =>
-        prev.map((f) =>
-          f.id === selectedFolder.id ? { ...f, count: (f.count || 0) + 1 } : f,
-        ),
+      await api.patch(`/chaos/${item.id}`, { status: nextStatus });
+      showToast(
+        nextStatus === 'COMPLETED'
+          ? (isKn ? 'ಅಭಿನಂದನೆಗಳು! ಕೆಯೋಸ್ ಪೂರ್ಣಗೊಂಡಿದೆ! 🎉' : 'Completed! Keep crushing your goals! 🎉')
+          : (isKn ? 'ಮರುತೆರೆಯಲಾಗಿದೆ' : 'Reopened task'),
       );
-      setSelectedFolder((prev) => (prev ? { ...prev, count: (prev.count || 0) + 1 } : null));
-
-      setNewItemTitle('');
-      setNewItemDescription('');
-      setNewItemTag('');
-      setShowAddItemModal(false);
-    } catch (e: any) {
-      Alert.alert('Error', e.message || 'Could not add item');
+      await loadChaos();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to update status', 'error');
     }
   };
 
-  const handleVote = async (entryId: string) => {
+  // Confirm and Delete
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await api.post(`/chaos/vote/${entryId}`).catch(() => {});
-      setChallenges((prev) =>
-        prev.map((c) => ({
-          ...c,
-          entries: c.entries?.map((e: any) =>
-            e.id === entryId ? { ...e, voteCount: e.voteCount + 1 } : e,
-          ),
-        })),
-      );
-    } catch (e) {
-      console.error(e);
+      await api.delete(`/chaos/${deleteTarget.id}`);
+      showToast(isKn ? 'ತೆಗೆದುಹಾಕಲಾಗಿದೆ' : 'Chaos task deleted');
+      setDeleteTarget(null);
+      await loadChaos();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to delete entry', 'error');
     }
   };
-
-  const filteredItems = folderItems.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchItemQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchItemQuery.toLowerCase()) ||
-      item.tag.toLowerCase().includes(searchItemQuery.toLowerCase()),
-  );
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: '#F5F2EB' }}
-      contentContainerStyle={{ padding: 18, paddingBottom: 110 }}
+    <MainLayout
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#FFB82E" />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#7C3AED" />
       }
-      showsVerticalScrollIndicator={false}
     >
-      {/* ------------------------------------------------------------- */}
-      {/* 1. DEDICATED FOLDER DETAIL VIEW */}
-      {/* ------------------------------------------------------------- */}
-      {selectedFolder ? (
-        <View>
-          {/* Back button & Folder Header */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <TouchableOpacity
-              onPress={() => setSelectedFolder(null)}
-              activeOpacity={0.8}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: '#FFFFFF',
-                borderRadius: 18,
-                paddingHorizontal: 12,
-                paddingVertical: 8,
-                borderWidth: 1,
-                borderColor: '#E8E5DD',
-              }}
-            >
-              <Text style={{ color: '#18171C', fontSize: 18, fontWeight: '900', marginRight: 4 }}>‹</Text>
-              <Text style={{ color: '#18171C', fontSize: 13, fontWeight: '800' }}>
-                {isKn ? 'ಉಳಿಸಲಾಗಿದೆ' : 'Back to Saved'}
-              </Text>
-            </TouchableOpacity>
+      <ToastNotification
+        visible={Boolean(toastMessage)}
+        message={toastMessage || ''}
+        type={toastType}
+        onDismiss={() => setToastMessage(null)}
+      />
 
-            <TouchableOpacity
-              onPress={() => setShowAddItemModal(true)}
-              activeOpacity={0.85}
-              style={{
-                backgroundColor: selectedFolder.color,
-                borderRadius: 18,
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                shadowColor: selectedFolder.color,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 5,
-              }}
-            >
-              <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 13 }}>
-                + {isKn ? 'ಐಟಂ ಸೇರಿಸಿ' : 'Add Item'}
-              </Text>
-            </TouchableOpacity>
+      {/* Page Header */}
+      <PageHeader
+        title={isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್' : 'Daily Chaos'}
+        subtitle={
+          isKn
+            ? 'ನಿಮ್ಮ ದೈನಂದಿನ ಸವಾಲುಗಳು ಮತ್ತು ಅನಿರೀಕ್ಷಿತ ಕಾರ್ಯಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ'
+            : 'Track, manage, and conquer your unexpected daily tasks and challenges'
+        }
+        badge={`${stats.pending} pending`}
+        actions={
+          <PrimaryButton
+            title={isKn ? '+ ಹೊಸ ಕೆಯೋಸ್' : '+ Create Chaos'}
+            icon="⚡"
+            onPress={handleOpenCreateModal}
+          />
+        }
+      />
+
+      {/* Real Statistics Cards */}
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        {/* Total Tasks */}
+        <GlassCard style={{ flex: 1, minWidth: 140, padding: 16 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '800' }}>
+              {isKn ? 'ಒಟ್ಟು' : 'Total'}
+            </Text>
+            <Text style={{ fontSize: 18 }}>📊</Text>
           </View>
+          <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: '900', marginTop: 8 }}>
+            {stats.total}
+          </Text>
+          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+            {isKn ? 'ನೋಂದಾಯಿತ ಕಾರ್ಯಗಳು' : 'Recorded entries'}
+          </Text>
+        </GlassCard>
 
-          {/* Folder Hero Banner */}
-          <View
-            style={{
-              backgroundColor: selectedFolder.color,
-              borderRadius: 26,
-              padding: 20,
-              marginBottom: 16,
-              shadowColor: selectedFolder.color,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.25,
-              shadowRadius: 8,
-            }}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={{ fontSize: 36, marginRight: 12 }}>{selectedFolder.emoji}</Text>
-                <View>
-                  <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: '900', letterSpacing: -0.3 }}>
-                    {selectedFolder.title}
-                  </Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '700' }}>
-                    {folderItems.length} {isKn ? 'ಐಟಂಗಳು' : 'saved items'}
-                  </Text>
-                </View>
-              </View>
-
-              <Floating distance={4} duration={2200}>
-                <Text style={{ fontSize: 24 }}>✨</Text>
-              </Floating>
-            </View>
+        {/* Pending */}
+        <GlassCard style={{ flex: 1, minWidth: 140, padding: 16, borderColor: 'rgba(245, 158, 11, 0.3)' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: '#FBBF24', fontSize: 12, fontWeight: '800' }}>
+              {isKn ? 'ಬಾಕಿ ಇದೆ' : 'Pending'}
+            </Text>
+            <Text style={{ fontSize: 18 }}>⏳</Text>
           </View>
+          <Text style={{ color: '#FBBF24', fontSize: 28, fontWeight: '900', marginTop: 8 }}>
+            {stats.pending}
+          </Text>
+          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+            {isKn ? 'ತಕ್ಷಣದ ಗಮನ ಅಗತ್ಯವಿದೆ' : 'Needs attention'}
+          </Text>
+        </GlassCard>
 
-          {/* Search inside folder */}
-          {folderItems.length > 0 && (
-            <View
-              style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: 16,
-                paddingHorizontal: 14,
-                paddingVertical: 9,
-                marginBottom: 14,
-                flexDirection: 'row',
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: '#E8E5DD',
-              }}
-            >
-              <Text style={{ marginRight: 8, fontSize: 14 }}>🔍</Text>
-              <TextInput
-                value={searchItemQuery}
-                onChangeText={setSearchItemQuery}
-                placeholder={isKn ? 'ಫೋಲ್ಡರ್‌ನಲ್ಲಿ ಹುಡುಕಿ...' : 'Search in this folder...'}
-                placeholderTextColor="#A8A29E"
-                style={{ flex: 1, fontSize: 14, color: '#18171C', fontWeight: '600' }}
-              />
-              {Boolean(searchItemQuery) && (
-                <TouchableOpacity onPress={() => setSearchItemQuery('')}>
-                  <Text style={{ color: '#A8A29E', fontWeight: '800' }}>✕</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
+        {/* In Progress */}
+        <GlassCard style={{ flex: 1, minWidth: 140, padding: 16, borderColor: 'rgba(56, 189, 248, 0.3)' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800' }}>
+              {isKn ? 'ಪ್ರಗತಿಯಲ್ಲಿದೆ' : 'In Progress'}
+            </Text>
+            <Text style={{ fontSize: 18 }}>⚡</Text>
+          </View>
+          <Text style={{ color: '#38BDF8', fontSize: 28, fontWeight: '900', marginTop: 8 }}>
+            {stats.inProgress}
+          </Text>
+          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+            {isKn ? 'ಕೆಲಸ ನಡೆಯುತ್ತಿದೆ' : 'Currently working'}
+          </Text>
+        </GlassCard>
 
-          {/* Folder Items List */}
-          {filteredItems.length === 0 ? (
-            <View
-              style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: 24,
-                padding: 30,
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: '#E8E5DD',
-              }}
-            >
-              <Text style={{ fontSize: 44, marginBottom: 10 }}>📭</Text>
-              <Text style={{ color: '#18171C', fontSize: 18, fontWeight: '900' }}>
-                {isKn ? 'ಯಾವುದೇ ಐಟಂ ಉಳಿಸಲಾಗಿಲ್ಲ' : 'No items in this folder yet'}
-              </Text>
-              <Text style={{ color: '#78716C', fontSize: 13, textAlign: 'center', marginTop: 4, marginBottom: 16 }}>
-                {isKn
-                  ? 'ಮೇಲಿನ "+ ಐಟಂ ಸೇರಿಸಿ" ಬಟನ್ ಒತ್ತಿ ಹೊಸ ನೋಟ್ ಅಥವಾ ಲಿಂಕ್ ಸೇರಿಸಿ'
-                  : 'Tap "+ Add Item" above to save your first note, quote, or link here!'}
-              </Text>
+        {/* Completed */}
+        <GlassCard style={{ flex: 1, minWidth: 140, padding: 16, borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: '#34D399', fontSize: 12, fontWeight: '800' }}>
+              {isKn ? 'ಪೂರ್ಣಗೊಂಡಿದೆ' : 'Completed'}
+            </Text>
+            <Text style={{ fontSize: 18 }}>✓</Text>
+          </View>
+          <Text style={{ color: '#34D399', fontSize: 28, fontWeight: '900', marginTop: 8 }}>
+            {stats.completed}
+          </Text>
+          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+            {isKn ? 'ಯಶಸ್ವಿಯಾಗಿ ಮುಗಿದಿದೆ' : 'Goals achieved'}
+          </Text>
+        </GlassCard>
+      </View>
+
+      {/* Search & Filter Controls */}
+      <GlassCard style={{ padding: 14, marginBottom: 20 }}>
+        {/* Search Bar */}
+        <InputField
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder={isKn ? 'ಶೀರ್ಷಿಕೆ, ವಿವರ ಅಥವಾ ಟ್ಯಾಗ್‌ಗಳ ಮೂಲಕ ಹುಡುಕಿ...' : 'Search chaos by title, note, or tag...'}
+          icon="🔍"
+          style={{ marginBottom: 12 }}
+        />
+
+        {/* Status Filter Tabs */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+          {STATUS_FILTERS.map((f) => {
+            const isSelected = statusFilter === f.value;
+            return (
               <TouchableOpacity
-                onPress={() => setShowAddItemModal(true)}
+                key={f.value}
+                onPress={() => setStatusFilter(f.value)}
                 style={{
-                  backgroundColor: selectedFolder.color,
-                  borderRadius: 16,
-                  paddingHorizontal: 18,
-                  paddingVertical: 10,
-                }}
-              >
-                <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 13 }}>
-                  + {isKn ? 'ಮೊದಲ ಐಟಂ ಸೇರಿಸಿ' : 'Save First Item'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            filteredItems.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => setSelectedItemDetail(item)}
-                activeOpacity={0.8}
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 20,
-                  padding: 16,
-                  marginBottom: 10,
+                  backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.25)' : 'rgba(255, 255, 255, 0.06)',
                   borderWidth: 1,
-                  borderColor: '#E8E5DD',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 4,
+                  borderColor: isSelected ? '#7C3AED' : 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: DS_TOKENS.radii.pill,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
                 }}
               >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <Text style={{ color: '#18171C', fontSize: 16, fontWeight: '900', flex: 1, marginRight: 8 }}>
-                    {item.title}
-                  </Text>
-                  <View
-                    style={{
-                      backgroundColor: '#F5F2EB',
-                      borderRadius: 10,
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                    }}
-                  >
-                    <Text style={{ color: '#78716C', fontSize: 11, fontWeight: '800' }}>
-                      {item.tag}
-                    </Text>
-                  </View>
-                </View>
-
-                {Boolean(item.description) && (
-                  <Text numberOfLines={2} style={{ color: '#57534E', fontSize: 13, lineHeight: 18, marginBottom: 8 }}>
-                    {item.description}
-                  </Text>
-                )}
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ color: '#A8A29E', fontSize: 11, fontWeight: '700' }}>
-                    📅 {item.date}
-                  </Text>
-                  <Text style={{ color: selectedFolder.color, fontSize: 12, fontWeight: '800' }}>
-                    {isKn ? 'ವಿವರ ನೋಡಿ ›' : 'View details ›'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-      ) : (
-        /* ------------------------------------------------------------- */
-        /* 2. MAIN FOLDERS GRID & DAILY CHAOS POLLS */
-        /* ------------------------------------------------------------- */
-        <View>
-          {/* Header matching reference Screen 2 */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ color: '#18171C', fontSize: 32, fontWeight: '900', letterSpacing: -0.5 }}>
-                {isKn ? 'ಉಳಿಸಲಾಗಿದೆ' : 'Saved'}
-              </Text>
-
-              {/* Functional "folders +" button */}
-              <TouchableOpacity
-                onPress={() => setShowNewFolderModal(true)}
-                activeOpacity={0.8}
-                style={{
-                  backgroundColor: '#E6E1D4',
-                  borderRadius: 14,
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  marginLeft: 10,
-                }}
-              >
-                <Text style={{ color: '#686055', fontSize: 13, fontWeight: '700' }}>
-                  {folders.length} {isKn ? 'ಫೋಲ್ಡರ್‌ಗಳು' : 'folders'} +
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <Floating distance={4} duration={2400}>
-              <Text style={{ fontSize: 26 }}>🐸</Text>
-            </Floating>
-          </View>
-
-          {/* Colorful Folder Cards Grid - Fully Clickable */}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 24 }}>
-            {folders.map((folder) => (
-              <TouchableOpacity
-                key={folder.id}
-                onPress={() => openFolder(folder)}
-                activeOpacity={0.85}
-                style={{
-                  width: '48%',
-                  backgroundColor: folder.color,
-                  borderRadius: 22,
-                  padding: 14,
-                  marginBottom: 12,
-                  shadowColor: folder.color,
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 6,
-                  elevation: 3,
-                  borderTopLeftRadius: 10, // Playful folder tab shape
-                }}
-              >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <Text style={{ fontSize: 22 }}>{folder.emoji}</Text>
-                  <View
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.3)',
-                      borderRadius: 10,
-                      paddingHorizontal: 7,
-                      paddingVertical: 2,
-                    }}
-                  >
-                    <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>
-                      {folder.count} items
-                    </Text>
-                  </View>
-                </View>
                 <Text
-                  numberOfLines={1}
                   style={{
-                    color: '#FFFFFF',
-                    fontSize: 16,
-                    fontWeight: '900',
-                    letterSpacing: -0.2,
+                    color: isSelected ? '#FFFFFF' : '#94A3B8',
+                    fontSize: 12,
+                    fontWeight: isSelected ? '800' : '600',
                   }}
                 >
-                  {folder.title}
+                  {f.label}
                 </Text>
               </TouchableOpacity>
-            ))}
-          </View>
+            );
+          })}
+        </View>
 
-          {/* Daily Chaos / Burning Polls Section */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <Text style={{ color: '#18171C', fontSize: 20, fontWeight: '900' }}>
-              🔥 {isKn ? 'ಕೇಯಾಸ್ ಪೋಲ್‌ಗಳು' : 'Daily Chaos Polls'}
-            </Text>
-            <Text style={{ color: '#78716C', fontSize: 12, fontWeight: '700' }}>
-              {challenges.length} active
-            </Text>
-          </View>
+        {/* Priority Filter Chips */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '800', marginRight: 4 }}>
+            {isKn ? 'ಆದ್ಯತೆ:' : 'PRIORITY:'}
+          </Text>
+          {['ALL', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((p) => {
+            const isSelected = priorityFilter === p;
+            return (
+              <TouchableOpacity
+                key={p}
+                onPress={() => setPriorityFilter(p)}
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: DS_TOKENS.radii.pill,
+                  backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.16)' : 'transparent',
+                  borderWidth: 1,
+                  borderColor: isSelected ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
+                }}
+              >
+                <Text
+                  style={{
+                    color: isSelected ? '#FFFFFF' : '#64748B',
+                    fontSize: 11,
+                    fontWeight: '800',
+                  }}
+                >
+                  {p}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </GlassCard>
 
-          {challenges.map((c) => (
-            <ChaosCard
-              key={c.id}
-              id={c.id}
-              promptText={isKn && c.promptTextKn ? c.promptTextKn : c.promptText}
-              category={c.category}
-              expiresAt={c.expiresAt}
-              entries={c.entries || []}
-              onVote={handleVote}
-              onSubmitEntry={(text) => {}}
-            />
-          ))}
+      {/* Task List / States */}
+      {loading ? (
+        <LoadingState message={isKn ? 'ಕೆಯೋಸ್ ಪಟ್ಟಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ...' : 'Loading Daily Chaos records...'} />
+      ) : errorMessage ? (
+        <ErrorState message={errorMessage} onRetry={loadChaos} />
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon="⚡"
+          title={isKn ? 'ಯಾವುದೇ ಕೆಯೋಸ್ ಸಿಗಲಿಲ್ಲ' : 'No Daily Chaos entries found'}
+          description={
+            searchQuery || statusFilter !== 'ALL' || priorityFilter !== 'ALL'
+              ? (isKn ? 'ನಿಮ್ಮ ಫಿಲ್ಟರ್‌ಗೆ ಹೊಂದಿಕೆಯಾಗುವ ಯಾವುದೇ ಕಾರ್ಯಗಳಿಲ್ಲ. ಫಿಲ್ಟರ್ ತೆರವುಗೊಳಿಸಿ.' : 'No tasks match your active filters. Try clearing filters or search.')
+              : (isKn ? 'ನಿಮ್ಮ ದಿನವನ್ನು ಆಯೋಜಿಸಲು ಮೊದಲ ಕೆಯೋಸ್ ಸೇರಿಸಿ!' : 'Track unexpected tasks and turn daily chaos into completed wins. Tap "+ Create Chaos" to get started!')
+          }
+          actionLabel={isKn ? '+ ಹೊಸ ಕೆಯೋಸ್ ಸೇರಿಸಿ' : '+ Create Chaos'}
+          onAction={handleOpenCreateModal}
+        />
+      ) : (
+        <View style={{ gap: 12 }}>
+          {items.map((item) => {
+            const isCompleted = item.status === 'COMPLETED';
+            const priorityOpt = PRIORITY_OPTIONS.find((o) => o.value === item.priority) || PRIORITY_OPTIONS[1];
+
+            return (
+              <GlassCard
+                key={item.id}
+                style={{
+                  padding: 16,
+                  borderColor: isCompleted
+                    ? 'rgba(16, 185, 129, 0.3)'
+                    : item.priority === 'CRITICAL'
+                    ? 'rgba(239, 68, 68, 0.35)'
+                    : DS_TOKENS.colors.borderSubtle,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                  {/* Status Toggle Checkbox */}
+                  <TouchableOpacity
+                    onPress={() => handleToggleStatus(item)}
+                    activeOpacity={0.8}
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: 13,
+                      borderWidth: 2,
+                      borderColor: isCompleted ? '#10B981' : '#64748B',
+                      backgroundColor: isCompleted ? '#10B981' : 'rgba(255, 255, 255, 0.05)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginTop: 2,
+                    }}
+                  >
+                    {isCompleted && <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}>✓</Text>}
+                  </TouchableOpacity>
+
+                  {/* Main Content */}
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
+                      <Text
+                        style={{
+                          color: isCompleted ? '#64748B' : '#FFFFFF',
+                          fontSize: 16,
+                          fontWeight: '800',
+                          textDecorationLine: isCompleted ? 'line-through' : 'none',
+                          flex: 1,
+                        }}
+                      >
+                        {item.title}
+                      </Text>
+
+                      {/* Priority Badge */}
+                      <View
+                        style={{
+                          backgroundColor: `${priorityOpt.color}22`,
+                          borderWidth: 1,
+                          borderColor: `${priorityOpt.color}55`,
+                          borderRadius: DS_TOKENS.radii.pill,
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <Text style={{ fontSize: 10 }}>{priorityOpt.emoji}</Text>
+                        <Text style={{ color: priorityOpt.color, fontSize: 11, fontWeight: '800' }}>
+                          {priorityOpt.label}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Description */}
+                    {Boolean(item.description) && (
+                      <Text
+                        style={{
+                          color: '#94A3B8',
+                          fontSize: 13,
+                          lineHeight: 18,
+                          marginBottom: 8,
+                        }}
+                      >
+                        {item.description}
+                      </Text>
+                    )}
+
+                    {/* Meta Row: Date, Deadline, Category, Tags */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                      <View
+                        style={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                          borderRadius: 8,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                        }}
+                      >
+                        <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700' }}>
+                          📅 {item.date}
+                        </Text>
+                      </View>
+
+                      {Boolean(item.deadline) && (
+                        <View
+                          style={{
+                            backgroundColor: 'rgba(245, 158, 11, 0.12)',
+                            borderRadius: 8,
+                            paddingHorizontal: 8,
+                            paddingVertical: 3,
+                          }}
+                        >
+                          <Text style={{ color: '#FBBF24', fontSize: 11, fontWeight: '800' }}>
+                            ⏰ {item.deadline}
+                          </Text>
+                        </View>
+                      )}
+
+                      <View
+                        style={{
+                          backgroundColor: 'rgba(124, 58, 237, 0.15)',
+                          borderRadius: 8,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                        }}
+                      >
+                        <Text style={{ color: '#C4B5FD', fontSize: 11, fontWeight: '700' }}>
+                          🏷️ {item.category}
+                        </Text>
+                      </View>
+
+                      {item.tags?.map((tag) => (
+                        <View
+                          key={tag}
+                          style={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                            borderRadius: 8,
+                            paddingHorizontal: 6,
+                            paddingVertical: 2,
+                          }}
+                        >
+                          <Text style={{ color: '#64748B', fontSize: 10, fontWeight: '700' }}>
+                            #{tag}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Actions: Edit & Delete */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <TouchableOpacity
+                      onPress={() => handleOpenEditModal(item)}
+                      style={{
+                        padding: 6,
+                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Text style={{ fontSize: 13 }}>✏️</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setDeleteTarget(item)}
+                      style={{
+                        padding: 6,
+                        backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Text style={{ fontSize: 13 }}>🗑️</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </GlassCard>
+            );
+          })}
         </View>
       )}
 
-      {/* ------------------------------------------------------------- */}
-      {/* 3. MODAL: CREATE NEW FOLDER */}
-      {/* ------------------------------------------------------------- */}
-      <Modal visible={showNewFolderModal} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 }}>
-          <View
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: 28,
-              padding: 22,
-              maxWidth: 440,
-              width: '100%',
-              alignSelf: 'center',
-            }}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <Text style={{ color: '#18171C', fontSize: 18, fontWeight: '900' }}>
-                📁 {isKn ? 'ಹೊಸ ಫೋಲ್ಡರ್ ರಚಿಸಿ' : 'Create New Folder'}
-              </Text>
-              <TouchableOpacity onPress={() => setShowNewFolderModal(false)}>
-                <Text style={{ color: '#78716C', fontWeight: '900', fontSize: 16 }}>✕</Text>
-              </TouchableOpacity>
-            </View>
+      {/* CREATE & EDIT MODAL */}
+      <Modal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title={editingItem ? (isKn ? 'ಕೆಯೋಸ್ ನವೀಕರಿಸಿ' : 'Edit Daily Chaos') : (isKn ? 'ಹೊಸ ಕೆಯೋಸ್ ರಚಿಸಿ' : 'Create Daily Chaos')}
+      >
+        <InputField
+          label={isKn ? 'ಶೀರ್ಷಿಕೆ (Title) *' : 'Task Title *'}
+          value={formTitle}
+          onChangeText={setFormTitle}
+          placeholder={isKn ? 'ಉದಾ: ಪರೀಕ್ಷೆಗೆ ತಯಾರಿ, ಪ್ರಾಜೆಕ್ಟ್ ಸಲ್ಲಿಕೆ...' : 'e.g. Finish database migration, Fix auth token bug'}
+          errorMessage={formError}
+        />
 
-            <Text style={{ color: '#18171C', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
-              {isKn ? 'ಫೋಲ್ಡರ್ ಹೆಸರು' : 'Folder Name'}
-            </Text>
-            <TextInput
-              value={newFolderTitle}
-              onChangeText={setNewFolderTitle}
-              placeholder="e.g. Travel, Gym, Movies"
-              placeholderTextColor="#A8A29E"
-              style={{
-                backgroundColor: '#F5F2EB',
-                borderRadius: 16,
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                color: '#18171C',
-                fontSize: 15,
-                fontWeight: '700',
-                marginBottom: 14,
-                borderWidth: 1,
-                borderColor: '#E8E5DD',
-              }}
-            />
+        <InputField
+          label={isKn ? 'ವಿವರ (Description)' : 'Detailed Description'}
+          value={formDescription}
+          onChangeText={setFormDescription}
+          placeholder={isKn ? 'ಹೆಚ್ಚುವರಿ ವಿವರಣೆ...' : 'Action steps, key notes or context...'}
+          multiline
+          numberOfLines={3}
+        />
 
-            {/* Emoji Selection */}
-            <Text style={{ color: '#18171C', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
-              {isKn ? 'ಐಕಾನ್ ಆಯ್ಕೆಮಾಡಿ' : 'Select Icon'}
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', marginBottom: 14 }}>
-              {FOLDER_EMOJIS.map((em) => (
-                <TouchableOpacity
-                  key={em}
-                  onPress={() => setNewFolderEmoji(em)}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: newFolderEmoji === em ? '#E6E1D4' : '#F5F2EB',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: 8,
-                    borderWidth: 1.5,
-                    borderColor: newFolderEmoji === em ? '#7047EB' : 'transparent',
-                  }}
-                >
-                  <Text style={{ fontSize: 18 }}>{em}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <InputField
+            label={isKn ? 'ದಿನಾಂಕ (Date)' : 'Date'}
+            value={formDate}
+            onChangeText={setFormDate}
+            placeholder="YYYY-MM-DD"
+            style={{ flex: 1 }}
+          />
+          <InputField
+            label={isKn ? 'ಗಡುವು (Deadline)' : 'Deadline'}
+            value={formDeadline}
+            onChangeText={setFormDeadline}
+            placeholder="HH:mm (e.g. 18:00)"
+            style={{ flex: 1 }}
+          />
+        </View>
 
-            {/* Color Selection */}
-            <Text style={{ color: '#18171C', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
-              {isKn ? 'ಬಣ್ಣ ಆಯ್ಕೆಮಾಡಿ' : 'Select Color'}
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
-              {FOLDER_COLORS.map((col) => (
-                <TouchableOpacity
-                  key={col}
-                  onPress={() => setNewFolderColor(col)}
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    backgroundColor: col,
-                    borderWidth: 2.5,
-                    borderColor: newFolderColor === col ? '#18171C' : '#FFFFFF',
-                  }}
-                />
-              ))}
-            </View>
+        <Dropdown
+          label={isKn ? 'ಆದ್ಯತೆ (Priority)' : 'Priority Level'}
+          value={formPriority}
+          options={PRIORITY_OPTIONS}
+          onSelect={(val) => setFormPriority(val as ChaosPriority)}
+        />
 
-            <TouchableOpacity
-              onPress={handleCreateFolder}
-              disabled={!newFolderTitle.trim()}
-              style={{
-                backgroundColor: newFolderColor,
-                borderRadius: 18,
-                paddingVertical: 13,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 15 }}>
-                {isKn ? 'ಫೋಲ್ಡರ್ ಸೇರಿಸಿ' : 'Create Folder'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+        <Dropdown
+          label={isKn ? 'ವರ್ಗ (Category)' : 'Category'}
+          value={formCategory}
+          options={CATEGORY_OPTIONS}
+          onSelect={setFormCategory}
+        />
+
+        <InputField
+          label={isKn ? 'ಟ್ಯಾಗ್‌ಗಳು (Tags - ಅಲ್ಪವಿರಾಮದಿಂದ ಬೇರ್ಪಡಿಸಿ)' : 'Tags (comma separated)'}
+          value={formTags}
+          onChangeText={setFormTags}
+          placeholder="e.g. bug, high-vibe, study"
+        />
+
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+          <SecondaryButton
+            title={isKn ? 'ರದ್ದುಮಾಡಿ' : 'Cancel'}
+            onPress={() => setModalVisible(false)}
+            style={{ flex: 1 }}
+          />
+          <PrimaryButton
+            title={editingItem ? (isKn ? 'ಉಳಿಸಿ' : 'Save Changes') : (isKn ? 'ರಚಿಸಿ' : 'Create Chaos')}
+            onPress={handleSaveChaos}
+            loading={formSubmitting}
+            style={{ flex: 1 }}
+          />
         </View>
       </Modal>
 
-      {/* ------------------------------------------------------------- */}
-      {/* 4. MODAL: ADD ITEM INSIDE FOLDER */}
-      {/* ------------------------------------------------------------- */}
-      <Modal visible={showAddItemModal} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 }}>
-          <View
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: 28,
-              padding: 22,
-              maxWidth: 440,
-              width: '100%',
-              alignSelf: 'center',
-            }}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <Text style={{ color: '#18171C', fontSize: 18, fontWeight: '900' }}>
-                ✍️ {isKn ? 'ಐಟಂ ಉಳಿಸಿ' : `Save Item to ${selectedFolder?.title}`}
-              </Text>
-              <TouchableOpacity onPress={() => setShowAddItemModal(false)}>
-                <Text style={{ color: '#78716C', fontWeight: '900', fontSize: 16 }}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={{ color: '#18171C', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
-              {isKn ? 'ಶೀರ್ಷಿಕೆ (Title) *' : 'Title *'}
-            </Text>
-            <TextInput
-              value={newItemTitle}
-              onChangeText={setNewItemTitle}
-              placeholder="e.g. Favorite Quote, Project Link, Idea"
-              placeholderTextColor="#A8A29E"
-              style={{
-                backgroundColor: '#F5F2EB',
-                borderRadius: 16,
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                color: '#18171C',
-                fontSize: 15,
-                fontWeight: '700',
-                marginBottom: 12,
-                borderWidth: 1,
-                borderColor: '#E8E5DD',
-              }}
-            />
-
-            <Text style={{ color: '#18171C', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
-              {isKn ? 'ಟ್ಯಾಗ್ / ವರ್ಗ (Tag)' : 'Tag / Category'}
-            </Text>
-            <TextInput
-              value={newItemTag}
-              onChangeText={setNewItemTag}
-              placeholder="e.g. Quote, Music, Note, Work"
-              placeholderTextColor="#A8A29E"
-              style={{
-                backgroundColor: '#F5F2EB',
-                borderRadius: 16,
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                color: '#18171C',
-                fontSize: 14,
-                fontWeight: '600',
-                marginBottom: 12,
-                borderWidth: 1,
-                borderColor: '#E8E5DD',
-              }}
-            />
-
-            <Text style={{ color: '#18171C', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
-              {isKn ? 'ವಿವರಣೆ / ಲಿಂಕ್ / ನೋಟ್' : 'Description / Notes'}
-            </Text>
-            <TextInput
-              value={newItemDescription}
-              onChangeText={setNewItemDescription}
-              placeholder="Type your saved notes, links, or text here..."
-              placeholderTextColor="#A8A29E"
-              multiline
-              numberOfLines={3}
-              style={{
-                backgroundColor: '#F5F2EB',
-                borderRadius: 16,
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                color: '#18171C',
-                fontSize: 14,
-                height: 80,
-                textAlignVertical: 'top',
-                marginBottom: 18,
-                borderWidth: 1,
-                borderColor: '#E8E5DD',
-              }}
-            />
-
-            <TouchableOpacity
-              onPress={handleAddItem}
-              disabled={!newItemTitle.trim()}
-              style={{
-                backgroundColor: selectedFolder?.color || '#FFB82E',
-                borderRadius: 18,
-                paddingVertical: 13,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 15 }}>
-                {isKn ? 'ಉಳಿಸಿ' : 'Save Item'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ------------------------------------------------------------- */}
-      {/* 5. MODAL: VIEW ITEM DETAILS */}
-      {/* ------------------------------------------------------------- */}
-      <Modal visible={Boolean(selectedItemDetail)} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 }}>
-          <View
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: 28,
-              padding: 22,
-              maxWidth: 440,
-              width: '100%',
-              alignSelf: 'center',
-            }}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <View
-                style={{
-                  backgroundColor: '#F5F2EB',
-                  borderRadius: 10,
-                  paddingHorizontal: 10,
-                  paddingVertical: 3,
-                }}
-              >
-                <Text style={{ color: '#78716C', fontSize: 12, fontWeight: '800' }}>
-                  {selectedItemDetail?.tag}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setSelectedItemDetail(null)}>
-                <Text style={{ color: '#78716C', fontWeight: '900', fontSize: 16 }}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={{ color: '#18171C', fontSize: 20, fontWeight: '900', marginBottom: 8 }}>
-              {selectedItemDetail?.title}
-            </Text>
-
-            <Text style={{ color: '#57534E', fontSize: 14, lineHeight: 22, marginBottom: 16 }}>
-              {selectedItemDetail?.description || 'No additional description provided.'}
-            </Text>
-
-            <Text style={{ color: '#A8A29E', fontSize: 11, fontWeight: '700', marginBottom: 16 }}>
-              📅 Saved on {selectedItemDetail?.date}
-            </Text>
-
-            <TouchableOpacity
-              onPress={() => setSelectedItemDetail(null)}
-              style={{
-                backgroundColor: '#18171C',
-                borderRadius: 16,
-                paddingVertical: 12,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 14 }}>
-                {isKn ? 'ಮುಚ್ಚಿ' : 'Close'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </ScrollView>
+      {/* DELETE CONFIRMATION DIALOG */}
+      <ConfirmationDialog
+        visible={Boolean(deleteTarget)}
+        title={isKn ? 'ಕೆಯೋಸ್ ತೆಗೆದುಹಾಕಬೇಕೆ?' : 'Delete Chaos Task?'}
+        message={
+          isKn
+            ? `ನೀವು "${deleteTarget?.title}" ಕಾರ್ಯವನ್ನು ಅಳಿಸಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ? ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ.`
+            : `Are you sure you want to delete "${deleteTarget?.title}"? This action cannot be undone.`
+        }
+        confirmText={isKn ? 'ತೆಗೆದುಹಾಕಿ' : 'Delete'}
+        cancelText={isKn ? 'ರದ್ದು' : 'Cancel'}
+        destructive
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </MainLayout>
   );
 }

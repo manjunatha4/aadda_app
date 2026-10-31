@@ -173,8 +173,44 @@ class ApiClient {
       }
     }
 
-    // 10. Vibe & Chaos
-    if (endpoint.startsWith('/vibe') || endpoint.startsWith('/chaos')) {
+    // 10. Daily Chaos Full Fallback
+    if (endpoint === '/chaos' || endpoint.startsWith('/chaos?') || endpoint.startsWith('/chaos/')) {
+      const currentUser = await clientStore.getCurrentUser();
+      const userId = currentUser?.id || 'usr_default';
+
+      if (method === 'GET' && (endpoint === '/chaos' || endpoint.startsWith('/chaos?'))) {
+        const queryStr = endpoint.includes('?') ? endpoint.split('?')[1] : '';
+        const params = new URLSearchParams(queryStr);
+        const filters = {
+          status: params.get('status') || undefined,
+          priority: params.get('priority') || undefined,
+          category: params.get('category') || undefined,
+          date: params.get('date') || undefined,
+          search: params.get('search') || undefined,
+        };
+        const res = await clientStore.getDailyChaos(userId, filters);
+        return res as unknown as T;
+      }
+
+      if (method === 'POST' && endpoint === '/chaos') {
+        const created = await clientStore.createDailyChaos(userId, data);
+        return created as unknown as T;
+      }
+
+      if (method === 'PATCH' && endpoint.startsWith('/chaos/')) {
+        const id = endpoint.replace('/chaos/', '').split('?')[0];
+        const updated = await clientStore.updateDailyChaos(userId, id, data);
+        return updated as unknown as T;
+      }
+
+      if (method === 'DELETE' && endpoint.startsWith('/chaos/')) {
+        const id = endpoint.replace('/chaos/', '').split('?')[0];
+        const success = await clientStore.deleteDailyChaos(userId, id);
+        return { success, id } as unknown as T;
+      }
+    }
+
+    if (endpoint.startsWith('/vibe')) {
       return [] as unknown as T;
     }
 
