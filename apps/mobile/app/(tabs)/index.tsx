@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, RefreshControl, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, RefreshControl, Platform, Modal, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
@@ -10,6 +10,8 @@ import {
   GlassCard,
   PrimaryButton,
   SecondaryButton,
+  InputField,
+  ConfirmationDialog,
   LoadingState,
   ToastNotification,
   DS_TOKENS,
@@ -18,12 +20,22 @@ import {
 export default function TodayScreen() {
   const { i18n } = useTranslation();
   const router = useRouter();
-  const user = useAuthStore((state) => state.user);
+  const { user, updateLanguage, updateProfile, logout } = useAuthStore();
 
   const [addas, setAddas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Profile Modal & Edit States
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editDisplayName, setEditDisplayName] = useState(user?.displayName || '');
+  const [editBio, setEditBio] = useState(user?.bio || '');
+  const [editDistrict, setEditDistrict] = useState(user?.district || 'Bengaluru Urban');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const isKn = i18n.language === 'kn';
 
@@ -48,12 +60,67 @@ export default function TodayScreen() {
     loadData();
   }, []);
 
+  // Sync edit form with user when opening
+  useEffect(() => {
+    if (user) {
+      setEditDisplayName(user.displayName || user.username || '');
+      setEditBio(user.bio || '');
+      setEditDistrict(user.district || 'Bengaluru Urban');
+    }
+  }, [user]);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadData();
   };
 
+  const handleToggleLanguage = async () => {
+    const nextLang = isKn ? 'en' : 'kn';
+    await updateLanguage(nextLang);
+    setToastMessage(nextLang === 'kn' ? 'ಭಾಷೆಯನ್ನು ಕನ್ನಡಕ್ಕೆ ಬದಲಾಯಿಸಲಾಗಿದೆ 🌐' : 'Language changed to English 🌐');
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editDisplayName.trim()) {
+      setToastMessage(isKn ? 'ಹೆಸರನ್ನು ಖಾಲಿ ಬಿಡುವಂತಿಲ್ಲ' : 'Display name cannot be empty');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+    try {
+      setSavingProfile(true);
+      await updateProfile({
+        displayName: editDisplayName.trim(),
+        bio: editBio.trim(),
+        district: editDistrict.trim(),
+      });
+      setIsEditingProfile(false);
+      setToastMessage(isKn ? 'ಪ್ರೊಫೈಲ್ ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ! ✨' : 'Profile updated successfully! ✨');
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (e: any) {
+      setToastMessage(e.message || (isKn ? 'ನವೀಕರಣ ವಿಫಲವಾಗಿದೆ' : 'Failed to update profile'));
+      setTimeout(() => setToastMessage(null), 3000);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+      setLoggingOut(true);
+      await logout();
+      setShowProfileModal(false);
+      setShowLogoutConfirm(false);
+      router.replace('/(auth)/login');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
   const displayName = user?.displayName || user?.username || 'Friend';
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <MainLayout
@@ -67,24 +134,55 @@ export default function TodayScreen() {
         onDismiss={() => setToastMessage(null)}
       />
 
-      {/* Top Header - Pure Dashboard & Hangout Hub */}
+      {/* Top Header with Profile Icon on Top Right */}
       <PageHeader
         title={isKn ? 'ಇಂದು' : 'Dashboard'}
         subtitle={`${dateFormatted} · ${dayFormatted}`}
         badge={`📍 ${user?.district || 'Bengaluru'}`}
         actions={
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <SecondaryButton
-              title={isKn ? 'ಸುದ್ದಿ ಫೀಡ್' : 'News Feed'}
-              icon="📰"
-              onPress={() => router.push('/(tabs)/chaos')}
-            />
-            <PrimaryButton
-              title={isKn ? 'ಅಡ್ಡ ಬಜ್' : 'Adda Buzz'}
-              icon="🔥"
-              onPress={() => router.push('/(tabs)/buzz')}
-            />
-          </View>
+          <TouchableOpacity
+            onPress={() => setShowProfileModal(true)}
+            activeOpacity={0.8}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              backgroundColor: '#FFFFFF',
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 24,
+              borderWidth: 1.5,
+              borderColor: '#E2E8F0',
+              shadowColor: '#000000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 6,
+              elevation: 3,
+            }}
+          >
+            <View
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: '#6366F1',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 15, color: '#FFFFFF', fontWeight: '900' }}>
+                {initial}
+              </Text>
+            </View>
+            <View>
+              <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: '800', color: '#0F172A', maxWidth: 90 }}>
+                {displayName}
+              </Text>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: '#6366F1' }}>
+                {isKn ? 'ಕನ್ನಡ' : 'EN'} · ⚙️
+              </Text>
+            </View>
+          </TouchableOpacity>
         }
       />
 
@@ -319,6 +417,266 @@ export default function TodayScreen() {
           ))}
         </View>
       )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* QUICK PROFILE, LANGUAGE, EDIT & LOGOUT MODAL SHEET           */}
+      {/* ------------------------------------------------------------- */}
+      <Modal visible={showProfileModal} transparent animationType="fade">
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setShowProfileModal(false)}
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 18,
+          }}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 28,
+              padding: 22,
+              width: '100%',
+              maxWidth: 420,
+              maxHeight: '90%',
+              borderWidth: 1.5,
+              borderColor: '#E2E8F0',
+              shadowColor: '#000000',
+              shadowOffset: { width: 0, height: 12 },
+              shadowOpacity: 0.2,
+              shadowRadius: 24,
+              elevation: 12,
+            }}
+          >
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Header: User Avatar & Close */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 26,
+                      backgroundColor: '#6366F1',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 24, color: '#FFFFFF', fontWeight: '900' }}>{initial}</Text>
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 17, fontWeight: '900', color: '#0F172A' }}>{displayName}</Text>
+                    <Text style={{ fontSize: 13, color: '#64748B', fontWeight: '600' }}>
+                      @{user?.username || 'member'} · 📍 {user?.district || 'Bengaluru'}
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  onPress={() => setShowProfileModal(false)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: '#F1F5F9',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 16, color: '#64748B', fontWeight: '800' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* SECTION 1: LANGUAGE SWITCHER */}
+              <View
+                style={{
+                  backgroundColor: '#F8FAFC',
+                  borderRadius: 18,
+                  padding: 14,
+                  borderWidth: 1,
+                  borderColor: '#E2E8F0',
+                  marginBottom: 14,
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View>
+                    <Text style={{ fontSize: 13, fontWeight: '800', color: '#0F172A' }}>
+                      🌐 {isKn ? 'ಅಪ್ಲಿಕೇಶನ್ ಭಾಷೆ' : 'Application Language'}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2, fontWeight: '600' }}>
+                      {isKn ? 'ಪ್ರಸ್ತುತ: ಕನ್ನಡ (KN)' : 'Current: English (EN)'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={handleToggleLanguage}
+                    activeOpacity={0.8}
+                    style={{
+                      backgroundColor: '#EEF2FF',
+                      borderWidth: 1.5,
+                      borderColor: '#818CF8',
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 9999,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '800', color: '#4F46E5' }}>
+                      {isKn ? 'Switch to English' : 'ಕನ್ನಡಕ್ಕೆ ಬದಲಿಸಿ'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* SECTION 2: EDIT PROFILE */}
+              <View
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 18,
+                  padding: 14,
+                  borderWidth: 1,
+                  borderColor: '#E2E8F0',
+                  marginBottom: 14,
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: '#0F172A' }}>
+                    👤 {isKn ? 'ಪ್ರೊಫೈಲ್ ಮಾಹಿತಿ' : 'Profile Information'}
+                  </Text>
+                  {!isEditingProfile && (
+                    <TouchableOpacity
+                      onPress={() => setIsEditingProfile(true)}
+                      style={{
+                        backgroundColor: '#F1F5F9',
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 9999,
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: '#334155' }}>
+                        ✏️ {isKn ? 'ಸಂಪಾದಿಸಿ' : 'Edit'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {isEditingProfile ? (
+                  <View style={{ gap: 10 }}>
+                    <InputField
+                      label={isKn ? 'ಪ್ರದರ್ಶನ ಹೆಸರು' : 'Display Name'}
+                      value={editDisplayName}
+                      onChangeText={setEditDisplayName}
+                      placeholder={isKn ? 'ನಿಮ್ಮ ಹೆಸರು' : 'Your name'}
+                    />
+                    <InputField
+                      label={isKn ? 'ಜಿಲ್ಲೆ / ಊರು' : 'District / Town'}
+                      value={editDistrict}
+                      onChangeText={setEditDistrict}
+                      placeholder="e.g. Bengaluru, Mysuru, Mangaluru"
+                    />
+                    <InputField
+                      label={isKn ? 'ಬಯೋ / ಸ್ಟೇಟಸ್' : 'Bio / Status Note'}
+                      value={editBio}
+                      onChangeText={setEditBio}
+                      placeholder={isKn ? 'ನಿಮ್ಮ ಬಗ್ಗೆ ಚಿಕ್ಕ ವಿವರ...' : 'A brief note about yourself...'}
+                    />
+                    <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
+                      <SecondaryButton
+                        title={isKn ? 'ರದ್ದು' : 'Cancel'}
+                        onPress={() => setIsEditingProfile(false)}
+                      />
+                      <PrimaryButton
+                        title={savingProfile ? (isKn ? 'ಉಳಿಸಲಾಗುತ್ತಿದೆ...' : 'Saving...') : (isKn ? 'ಉಳಿಸಿ' : 'Save Changes')}
+                        onPress={handleSaveProfile}
+                        disabled={savingProfile}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <View style={{ gap: 4 }}>
+                    <Text style={{ fontSize: 12, color: '#64748B' }}>
+                      <Text style={{ fontWeight: '700', color: '#0F172A' }}>{isKn ? 'ಹೆಸರು: ' : 'Name: '}</Text>
+                      {displayName}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#64748B' }}>
+                      <Text style={{ fontWeight: '700', color: '#0F172A' }}>{isKn ? 'ಜಿಲ್ಲೆ: ' : 'District: '}</Text>
+                      {user?.district || 'Bengaluru Urban'}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#64748B' }}>
+                      <Text style={{ fontWeight: '700', color: '#0F172A' }}>{isKn ? 'ಬಯೋ: ' : 'Bio: '}</Text>
+                      {user?.bio || (isKn ? 'ಇನ್ನೂ ವಿವರಣೆ ಸೇರಿಸಿಲ್ಲ' : 'No bio added yet')}
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* SECTION 3: MORE ACTIONS (Full Profile Link + Logout) */}
+              <View style={{ gap: 8 }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowProfileModal(false);
+                    router.push('/(tabs)/profile');
+                  }}
+                  activeOpacity={0.8}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: 12,
+                    borderRadius: 14,
+                    backgroundColor: '#F8FAFC',
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155' }}>
+                    ⚙️ {isKn ? 'ಪೂರ್ಣ ಪ್ರೊಫೈಲ್ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್ಸ್' : 'Full Account & Profile Settings'}
+                  </Text>
+                  <Text style={{ fontSize: 14, color: '#94A3B8', fontWeight: '800' }}>›</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setShowLogoutConfirm(true)}
+                  activeOpacity={0.8}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    padding: 12,
+                    borderRadius: 14,
+                    backgroundColor: '#FEF2F2',
+                    borderWidth: 1,
+                    borderColor: '#FECACA',
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: '#EF4444' }}>
+                    🚪 {isKn ? 'ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್' : 'Sign Out of Account'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* LOGOUT CONFIRMATION DIALOG */}
+      <ConfirmationDialog
+        visible={showLogoutConfirm}
+        title={isKn ? 'ಖಾತೆಯಿಂದ ನಿರ್ಗಮಿಸಬೇಕೆ?' : 'Sign out of your account?'}
+        message={
+          isKn
+            ? 'ನಿಮ್ಮ ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್ ಆಗಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?'
+            : 'Are you sure you want to log out? You can sign right back in anytime using your credentials.'
+        }
+        confirmText={loggingOut ? (isKn ? 'ನಿರ್ಗಮಿಸಲಾಗುತ್ತಿದೆ...' : 'Signing out...') : (isKn ? 'ಲಾಗ್ ಔಟ್' : 'Log Out')}
+        cancelText={isKn ? 'ರದ್ದು' : 'Cancel'}
+        destructive
+        onConfirm={handleConfirmLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </MainLayout>
   );
 }

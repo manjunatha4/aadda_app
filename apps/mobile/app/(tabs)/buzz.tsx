@@ -35,13 +35,8 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const REACTION_EMOJIS = ['😂', '👀', '🍿', '☕', '🔥', '💀', '❤️'];
 
-const CIRCLE_STORIES = [
-  { id: 'st_my', name: 'My Story', avatar: '✨', mood: 'LIVE', isMe: true },
-  { id: 'st_1', name: 'Rohit K', avatar: '☕', mood: 'Need Gossip 👀', hasUnread: true, storyContent: 'Canteen Coffee Saga: table 4 disappeared 😭' },
-  { id: 'st_2', name: 'Deepa M', avatar: '🚇', mood: 'Metro Run', hasUnread: true, storyContent: 'Purple line peak trains every 3 mins now! 🚀' },
-  { id: 'st_3', name: 'Karthik', avatar: '🎮', mood: 'Gaming Mode', hasUnread: true, storyContent: 'ChakraVyuh Hackathon mock interviews in Hall 2' },
-  { id: 'st_4', name: 'Ananya S', avatar: '🥑', mood: 'Chill Mode 🌿', hasUnread: false, storyContent: 'Weekend Chai Adda playlist updated' },
-  { id: 'st_5', name: 'Suresh', avatar: '🧈', mood: 'CTR Hunter', hasUnread: false, storyContent: 'CTR Benne Dosa is officially top tier' },
+const CIRCLE_STORIES: Array<{ id: string; name: string; avatar: string; mood: string; isMe: boolean; hasUnread?: boolean }> = [
+  { id: 'st_my', name: 'My Story', avatar: '✨', mood: 'LIVE', isMe: true, hasUnread: false },
 ];
 
 const CATEGORY_CHIPS: Array<{ key: BuzzCategory; labelEn: string; labelKn: string; icon: string }> = [

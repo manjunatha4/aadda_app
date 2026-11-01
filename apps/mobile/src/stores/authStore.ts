@@ -22,6 +22,7 @@ interface AuthState {
   initAuth: () => Promise<void>;
   setAuth: (user: User, accessToken: string, refreshToken: string) => Promise<void>;
   updateLanguage: (lang: 'kn' | 'en') => Promise<void>;
+  updateProfile: (profile: Partial<User>) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -68,6 +69,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (currentUser) {
       set({ user: { ...currentUser, language: lang } });
       await api.patch('/users/profile', { language: lang }).catch(() => {});
+    }
+  },
+
+  updateProfile: async (profile: Partial<User>) => {
+    const currentUser = get().user;
+    if (currentUser) {
+      const updatedUser = { ...currentUser, ...profile };
+      set({ user: updatedUser });
+      await storage.setItem('aadda_client_current_user', JSON.stringify(updatedUser)).catch(() => {});
+      await api.patch('/users/profile', profile).catch(() => {});
     }
   },
 

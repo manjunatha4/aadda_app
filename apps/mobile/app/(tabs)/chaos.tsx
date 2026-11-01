@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../src/stores/authStore';
+import { storage } from '../../src/services/storage';
 import {
   MainLayout,
   GlassCard,
@@ -70,137 +71,7 @@ const PRESET_NEWS_PHOTOS = [
   },
 ];
 
-const INITIAL_NEWS_POSTS: PhotoNewsPost[] = [
-  {
-    id: 'news_1',
-    authorName: 'Edward Morgan',
-    authorHandle: '@edward · Ulsoor Eco-Park Bureau',
-    authorAvatar: '📸',
-    verified: true,
-    timeAgo: '14m ago',
-    category: 'OORU CITY NEWS',
-    categoryIcon: '🏙️',
-    categoryColor: '#0284C7',
-    title: 'Sunset Boardwalk Opened at Ulsoor: New Eco-Corridor Opens To Morning Walkers',
-    details:
-      'BBMP and Lake Development Authority have officially completed the 1.8km eco-boardwalk around the eastern shoreline of Ulsoor Lake. Complete with solar lamp posts, bird-watching shelters, and cycling tracks. Open daily 5:30 AM to 9:30 AM.',
-    photoUrl:
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-    sourceName: 'deccanherald.com',
-    sourceUrl: 'https://deccanherald.com',
-    likesCount: 1240,
-    commentsCount: 124,
-    comments: [
-      { id: 'c1', user: 'Rohit K', text: 'Visited today morning, the reflection on the water is stunning! 🌅', time: '10m ago' },
-      { id: 'c2', user: 'Ananya S', text: 'Are cycles allowed on the lower deck as well?', time: '5m ago' },
-    ],
-  },
-  {
-    id: 'news_2',
-    authorName: 'Deepa Rao',
-    authorHandle: '@deepa · Western Ghats Desk',
-    authorAvatar: '🌲',
-    verified: true,
-    timeAgo: '42m ago',
-    category: 'NATURE & WEATHER',
-    categoryIcon: '🌦️',
-    categoryColor: '#15803D',
-    title: 'Lush Green Western Ghats Rain Alert: Eco-Tourism Guidelines Released for Kodagu & Chikmagalur',
-    details:
-      'Karnataka Forest Department has updated eco-trekking guidelines for Kudremukha, Mullayanagiri, and Tadiandamol peaks. Advance digital passes are now required on weekends to protect sensitive forest biodiversity corridors.',
-    photoUrl:
-      'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80',
-    sourceName: 'thehindu.com',
-    sourceUrl: 'https://thehindu.com',
-    likesCount: 842,
-    commentsCount: 58,
-    comments: [
-      { id: 'c3', user: 'Karthik M', text: 'The greenery this season is unreal. Good initiative for passes.', time: '25m ago' },
-    ],
-  },
-  {
-    id: 'news_3',
-    authorName: 'Suresh Patil',
-    authorHandle: '@suresh · Coastal Highway Bureau',
-    authorAvatar: '🌊',
-    verified: true,
-    timeAgo: '2h ago',
-    category: 'COASTAL & TRANSIT',
-    categoryIcon: '🏖️',
-    categoryColor: '#D97706',
-    title: 'Coastal Highway 4-Laning Near Karwar Enters Final Testing Phase',
-    details:
-      'The scenic coastal highway connecting Mangaluru, Udupi, and Karwar brings travel time down by 45 minutes with elevated scenic viewpoints overlooking the Arabian Sea sunset points.',
-    photoUrl:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
-    sourceName: 'bangaloremirror.com',
-    sourceUrl: 'https://bangaloremirror.com',
-    likesCount: 2430,
-    commentsCount: 210,
-    comments: [
-      { id: 'c4', user: 'Pooja H', text: 'Road trip planned for next weekend! Best drive in South India.', time: '1h ago' },
-    ],
-  },
-  {
-    id: 'news_4',
-    authorName: 'Karthik Murthy',
-    authorHandle: '@karthik · Tech Radar Bureau',
-    authorAvatar: '💻',
-    verified: true,
-    timeAgo: '3h ago',
-    category: 'TECH & STARTUPS',
-    categoryIcon: '🚀',
-    categoryColor: '#7C3AED',
-    title: 'Electronic City AI & Robotics Innovation Center Inaugurated',
-    details:
-      'A brand-new 50,000 sq ft research incubator opens for student startups, offering free high-speed compute clusters, hardware fabrication labs, and mentoring from Bengaluru industry founders.',
-    photoUrl:
-      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
-    sourceName: 'yourstory.com',
-    sourceUrl: 'https://yourstory.com',
-    likesCount: 950,
-    commentsCount: 73,
-    comments: [],
-  },
-  {
-    id: 'news_5',
-    authorName: 'Ananya Sharma',
-    authorHandle: '@ananya · Campus Council Desk',
-    authorAvatar: '🎓',
-    verified: true,
-    timeAgo: '5h ago',
-    category: 'CAMPUS DESK',
-    categoryIcon: '🎓',
-    categoryColor: '#E11D48',
-    title: 'VTU State-Level Hackathon 2026: Registrations Open with 5 Lakh Prize Pool',
-    details:
-      'Inter-collegiate 36-hour hackathon scheduled for November 14-16 at Campus Grounds. Top 10 teams receive direct interview fast-tracks with participating technology sponsors.',
-    photoUrl:
-      'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80',
-    sourceName: 'campusbulletin.in',
-    sourceUrl: 'https://campusbulletin.in',
-    likesCount: 1820,
-    commentsCount: 195,
-    comments: [],
-  },
-];
-
-const REPORTERS_STORIES = [
-  { id: 'rep_1', name: 'Edward', avatar: '📸', role: 'Bangalore Photo' },
-  { id: 'rep_2', name: 'Ananya S', avatar: '🎓', role: 'Campus Pulse' },
-  { id: 'rep_3', name: 'Deepa R', avatar: '🌲', role: 'Nature Bureau' },
-  { id: 'rep_4', name: 'Karthik', avatar: '💻', role: 'Tech Radar' },
-  { id: 'rep_5', name: 'Suresh P', avatar: '🌊', role: 'Coastal Desk' },
-  { id: 'rep_6', name: 'Pooja H', avatar: '🏙️', role: 'City Culture' },
-];
-
-const RECOMMENDED_FRIENDS = [
-  { id: 'f1', name: 'Edward Morgan', handle: '@edward_m', avatar: '📸', role: 'Bangalore Beats', mutual: '14 mutual' },
-  { id: 'f2', name: 'Sarah Connor', handle: '@sarah_c', avatar: '⚡', role: 'Campus Pulse', mutual: '9 mutual' },
-  { id: 'f3', name: 'Alex Kumar', handle: '@alex_k', avatar: '💻', role: 'Tech Observer', mutual: '22 mutual' },
-  { id: 'f4', name: 'Pooja Hegde', handle: '@pooja_h', avatar: '🌸', role: 'Ooru Culture', mutual: '18 mutual' },
-  { id: 'f5', name: 'Naveen Gowda', handle: '@naveen_g', avatar: '🏃', role: 'Sports Desk', mutual: '7 mutual' },
-];
+const INITIAL_NEWS_POSTS: PhotoNewsPost[] = [];
 
 const CATEGORIES = [
   'All News 🌟',
@@ -239,12 +110,47 @@ export default function RealNewsFeedScreen() {
   const [activeCommentsPost, setActiveCommentsPost] = useState<PhotoNewsPost | null>(null);
   const [commentInput, setCommentInput] = useState('');
 
-  const onRefresh = () => {
+  // Load saved posts from storage on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const stored = await storage.getItem('aadda_user_photo_news');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setPosts(parsed);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading stored news:', e);
+      }
+    })();
+  }, []);
+
+  const savePostsToStorage = async (updated: PhotoNewsPost[]) => {
+    try {
+      await storage.setItem('aadda_user_photo_news', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving news to storage:', e);
+    }
+  };
+
+  const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => {
+    try {
+      const stored = await storage.getItem('aadda_user_photo_news');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setPosts(parsed);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
       setRefreshing(false);
       showToast(isKn ? 'ಫೀಡ್ ನವೀಕರಿಸಲಾಗಿದೆ ✨' : 'News feed refreshed ✨');
-    }, 600);
+    }
   };
 
   const showToast = (msg: string) => {
@@ -253,8 +159,8 @@ export default function RealNewsFeedScreen() {
   };
 
   const handleToggleLike = (postId: string) => {
-    setPosts((prev) =>
-      prev.map((p) => {
+    setPosts((prev) => {
+      const updated = prev.map((p) => {
         if (p.id !== postId) return p;
         const isLiked = !p.isLiked;
         return {
@@ -262,13 +168,15 @@ export default function RealNewsFeedScreen() {
           isLiked,
           likesCount: isLiked ? p.likesCount + 1 : Math.max(0, p.likesCount - 1),
         };
-      }),
-    );
+      });
+      savePostsToStorage(updated);
+      return updated;
+    });
   };
 
   const handleToggleBookmark = (postId: string) => {
-    setPosts((prev) =>
-      prev.map((p) => {
+    setPosts((prev) => {
+      const updated = prev.map((p) => {
         if (p.id !== postId) return p;
         const isBookmarked = !p.isBookmarked;
         showToast(
@@ -281,8 +189,10 @@ export default function RealNewsFeedScreen() {
             : 'Removed from bookmarks',
         );
         return { ...p, isBookmarked };
-      }),
-    );
+      });
+      savePostsToStorage(updated);
+      return updated;
+    });
   };
 
   const handleToggleConnect = (userId: string, name: string) => {
@@ -308,8 +218,8 @@ export default function RealNewsFeedScreen() {
       time: 'Just now',
     };
 
-    setPosts((prev) =>
-      prev.map((p) => {
+    setPosts((prev) => {
+      const updated = prev.map((p) => {
         if (p.id !== activeCommentsPost.id) return p;
         const comments = [newComment, ...(p.comments || [])];
         return {
@@ -317,8 +227,10 @@ export default function RealNewsFeedScreen() {
           comments,
           commentsCount: p.commentsCount + 1,
         };
-      }),
-    );
+      });
+      savePostsToStorage(updated);
+      return updated;
+    });
 
     setActiveCommentsPost((prev) =>
       prev
@@ -366,7 +278,9 @@ export default function RealNewsFeedScreen() {
       comments: [],
     };
 
-    setPosts([newPost, ...posts]);
+    const nextPosts = [newPost, ...posts];
+    setPosts(nextPosts);
+    savePostsToStorage(nextPosts);
     setSubmitting(false);
     setCreateModalVisible(false);
     setFormTitle('');
@@ -526,51 +440,54 @@ export default function RealNewsFeedScreen() {
             </Text>
           </TouchableOpacity>
 
-          {REPORTERS_STORIES.map((rep) => (
-            <TouchableOpacity
-              key={rep.id}
-              onPress={() => showToast(`Viewing verified updates from ${rep.name} (${rep.role})`)}
-              activeOpacity={0.75}
-              style={{ alignItems: 'center', width: 66 }}
-            >
-              <View
-                style={{
-                  width: 58,
-                  height: 58,
-                  borderRadius: 29,
-                  padding: 2.5,
-                  backgroundColor: '#818CF8',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+          {/* Active Circle Reporters (dynamically loaded from circle posts) */}
+          {posts
+            .filter((p, index, self) => index === self.findIndex((t) => t.authorName === p.authorName))
+            .map((rep) => (
+              <TouchableOpacity
+                key={rep.id}
+                onPress={() => showToast(`Viewing news from ${rep.authorName}`)}
+                activeOpacity={0.75}
+                style={{ alignItems: 'center', width: 66 }}
               >
                 <View
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: 26,
-                    backgroundColor: '#FFFFFF',
+                    width: 58,
+                    height: 58,
+                    borderRadius: 29,
+                    padding: 2.5,
+                    backgroundColor: '#818CF8',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <Text style={{ fontSize: 24 }}>{rep.avatar}</Text>
+                  <View
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: 26,
+                      backgroundColor: '#FFFFFF',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 24 }}>{rep.authorAvatar || '📸'}</Text>
+                  </View>
                 </View>
-              </View>
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontSize: 11,
-                  fontWeight: '700',
-                  color: '#0F172A',
-                  marginTop: 4,
-                  textAlign: 'center',
-                }}
-              >
-                {rep.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '700',
+                    color: '#0F172A',
+                    marginTop: 4,
+                    textAlign: 'center',
+                  }}
+                >
+                  {rep.authorName}
+                </Text>
+              </TouchableOpacity>
+            ))}
         </ScrollView>
 
         {/* ------------------------------------------------------------- */}
@@ -615,324 +532,402 @@ export default function RealNewsFeedScreen() {
         {/* 4. REAL PHOTO NEWS FEED (Dribbble Mockup Cards)              */}
         {/* ------------------------------------------------------------- */}
         <View style={{ gap: 20 }}>
-          {filteredPosts.map((post, idx) => (
+          {filteredPosts.length === 0 ? (
             <GlassCard
-              key={post.id}
-              elevated
               style={{
                 borderRadius: 24,
-                overflow: 'hidden',
-                padding: 16,
+                padding: 36,
+                alignItems: 'center',
+                justifyContent: 'center',
                 backgroundColor: '#FFFFFF',
+                borderWidth: 1.5,
                 borderColor: '#E2E8F0',
+                shadowColor: '#000000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.04,
+                shadowRadius: 10,
+                elevation: 2,
               }}
             >
-              {/* Author Header Row */}
               <View
                 style={{
-                  flexDirection: 'row',
+                  width: 68,
+                  height: 68,
+                  borderRadius: 34,
+                  backgroundColor: '#EEF2FF',
+                  borderWidth: 2,
+                  borderColor: '#C7D2FE',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: 12,
+                  justifyContent: 'center',
+                  marginBottom: 14,
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <View
-                    style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: 21,
-                      backgroundColor: '#F1F5F9',
-                      borderWidth: 1.5,
-                      borderColor: '#E2E8F0',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text style={{ fontSize: 20 }}>{post.authorAvatar}</Text>
-                  </View>
-                  <View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
-                        {post.authorName}
-                      </Text>
-                      {post.verified && (
-                        <View
-                          style={{
-                            backgroundColor: '#E0F2FE',
-                            paddingHorizontal: 6,
-                            paddingVertical: 1,
-                            borderRadius: 9999,
-                          }}
-                        >
-                          <Text style={{ fontSize: 10, fontWeight: '800', color: '#0284C7' }}>✓ Verified</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#64748B' }}>
-                      {post.authorHandle} · {post.timeAgo}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Category Badge */}
-                <View
-                  style={{
-                    backgroundColor: '#F8FAFC',
-                    borderWidth: 1,
-                    borderColor: '#E2E8F0',
-                    paddingHorizontal: 8,
-                    paddingVertical: 3,
-                    borderRadius: 9999,
-                  }}
-                >
-                  <Text style={{ fontSize: 10, fontWeight: '800', color: post.categoryColor }}>
-                    {post.categoryIcon} {post.category.split(' ')[0]}
-                  </Text>
-                </View>
+                <Text style={{ fontSize: 32 }}>📷</Text>
               </View>
-
-              {/* Real High-Resolution Photo Card (Dribbble Mockup Style) */}
-              <View
-                style={{
-                  borderRadius: 18,
-                  overflow: 'hidden',
-                  backgroundColor: '#0F172A',
-                  marginBottom: 12,
-                  aspectRatio: 16 / 10,
-                  width: '100%',
-                }}
-              >
-                <Image
-                  source={{ uri: post.photoUrl }}
-                  style={{ width: '100%', height: '100%' }}
-                  resizeMode="cover"
-                />
-              </View>
-
-              {/* Interaction Bar (Like, Comment, Bookmark, Share) */}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: 10,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                  {/* Like Button */}
-                  <TouchableOpacity
-                    onPress={() => handleToggleLike(post.id)}
-                    activeOpacity={0.7}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
-                  >
-                    <Text style={{ fontSize: 20 }}>{post.isLiked ? '❤️' : '🤍'}</Text>
-                    <Text
-                      style={{
-                        fontSize: 13,
-                        fontWeight: '800',
-                        color: post.isLiked ? '#E11D48' : '#334155',
-                      }}
-                    >
-                      {post.likesCount.toLocaleString()}
-                    </Text>
-                  </TouchableOpacity>
-
-                  {/* Comment Button */}
-                  <TouchableOpacity
-                    onPress={() => setActiveCommentsPost(post)}
-                    activeOpacity={0.7}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
-                  >
-                    <Text style={{ fontSize: 20 }}>💬</Text>
-                    <Text style={{ fontSize: 13, fontWeight: '800', color: '#334155' }}>
-                      {post.commentsCount}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  {/* Bookmark Button */}
-                  <TouchableOpacity
-                    onPress={() => handleToggleBookmark(post.id)}
-                    activeOpacity={0.7}
-                    style={{ padding: 4 }}
-                  >
-                    <Text style={{ fontSize: 18 }}>{post.isBookmarked ? '🔖' : '📑'}</Text>
-                  </TouchableOpacity>
-
-                  {/* External Link */}
-                  {post.sourceUrl && (
-                    <TouchableOpacity
-                      onPress={() => {
-                        if (Platform.OS === 'web' && post.sourceUrl) {
-                          window.open(post.sourceUrl, '_blank');
-                        }
-                      }}
-                      activeOpacity={0.7}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 4,
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        borderRadius: 9999,
-                        backgroundColor: '#F1F5F9',
-                      }}
-                    >
-                      <Text style={{ fontSize: 10, fontWeight: '800', color: '#0284C7' }}>
-                        🔗 {post.sourceName}
-                      </Text>
-                      <Text style={{ fontSize: 10, color: '#0284C7' }}>↗</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-
-              {/* News Headline & Story Details */}
               <Text
                 style={{
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: '900',
                   color: '#0F172A',
-                  lineHeight: 22,
-                  marginBottom: 6,
+                  textAlign: 'center',
+                  letterSpacing: -0.3,
                 }}
               >
-                {post.title}
+                {isKn ? 'ಯಾವುದೇ ಫೋಟೋ ಸುದ್ದಿ ಇಲ್ಲ' : 'No photo news yet'}
               </Text>
               <Text
                 style={{
                   fontSize: 13,
                   fontWeight: '500',
-                  color: '#475569',
+                  color: '#64748B',
+                  textAlign: 'center',
+                  marginTop: 6,
                   lineHeight: 19,
+                  maxWidth: 290,
                 }}
               >
-                {post.details}
+                {isKn
+                  ? 'ನಿಮ್ಮ ವೃತ್ತದಲ್ಲಿ ಮೊದಲ ಫೋಟೋ ಸುದ್ದಿ, ಸ್ಥಳೀಯ ಘಟನೆ ಅಥವಾ ಕಾಲೇಜು ಅಪ್‌ಡೇಟ್ ಹಂಚಿಕೊಳ್ಳಿ.'
+                  : 'Be the first to share breaking campus updates, local ooru news, or high-res photos with your circle.'}
               </Text>
-
-              {/* Inline Comments Preview (if any) */}
-              {post.comments && post.comments.length > 0 && (
-                <TouchableOpacity
-                  onPress={() => setActiveCommentsPost(post)}
-                  activeOpacity={0.75}
+              <TouchableOpacity
+                onPress={() => setCreateModalVisible(true)}
+                activeOpacity={0.85}
+                style={{
+                  marginTop: 18,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                  backgroundColor: '#4F46E5',
+                  paddingHorizontal: 22,
+                  paddingVertical: 12,
+                  borderRadius: 9999,
+                  shadowColor: '#4F46E5',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <Text style={{ fontSize: 16 }}>📸</Text>
+                <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
+                  {isKn ? 'ಮೊದಲ ಸುದ್ದಿ ಹಂಚಿಕೊಳ್ಳಿ' : '+ Share Photo News'}
+                </Text>
+              </TouchableOpacity>
+            </GlassCard>
+          ) : (
+            filteredPosts.map((post, idx) => (
+              <GlassCard
+                key={post.id}
+                elevated
+                style={{
+                  borderRadius: 24,
+                  overflow: 'hidden',
+                  padding: 16,
+                  backgroundColor: '#FFFFFF',
+                  borderColor: '#E2E8F0',
+                }}
+              >
+                {/* Author Header Row */}
+                <View
                   style={{
-                    backgroundColor: '#F8FAFC',
-                    borderRadius: 14,
-                    padding: 10,
-                    marginTop: 10,
-                    borderWidth: 1,
-                    borderColor: '#F1F5F9',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 12,
                   }}
                 >
-                  <Text style={{ fontSize: 11, fontWeight: '800', color: '#6366F1' }}>
-                    💬 {post.comments[0].user}: "{post.comments[0].text}"
-                  </Text>
-                  {post.comments.length > 1 && (
-                    <Text style={{ fontSize: 10, color: '#94A3B8', marginTop: 2, fontWeight: '600' }}>
-                      View all {post.commentsCount} comments...
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View
+                      style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 21,
+                        backgroundColor: '#F1F5F9',
+                        borderWidth: 1.5,
+                        borderColor: '#E2E8F0',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ fontSize: 20 }}>{post.authorAvatar}</Text>
+                    </View>
+                    <View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                        <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
+                          {post.authorName}
+                        </Text>
+                        {post.verified && (
+                          <View
+                            style={{
+                              backgroundColor: '#E0F2FE',
+                              paddingHorizontal: 6,
+                              paddingVertical: 1,
+                              borderRadius: 9999,
+                            }}
+                          >
+                            <Text style={{ fontSize: 10, fontWeight: '800', color: '#0284C7' }}>✓ Verified</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={{ fontSize: 11, fontWeight: '600', color: '#64748B' }}>
+                        {post.authorHandle} · {post.timeAgo}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Category Badge */}
+                  <View
+                    style={{
+                      backgroundColor: '#F8FAFC',
+                      borderWidth: 1,
+                      borderColor: '#E2E8F0',
+                      paddingHorizontal: 8,
+                      paddingVertical: 3,
+                      borderRadius: 9999,
+                    }}
+                  >
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: post.categoryColor }}>
+                      {post.categoryIcon} {post.category.split(' ')[0]}
                     </Text>
-                  )}
-                </TouchableOpacity>
-              )}
-            </GlassCard>
-          ))}
+                  </View>
+                </View>
+
+                {/* Real High-Resolution Photo Card (Dribbble Mockup Style) */}
+                <View
+                  style={{
+                    borderRadius: 18,
+                    overflow: 'hidden',
+                    backgroundColor: '#0F172A',
+                    marginBottom: 12,
+                    aspectRatio: 16 / 10,
+                    width: '100%',
+                  }}
+                >
+                  <Image
+                    source={{ uri: post.photoUrl }}
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="cover"
+                  />
+                </View>
+
+                {/* Interaction Bar (Like, Comment, Bookmark, Share) */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 10,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                    {/* Like Button */}
+                    <TouchableOpacity
+                      onPress={() => handleToggleLike(post.id)}
+                      activeOpacity={0.7}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                    >
+                      <Text style={{ fontSize: 20 }}>{post.isLiked ? '❤️' : '🤍'}</Text>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: '800',
+                          color: post.isLiked ? '#E11D48' : '#334155',
+                        }}
+                      >
+                        {post.likesCount.toLocaleString()}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Comment Button */}
+                    <TouchableOpacity
+                      onPress={() => setActiveCommentsPost(post)}
+                      activeOpacity={0.7}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                    >
+                      <Text style={{ fontSize: 20 }}>💬</Text>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: '#334155' }}>
+                        {post.commentsCount}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    {/* Bookmark Button */}
+                    <TouchableOpacity
+                      onPress={() => handleToggleBookmark(post.id)}
+                      activeOpacity={0.7}
+                      style={{ padding: 4 }}
+                    >
+                      <Text style={{ fontSize: 18 }}>{post.isBookmarked ? '🔖' : '📑'}</Text>
+                    </TouchableOpacity>
+
+                    {/* External Link */}
+                    {post.sourceUrl && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (Platform.OS === 'web' && post.sourceUrl) {
+                            window.open(post.sourceUrl, '_blank');
+                          }
+                        }}
+                        activeOpacity={0.7}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                          paddingHorizontal: 8,
+                          paddingVertical: 4,
+                          borderRadius: 9999,
+                          backgroundColor: '#F1F5F9',
+                        }}
+                      >
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#0284C7' }}>
+                          🔗 {post.sourceName}
+                        </Text>
+                        <Text style={{ fontSize: 10, color: '#0284C7' }}>↗</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+
+                {/* News Headline & Story Details */}
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '900',
+                    color: '#0F172A',
+                    lineHeight: 22,
+                    marginBottom: 6,
+                  }}
+                >
+                  {post.title}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '500',
+                    color: '#475569',
+                    lineHeight: 19,
+                  }}
+                >
+                  {post.details}
+                </Text>
+
+                {/* Inline Comments Preview (if any) */}
+                {post.comments && post.comments.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => setActiveCommentsPost(post)}
+                    activeOpacity={0.75}
+                    style={{
+                      backgroundColor: '#F8FAFC',
+                      borderRadius: 14,
+                      padding: 10,
+                      marginTop: 10,
+                      borderWidth: 1,
+                      borderColor: '#F1F5F9',
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#6366F1' }}>
+                      💬 {post.comments[0].user}: "{post.comments[0].text}"
+                    </Text>
+                    {post.comments.length > 1 && (
+                      <Text style={{ fontSize: 10, color: '#94A3B8', marginTop: 2, fontWeight: '600' }}>
+                        View all {post.commentsCount} comments...
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </GlassCard>
+            ))
+          )}
         </View>
 
         {/* ------------------------------------------------------------- */}
-        {/* 5. "MORE FRIENDS, MORE EXCITEMENT!" SECTION (Dribbble Mockup) */}
+        {/* 5. GROW YOUR CIRCLE SECTION (Real Actionable Invitation)     */}
         {/* ------------------------------------------------------------- */}
-        <View style={{ marginTop: 26, marginBottom: 12 }}>
-          <Text
+        <View style={{ marginTop: 24, marginBottom: 12 }}>
+          <GlassCard
             style={{
-              fontSize: 16,
-              fontWeight: '900',
-              color: '#0F172A',
-              marginBottom: 4,
+              borderRadius: 24,
+              padding: 20,
+              backgroundColor: '#FFFFFF',
+              borderWidth: 1.5,
+              borderColor: '#E2E8F0',
+              shadowColor: '#000000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.04,
+              shadowRadius: 8,
+              elevation: 2,
             }}
           >
-            {isKn ? 'ಹೆಚ್ಚು ಸ್ನೇಹಿತರು, ಹೆಚ್ಚು ಉತ್ಸಾಹ!' : 'More friends, more excitement!'}
-          </Text>
-          <Text
-            style={{
-              fontSize: 11,
-              fontWeight: '700',
-              color: '#64748B',
-              marginBottom: 12,
-              textTransform: 'uppercase',
-            }}
-          >
-            {isKn ? 'ಶಿಫಾರಸು ಮಾಡಿದ ವರದಿಗಾರರು' : 'RECOMMENDED CIRCLE REPORTERS'}
-          </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+              <View
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 26,
+                  backgroundColor: '#EEF2FF',
+                  borderWidth: 1.5,
+                  borderColor: '#C7D2FE',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 26 }}>👥</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>
+                  {isKn ? 'ನಿಮ್ಮ ವೃತ್ತದ ಸ್ನೇಹಿತರನ್ನು ಆಹ್ವಾನಿಸಿ' : 'Grow Your Circle'}
+                </Text>
+                <Text style={{ fontSize: 12, fontWeight: '500', color: '#64748B', marginTop: 2, lineHeight: 17 }}>
+                  {isKn
+                    ? 'ಖಾಸಗಿ ಅಡ್ಡ ವೃತ್ತದಲ್ಲಿ ನೈಜ ಹರಟೆ ಮತ್ತು ಫೋಟೋ ಸುದ್ದಿಗಳನ್ನು ಹಂಚಿಕೊಳ್ಳಲು ನಿಮ್ಮ ಸ್ನೇಹಿತರನ್ನು ಸೇರಿಸಿ.'
+                    : 'Invite close friends to your Adda room to see updates, debate polls, and share local news together.'}
+                </Text>
+              </View>
+            </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-            {RECOMMENDED_FRIENDS.map((f) => {
-              const isConnected = Boolean(connectedUsers[f.id]);
-              return (
-                <View
-                  key={f.id}
-                  style={{
-                    width: 120,
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 20,
-                    padding: 12,
-                    alignItems: 'center',
-                    borderWidth: 1.5,
-                    borderColor: '#E2E8F0',
-                    shadowColor: '#000000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 8,
-                    elevation: 2,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 24,
-                      backgroundColor: '#EEF2FF',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Text style={{ fontSize: 24 }}>{f.avatar}</Text>
-                  </View>
-                  <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: '800', color: '#0F172A', textAlign: 'center' }}>
-                    {f.name}
-                  </Text>
-                  <Text numberOfLines={1} style={{ fontSize: 10, fontWeight: '600', color: '#64748B', marginTop: 1 }}>
-                    {f.role}
-                  </Text>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+                    navigator.clipboard.writeText('Join my private circle on Varavu Adda! 🛖');
+                  }
+                  showToast(isKn ? 'ಆಹ್ವಾನ ಲಿಂಕ್ ನಕಲಿಸಲಾಗಿದೆ! 📋' : 'Circle invite link copied! 📋');
+                }}
+                activeOpacity={0.8}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#EEF2FF',
+                  paddingVertical: 10,
+                  borderRadius: 14,
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: '#C7D2FE',
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#4F46E5' }}>
+                  📋 {isKn ? 'ಲಿಂಕ್ ನಕಲಿಸಿ' : 'Copy Invite Link'}
+                </Text>
+              </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={() => handleToggleConnect(f.id, f.name)}
-                    activeOpacity={0.8}
-                    style={{
-                      marginTop: 10,
-                      width: '100%',
-                      paddingVertical: 5,
-                      borderRadius: 9999,
-                      backgroundColor: isConnected ? '#F1F5F9' : '#6366F1',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 11,
-                        fontWeight: '800',
-                        color: isConnected ? '#475569' : '#FFFFFF',
-                      }}
-                    >
-                      {isConnected ? '✓ Added' : '+ Add'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            })}
-          </ScrollView>
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/chats')}
+                activeOpacity={0.8}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#4F46E5',
+                  paddingVertical: 10,
+                  borderRadius: 14,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#FFFFFF' }}>
+                  🛖 {isKn ? 'ಅಡ್ಡ ರೂಮ್‌ಗಳು' : 'Open Rooms'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </GlassCard>
         </View>
       </ScrollView>
 

@@ -23,6 +23,6 @@ config.resolver.blockList = [
   /.*[/\\]data[/\\].*/,
 ];
 
-config.maxWorkers = 2;
+config.maxWorkers = 1;
 
 module.exports = config;

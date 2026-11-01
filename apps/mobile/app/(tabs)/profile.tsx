@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -9,22 +9,64 @@ import {
   GlassCard,
   PrimaryButton,
   SecondaryButton,
+  InputField,
   ConfirmationDialog,
+  ToastNotification,
   DS_TOKENS,
 } from '../../src/components/DesignSystem';
 
 export default function ProfileScreen() {
   const { i18n } = useTranslation();
   const router = useRouter();
-  const { user, logout, updateLanguage } = useAuthStore();
+  const { user, logout, updateLanguage, updateProfile } = useAuthStore();
   const [loggingOut, setLoggingOut] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editDisplayName, setEditDisplayName] = useState(user?.displayName || '');
+  const [editBio, setEditBio] = useState(user?.bio || '');
+  const [editDistrict, setEditDistrict] = useState(user?.district || 'Bengaluru Urban');
+  const [saving, setSaving] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      setEditDisplayName(user.displayName || user.username || '');
+      setEditBio(user.bio || '');
+      setEditDistrict(user.district || 'Bengaluru Urban');
+    }
+  }, [user]);
 
   const isKn = i18n.language === 'kn';
 
   const handleToggleLang = async () => {
     const next = i18n.language === 'kn' ? 'en' : 'kn';
     await updateLanguage(next);
+    setToastMessage(next === 'kn' ? 'ಭಾಷೆಯನ್ನು ಕನ್ನಡಕ್ಕೆ ಬದಲಾಯಿಸಲಾಗಿದೆ 🌐' : 'Language switched to English 🌐');
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editDisplayName.trim()) {
+      setToastMessage(isKn ? 'ದಯವಿಟ್ಟು ಹೆಸರನ್ನು ನಮೂದಿಸಿ' : 'Please enter a display name');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+    try {
+      setSaving(true);
+      await updateProfile({
+        displayName: editDisplayName.trim(),
+        bio: editBio.trim(),
+        district: editDistrict.trim(),
+      });
+      setShowEditModal(false);
+      setToastMessage(isKn ? 'ಪ್ರೊಫೈಲ್ ನವೀಕರಿಸಲಾಗಿದೆ! ✨' : 'Profile updated successfully! ✨');
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (e: any) {
+      setToastMessage(e.message || (isKn ? 'ನವೀಕರಣ ವಿಫಲವಾಗಿದೆ' : 'Update failed'));
+      setTimeout(() => setToastMessage(null), 3000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleConfirmLogout = async () => {
@@ -111,7 +153,30 @@ export default function ProfileScreen() {
           >
             <Text style={{ color: DS_TOKENS.colors.emerald, fontSize: 12, fontWeight: '800' }}>✓ Verified</Text>
           </View>
+
+          <TouchableOpacity
+            onPress={() => setShowEditModal(true)}
+            activeOpacity={0.8}
+            style={{
+              backgroundColor: '#EEF2FF',
+              borderWidth: 1,
+              borderColor: '#C7D2FE',
+              borderRadius: DS_TOKENS.radii.pill,
+              paddingHorizontal: 12,
+              paddingVertical: 4,
+            }}
+          >
+            <Text style={{ color: '#4F46E5', fontSize: 12, fontWeight: '800' }}>
+              ✏️ {isKn ? 'ತಿದ್ದುಪಡಿ' : 'Edit Profile'}
+            </Text>
+          </TouchableOpacity>
         </View>
+
+        {Boolean(user?.bio) && (
+          <Text style={{ color: '#64748B', fontSize: 13, fontStyle: 'italic', marginTop: 10, textAlign: 'center', paddingHorizontal: 20 }}>
+            "{user?.bio}"
+          </Text>
+        )}
       </GlassCard>
 
       {/* Account Settings List */}
@@ -234,6 +299,88 @@ export default function ProfileScreen() {
         destructive
         onConfirm={handleConfirmLogout}
         onCancel={() => setShowLogoutConfirm(false)}
+      />
+
+      {/* Edit Profile Modal */}
+      <Modal visible={showEditModal} transparent animationType="fade">
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setShowEditModal(false)}
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 18,
+          }}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 28,
+              padding: 24,
+              width: '100%',
+              maxWidth: 420,
+              borderWidth: 1.5,
+              borderColor: '#E2E8F0',
+              shadowColor: '#000000',
+              shadowOffset: { width: 0, height: 12 },
+              shadowOpacity: 0.2,
+              shadowRadius: 24,
+              elevation: 12,
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>
+                ✏️ {isKn ? 'ಪ್ರೊಫೈಲ್ ತಿದ್ದುಪಡಿ' : 'Edit Your Profile'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                <Text style={{ fontSize: 18, color: '#94A3B8', fontWeight: '800' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ gap: 12 }}>
+              <InputField
+                label={isKn ? 'ಪ್ರದರ್ಶನ ಹೆಸರು' : 'Display Name'}
+                value={editDisplayName}
+                onChangeText={setEditDisplayName}
+                placeholder={isKn ? 'ನಿಮ್ಮ ಪೂರ್ಣ ಹೆಸರು' : 'Your display name'}
+              />
+              <InputField
+                label={isKn ? 'ಜಿಲ್ಲೆ / ಊರು' : 'District / Town'}
+                value={editDistrict}
+                onChangeText={setEditDistrict}
+                placeholder="e.g. Bengaluru Urban, Mysuru, Mangaluru"
+              />
+              <InputField
+                label={isKn ? 'ಬಯೋ / ಸ್ಟೇಟಸ್' : 'Bio / Status'}
+                value={editBio}
+                onChangeText={setEditBio}
+                placeholder={isKn ? 'ನಿಮ್ಮ ಬಗ್ಗೆ ಒಂದು ಸಾಲು...' : 'A brief description...'}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
+                <SecondaryButton
+                  title={isKn ? 'ರದ್ದು' : 'Cancel'}
+                  onPress={() => setShowEditModal(false)}
+                />
+                <PrimaryButton
+                  title={saving ? (isKn ? 'ಉಳಿಸಲಾಗುತ್ತಿದೆ...' : 'Saving...') : (isKn ? 'ಉಳಿಸಿ' : 'Save Changes')}
+                  onPress={handleSaveProfile}
+                  disabled={saving}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      <ToastNotification
+        visible={Boolean(toastMessage)}
+        message={toastMessage || ''}
+        onDismiss={() => setToastMessage(null)}
       />
     </MainLayout>
   );
