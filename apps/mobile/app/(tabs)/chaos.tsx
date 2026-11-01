@@ -10,6 +10,7 @@ import {
   Platform,
   RefreshControl,
   Dimensions,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -75,12 +76,60 @@ const INITIAL_NEWS_POSTS: PhotoNewsPost[] = [];
 
 const CATEGORIES = [
   'All News 🌟',
+  'WORLD & SPACE NEWS 🚀',
   'OORU CITY NEWS 🏙️',
   'NATURE & WEATHER 🌲',
   'CAMPUS DESK 🎓',
   'TECH & STARTUPS 💻',
   'COASTAL & TRANSIT 🏖️',
 ];
+
+async function fetchSpaceNews(): Promise<PhotoNewsPost[]> {
+  try {
+    const res = await fetch('https://api.spaceflightnewsapi.net/v4/articles/?limit=15');
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!data || !Array.isArray(data.results)) return [];
+
+    return data.results.map((item: any) => {
+      let timeAgo = 'Today';
+      if (item.published_at) {
+        const diffHours = Math.round((Date.now() - new Date(item.published_at).getTime()) / (1000 * 60 * 60));
+        if (diffHours <= 1) timeAgo = 'Just now';
+        else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
+        else {
+          const diffDays = Math.round(diffHours / 24);
+          timeAgo = `${diffDays}d ago`;
+        }
+      }
+
+      return {
+        id: `space_${item.id}`,
+        authorName: item.news_site || 'World News Desk',
+        authorHandle: `@${(item.news_site || 'world').toLowerCase().replace(/[^a-z0-9]/g, '')} · Verified Wire`,
+        authorAvatar: '🛰️',
+        verified: true,
+        timeAgo,
+        category: 'WORLD & SPACE NEWS',
+        categoryIcon: '🚀',
+        categoryColor: '#2563EB',
+        title: item.title,
+        details: item.summary,
+        photoUrl: item.image_url || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+        sourceName: item.news_site || 'World Wire',
+        sourceUrl: item.url,
+        likesCount: 16 + (Number(item.id) % 37),
+        commentsCount: 2 + (Number(item.id) % 9),
+        isLiked: false,
+        isBookmarked: false,
+        comments: [],
+      };
+    });
+  } catch (e) {
+    console.error('Failed to fetch real-time space & world news:', e);
+    return [];
+  }
+}
 
 export default function RealNewsFeedScreen() {
   const router = useRouter();
@@ -110,26 +159,35 @@ export default function RealNewsFeedScreen() {
   const [activeCommentsPost, setActiveCommentsPost] = useState<PhotoNewsPost | null>(null);
   const [commentInput, setCommentInput] = useState('');
 
-  // Load saved posts from storage on mount
-  useEffect(() => {
-    (async () => {
-      try {
-        const stored = await storage.getItem('aadda_user_photo_news');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) {
-            setPosts(parsed);
-          }
+  const loadAllNews = async () => {
+    try {
+      let localPosts: PhotoNewsPost[] = [];
+      const stored = await storage.getItem('aadda_user_photo_news');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          localPosts = parsed;
         }
-      } catch (e) {
-        console.error('Error loading stored news:', e);
       }
-    })();
+
+      // Live real-time world/space news from Spaceflight News API
+      const spaceNews = await fetchSpaceNews();
+      const merged = [...localPosts, ...spaceNews];
+      setPosts(merged);
+    } catch (e) {
+      console.error('Error loading stored & live news:', e);
+    }
+  };
+
+  // Load saved posts and live world news on mount
+  useEffect(() => {
+    loadAllNews();
   }, []);
 
   const savePostsToStorage = async (updated: PhotoNewsPost[]) => {
     try {
-      await storage.setItem('aadda_user_photo_news', JSON.stringify(updated));
+      const userOnly = updated.filter((p) => !p.id.startsWith('space_'));
+      await storage.setItem('aadda_user_photo_news', JSON.stringify(userOnly));
     } catch (e) {
       console.error('Error saving news to storage:', e);
     }
@@ -137,19 +195,37 @@ export default function RealNewsFeedScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    try {
-      const stored = await storage.getItem('aadda_user_photo_news');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setPosts(parsed);
+    await loadAllNews();
+    setRefreshing(false);
+    showToast(isKn ? 'ದೈನಂದಿನ ಜಾಗತಿಕ & ಸ್ಥಳೀಯ ಸುದ್ದಿ ನವೀಕರಿಸಲಾಗಿದೆ ✨' : 'Daily world & circle news refreshed ✨');
+  };
+
+  const handlePickFromGallery = () => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e: any) => {
+        const file = e.target?.files?.[0];
+        if (file) {
+          if (file.size > 10 * 1024 * 1024) {
+            showToast(isKn ? 'ಚಿತ್ರದ ಗಾತ್ರ 10MB ಗಿಂತ ಕಡಿಮೆಯಿರಬೇಕು' : 'Image size must be under 10MB');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = (readerEvt) => {
+            const dataUrl = readerEvt.target?.result as string;
+            if (dataUrl) {
+              setFormPhotoUrl(dataUrl);
+              showToast(isKn ? 'ಗ್ಯಾಲರಿಯಿಂದ ಫೋಟೋ ಸೇರಿಸಲಾಗಿದೆ! 📸' : 'Photo picked from device gallery! 📸');
+            }
+          };
+          reader.readAsDataURL(file);
         }
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setRefreshing(false);
-      showToast(isKn ? 'ಫೀಡ್ ನವೀಕರಿಸಲಾಗಿದೆ ✨' : 'News feed refreshed ✨');
+      };
+      input.click();
+    } else {
+      showToast(isKn ? 'ಗ್ಯಾಲರಿ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಲಭ್ಯವಿದೆ' : 'Gallery picker ready');
     }
   };
 
@@ -348,7 +424,7 @@ export default function RealNewsFeedScreen() {
             </View>
           </View>
 
-          {/* Right Actions: Share News + Profile */}
+          {/* Right Action: "+ Share News" (No profile icon in header; dedicated 4th tab is Profile) */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <TouchableOpacity
               onPress={() => setCreateModalVisible(true)}
@@ -369,28 +445,6 @@ export default function RealNewsFeedScreen() {
               <Text style={{ fontSize: 12, fontWeight: '800', color: '#4F46E5' }}>
                 {isKn ? '+ ಸುದ್ದಿ' : '+ Share'}
               </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => router.push('/(tabs)/profile' as any)}
-              activeOpacity={0.8}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: '#FFFFFF',
-                borderWidth: 1.5,
-                borderColor: '#E2E8F0',
-                alignItems: 'center',
-                justifyContent: 'center',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.06,
-                shadowRadius: 6,
-                elevation: 2,
-              }}
-            >
-              <Text style={{ fontSize: 18 }}>👤</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -768,6 +822,8 @@ export default function RealNewsFeedScreen() {
                         onPress={() => {
                           if (Platform.OS === 'web' && post.sourceUrl) {
                             window.open(post.sourceUrl, '_blank');
+                          } else if (post.sourceUrl) {
+                            Linking.openURL(post.sourceUrl);
                           }
                         }}
                         activeOpacity={0.7}
@@ -966,10 +1022,90 @@ export default function RealNewsFeedScreen() {
             </View>
 
             <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 20 }}>
-              {/* Photo Selector */}
+              {/* Photo Selector with Device Gallery Picker */}
               <View>
                 <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F172A', marginBottom: 6 }}>
-                  1. {isKn ? 'ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ' : 'SELECT PHOTO'}
+                  1. {isKn ? 'ಸಾಧನದ ಗ್ಯಾಲರಿಯಿಂದ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ' : 'PICK PHOTO FROM DEVICE GALLERY'}
+                </Text>
+
+                {/* Prominent Gallery Button */}
+                <TouchableOpacity
+                  onPress={handlePickFromGallery}
+                  activeOpacity={0.8}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    backgroundColor: '#EEF2FF',
+                    borderWidth: 1.5,
+                    borderColor: '#6366F1',
+                    borderStyle: 'dashed',
+                    borderRadius: 16,
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    marginBottom: 10,
+                  }}
+                >
+                  <Text style={{ fontSize: 20 }}>📁</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: '#4F46E5' }}>
+                    {isKn ? 'ಗ್ಯಾಲರಿಯಿಂದ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ' : 'Choose Photo from Device Gallery'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Selected Photo Live Preview */}
+                {formPhotoUrl ? (
+                  <View
+                    style={{
+                      marginBottom: 12,
+                      borderRadius: 16,
+                      overflow: 'hidden',
+                      borderWidth: 1.5,
+                      borderColor: '#E2E8F0',
+                      position: 'relative',
+                    }}
+                  >
+                    <Image
+                      source={{ uri: formPhotoUrl }}
+                      style={{ width: '100%', height: 160 }}
+                      resizeMode="cover"
+                    />
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 8,
+                        left: 8,
+                        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>
+                        ✓ {isKn ? 'ಆಯ್ಕೆಯಾದ ಚಿತ್ರ' : 'Selected Photo'}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setFormPhotoUrl('')}
+                      style={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                        width: 26,
+                        height: 26,
+                        borderRadius: 13,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '900' }}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#64748B', marginBottom: 6 }}>
+                  {isKn ? 'ಅಥವಾ ತ್ವರಿತ ಪ್ರಿಸೆಟ್‌ಗಳಿಂದ ಆರಿಸಿ' : 'OR CHOOSE FROM QUICK PRESETS'}
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                   {PRESET_NEWS_PHOTOS.map((p) => {

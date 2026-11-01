@@ -89,14 +89,19 @@ const EXPIRIES = [
 
 export default function CreateBuzzScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ addaId?: string }>();
+  const params = useLocalSearchParams<{ addaId?: string; category?: string }>();
   const { i18n } = useTranslation();
   const isKn = i18n.language === 'kn';
   const currentUser = useAuthStore((state) => state.user);
 
+  const initialCat =
+    params.category && Object.values(BuzzCategory).includes(params.category as BuzzCategory)
+      ? (params.category as BuzzCategory)
+      : BuzzCategory.SPILL_THE_TEA;
+
   const [addas, setAddas] = useState<any[]>([]);
   const [selectedAddaId, setSelectedAddaId] = useState<string>(params.addaId || '');
-  const [category, setCategory] = useState<BuzzCategory>(BuzzCategory.SPILL_THE_TEA);
+  const [category, setCategory] = useState<BuzzCategory>(initialCat);
   const [credibility, setCredibility] = useState<BuzzCredibility>(BuzzCredibility.PERSONAL_EXPERIENCE);
   const [expiry, setExpiry] = useState<BuzzExpiry>(BuzzExpiry.PERMANENT);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -109,6 +114,12 @@ export default function CreateBuzzScreen() {
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (params.category && Object.values(BuzzCategory).includes(params.category as BuzzCategory)) {
+      setCategory(params.category as BuzzCategory);
+    }
+  }, [params.category]);
 
   useEffect(() => {
     async function loadAddas() {

@@ -248,10 +248,10 @@ export default function BuzzFeedScreen() {
         prev.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isBookmarked: res.isBookmarked,
-                bookmarksCount: res.bookmarksCount,
-              }
+              ...p,
+              isBookmarked: res.isBookmarked,
+              bookmarksCount: res.bookmarksCount,
+            }
             : p,
         ),
       );
@@ -261,8 +261,8 @@ export default function BuzzFeedScreen() {
             ? 'ಪೋಸ್ಟ್ ಉಳಿಸಲಾಗಿದೆ! 🔖'
             : 'Saved to your bookmarks! 🔖'
           : isKn
-          ? 'ಬುಕ್‌ಮಾರ್ಕ್‌ನಿಂದ ತೆಗೆದುಹಾಕಲಾಗಿದೆ'
-          : 'Removed from bookmarks',
+            ? 'ಬುಕ್‌ಮಾರ್ಕ್‌ನಿಂದ ತೆಗೆದುಹಾಕಲಾಗಿದೆ'
+            : 'Removed from bookmarks',
       );
       setTimeout(() => setToastMessage(null), 2000);
     } catch (e: any) {
@@ -365,20 +365,21 @@ export default function BuzzFeedScreen() {
           </View>
         </View>
 
-        {/* Right Action Icons: Pencil / Create + Profile Button (Language, Edit Profile, Logout) */}
+        {/* Right Action: "+ Buzz" Create Button (No profile icon in header; dedicated 4th tab is Profile) */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TouchableOpacity
             onPress={() => router.push('/buzz/create' as any)}
             activeOpacity={0.8}
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: 19,
-              backgroundColor: '#FFFFFF',
-              borderWidth: 1.5,
-              borderColor: '#E2E8F0',
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: 6,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 9999,
+              backgroundColor: '#EEF2FF',
+              borderWidth: 1.5,
+              borderColor: '#818CF8',
               shadowColor: '#000000',
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.06,
@@ -386,45 +387,9 @@ export default function BuzzFeedScreen() {
               elevation: 2,
             }}
           >
-            <Text style={{ fontSize: 16 }}>✏️</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setShowProfileModal(true)}
-            activeOpacity={0.8}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-              backgroundColor: '#FFFFFF',
-              paddingHorizontal: 10,
-              paddingVertical: 6,
-              borderRadius: 20,
-              borderWidth: 1.5,
-              borderColor: '#E2E8F0',
-              shadowColor: '#000000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 6,
-              elevation: 3,
-            }}
-          >
-            <View
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: 13,
-                backgroundColor: '#6366F1',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 13, color: '#FFFFFF', fontWeight: '900' }}>
-                {(currentUser?.displayName || currentUser?.username || 'U').charAt(0).toUpperCase()}
-              </Text>
-            </View>
-            <Text style={{ fontSize: 11, fontWeight: '800', color: '#0F172A' }}>
-              {isKn ? 'ಕನ್ನಡ' : 'EN'} · ⚙️
+            <Text style={{ fontSize: 14 }}>✏️</Text>
+            <Text style={{ fontSize: 12, fontWeight: '800', color: '#4F46E5' }}>
+              {isKn ? '+ ಬಜ್' : '+ Buzz'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -476,6 +441,8 @@ export default function BuzzFeedScreen() {
           onPress={() => {
             setSelectedCategory(BuzzCategory.SPILL_THE_TEA);
             setSelectedFilter('all');
+            setToastMessage(isKn ? 'ಟೀ ಕುಡಿತಾ ಹರಟೆ ಸಕ್ರಿಯ ☕' : 'Spill the Tea active ☕');
+            setTimeout(() => setToastMessage(null), 2500);
           }}
           activeOpacity={0.85}
           style={{
@@ -485,6 +452,8 @@ export default function BuzzFeedScreen() {
             backgroundColor: '#27204A',
             padding: 14,
             justifyContent: 'space-between',
+            borderWidth: selectedCategory === BuzzCategory.SPILL_THE_TEA ? 2.5 : 0,
+            borderColor: '#FFFFFF',
             shadowColor: '#27204A',
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.22,
@@ -492,17 +461,24 @@ export default function BuzzFeedScreen() {
             elevation: 5,
           }}
         >
-          <View
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: 'rgba(255, 255, 255, 0.14)',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 18 }}>☕</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: 'rgba(255, 255, 255, 0.14)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 18 }}>☕</Text>
+            </View>
+            {selectedCategory === BuzzCategory.SPILL_THE_TEA && (
+              <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.22)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 9999 }}>
+                <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>✓ Active</Text>
+              </View>
+            )}
           </View>
           <View>
             <Text style={{ fontSize: 16, fontWeight: '900', color: '#FFFFFF', letterSpacing: -0.2 }}>
@@ -519,6 +495,8 @@ export default function BuzzFeedScreen() {
           onPress={() => {
             setSelectedCategory(BuzzCategory.ALL);
             setSelectedFilter('all');
+            setToastMessage(isKn ? 'ಎಲ್ಲಾ ಹರಟೆಗಳು & ಬಜ್ 📰' : 'All Buzz Feed active 📰');
+            setTimeout(() => setToastMessage(null), 2500);
           }}
           activeOpacity={0.85}
           style={{
@@ -528,6 +506,8 @@ export default function BuzzFeedScreen() {
             backgroundColor: '#FF6464',
             padding: 14,
             justifyContent: 'space-between',
+            borderWidth: selectedCategory === BuzzCategory.ALL && selectedFilter === 'all' ? 2.5 : 0,
+            borderColor: '#FFFFFF',
             shadowColor: '#FF6464',
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.22,
@@ -535,17 +515,24 @@ export default function BuzzFeedScreen() {
             elevation: 5,
           }}
         >
-          <View
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: 'rgba(255, 255, 255, 0.22)',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 18 }}>📰</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: 'rgba(255, 255, 255, 0.22)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 18 }}>📰</Text>
+            </View>
+            {selectedCategory === BuzzCategory.ALL && selectedFilter === 'all' && (
+              <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 9999 }}>
+                <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>✓ Active</Text>
+              </View>
+            )}
           </View>
           <View>
             <Text style={{ fontSize: 16, fontWeight: '900', color: '#FFFFFF', letterSpacing: -0.2 }}>
@@ -560,7 +547,10 @@ export default function BuzzFeedScreen() {
         {/* CARD 3: Trending 🔥 (Electric Lime / Neon Yellow-Green) */}
         <TouchableOpacity
           onPress={() => {
-            setSelectedFilter(selectedFilter === 'trending' ? 'all' : 'trending');
+            const next = selectedFilter === 'trending' ? 'all' : 'trending';
+            setSelectedFilter(next);
+            setToastMessage(next === 'trending' ? (isKn ? 'ಹಾಟ್ ಟಾಪಿಕ್ಸ್ & ಟ್ರೆಂಡಿಂಗ್ 🔥' : 'Trending topics active 🔥') : (isKn ? 'ಎಲ್ಲಾ ಪೋಸ್ಟ್‌ಗಳು 🌟' : 'All circle posts 🌟'));
+            setTimeout(() => setToastMessage(null), 2500);
           }}
           activeOpacity={0.85}
           style={{
@@ -570,7 +560,7 @@ export default function BuzzFeedScreen() {
             backgroundColor: '#D4FF32',
             padding: 14,
             justifyContent: 'space-between',
-            borderWidth: selectedFilter === 'trending' ? 2 : 0,
+            borderWidth: selectedFilter === 'trending' ? 2.5 : 0,
             borderColor: '#0F172A',
             shadowColor: '#000000',
             shadowOffset: { width: 0, height: 6 },
@@ -579,17 +569,24 @@ export default function BuzzFeedScreen() {
             elevation: 5,
           }}
         >
-          <View
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: 'rgba(0, 0, 0, 0.08)',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 18 }}>🔥</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 18 }}>🔥</Text>
+            </View>
+            {selectedFilter === 'trending' && (
+              <View style={{ backgroundColor: 'rgba(0, 0, 0, 0.14)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 9999 }}>
+                <Text style={{ color: '#0F172A', fontSize: 10, fontWeight: '800' }}>✓ Active</Text>
+              </View>
+            )}
           </View>
           <View>
             <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A', letterSpacing: -0.2 }}>
@@ -606,6 +603,8 @@ export default function BuzzFeedScreen() {
           onPress={() => {
             setSelectedCategory(BuzzCategory.POLL_HOT_TAKE);
             setSelectedFilter('all');
+            setToastMessage(isKn ? 'ಮತದಾನ & ತೀರ್ಪು ಸಕ್ರಿಯ 🗳️' : 'Tribunal & Polls active 🗳️');
+            setTimeout(() => setToastMessage(null), 2500);
           }}
           activeOpacity={0.85}
           style={{
@@ -615,8 +614,8 @@ export default function BuzzFeedScreen() {
             backgroundColor: '#EDE9FE',
             padding: 14,
             justifyContent: 'space-between',
-            borderWidth: 1,
-            borderColor: '#DDD6FE',
+            borderWidth: selectedCategory === BuzzCategory.POLL_HOT_TAKE ? 2.5 : 1,
+            borderColor: selectedCategory === BuzzCategory.POLL_HOT_TAKE ? '#4338CA' : '#DDD6FE',
             shadowColor: '#8B5CF6',
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.12,
@@ -624,17 +623,24 @@ export default function BuzzFeedScreen() {
             elevation: 3,
           }}
         >
-          <View
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: '#FFFFFF',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 18 }}>🗳️</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: '#FFFFFF',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 18 }}>🗳️</Text>
+            </View>
+            {selectedCategory === BuzzCategory.POLL_HOT_TAKE && (
+              <View style={{ backgroundColor: '#4338CA', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 9999 }}>
+                <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>✓ Active</Text>
+              </View>
+            )}
           </View>
           <View>
             <Text style={{ fontSize: 16, fontWeight: '900', color: '#4338CA', letterSpacing: -0.2 }}>
@@ -769,18 +775,62 @@ export default function BuzzFeedScreen() {
       {loading ? (
         <LoadingState message={isKn ? 'ಲೋಡ್ ಆಗುತ್ತಿದೆ...' : 'Loading Adda Buzz...'} />
       ) : posts.length === 0 ? (
-        <GlassCard style={{ padding: 32, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 44, marginBottom: 10 }}>✨</Text>
-          <Text style={{ fontSize: 16, fontWeight: '800', color: '#0F172A', textAlign: 'center' }}>
-            {isKn ? 'ಯಾವುದೇ ಬಜ್ ಪೋಸ್ಟ್‌ಗಳಿಲ್ಲ' : 'No circle buzz right now'}
+        <GlassCard style={{ padding: 32, alignItems: 'center', justifyContent: 'center', borderRadius: 24 }}>
+          <Text style={{ fontSize: 44, marginBottom: 10 }}>
+            {selectedCategory === BuzzCategory.SPILL_THE_TEA
+              ? '☕'
+              : selectedCategory === BuzzCategory.POLL_HOT_TAKE
+              ? '🗳️'
+              : selectedFilter === 'trending'
+              ? '🔥'
+              : selectedCategory === BuzzCategory.CONFESSION
+              ? '👀'
+              : '✨'}
           </Text>
-          <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center', marginTop: 4 }}>
-            {isKn ? 'ಮೊದಲ ಹರಟೆ ಅಥವಾ ಮತದಾನ ಆರಂಭಿಸಿ!' : 'Start the tea or drop a hot take poll!'}
+          <Text style={{ fontSize: 17, fontWeight: '900', color: '#0F172A', textAlign: 'center' }}>
+            {selectedCategory === BuzzCategory.SPILL_THE_TEA
+              ? (isKn ? 'ಯಾವುದೇ ಟೀ ಹರಟೆ ಇಲ್ಲ ☕' : 'No tea spilled yet ☕')
+              : selectedCategory === BuzzCategory.POLL_HOT_TAKE
+              ? (isKn ? 'ಯಾವುದೇ ಮತದಾನ ಅಥವಾ ತೀರ್ಪುಗಳಿಲ್ಲ 🗳️' : 'No verdict or polls active 🗳️')
+              : selectedFilter === 'trending'
+              ? (isKn ? 'ಯಾವುದೇ ಟ್ರೆಂಡಿಂಗ್ ವಿಷಯಗಳಿಲ್ಲ 🔥' : 'No trending topics yet 🔥')
+              : selectedCategory === BuzzCategory.CONFESSION
+              ? (isKn ? 'ಯಾವುದೇ ಕನ್ಫೆಷನ್‌ಗಳಿಲ್ಲ 👀' : 'No anonymous confessions yet 👀')
+              : (isKn ? 'ಯಾವುದೇ ಬಜ್ ಪೋಸ್ಟ್‌ಗಳಿಲ್ಲ' : 'No circle buzz right now')}
+          </Text>
+          <Text style={{ fontSize: 12, fontWeight: '500', color: '#64748B', textAlign: 'center', marginTop: 6, maxWidth: 320, lineHeight: 18 }}>
+            {selectedCategory === BuzzCategory.SPILL_THE_TEA
+              ? (isKn ? 'ನಿಮ್ಮ ಸ್ನೇಹಿತರ ವೃತ್ತದಲ್ಲಿ ಮೊದಲ ಗೋಸಿಪ್ ಅಥವಾ ಅನಿರೀಕ್ಷಿತ ಕಥೆ ಹಂಚಿಕೊಳ್ಳಿ!' : 'Be the first one in your circle to spill fresh gossip or funny incidents!')
+              : selectedCategory === BuzzCategory.POLL_HOT_TAKE
+              ? (isKn ? 'ಸ್ನೇಹಿತರ ಅಭಿಪ್ರಾಯ ತಿಳಿಯಲು ಹೊಸ ಮತದಾನ ಆರಂಭಿಸಿ!' : 'Put gossip to vote! Ask your friends to decide the verdict.')
+              : selectedFilter === 'trending'
+              ? (isKn ? 'ಹೆಚ್ಚು ಪ್ರತಿಕ್ರಿಯೆ ಪಡೆದ ಪೋಸ್ಟ್‌ಗಳು ಇಲ್ಲಿ ಕಾಣಿಸಿಕೊಳ್ಳುತ್ತವೆ.' : 'Posts with high reactions and discussions will appear here!')
+              : selectedCategory === BuzzCategory.CONFESSION
+              ? (isKn ? 'ಅನಾಮಧೇಯವಾಗಿ ನಿಮ್ಮ ರಹಸ್ಯ ಕನ್ಫೆಷನ್ ಹಂಚಿಕೊಳ್ಳಿ.' : 'Drop an anonymous confession safely without revealing your identity.')
+              : (isKn ? 'ಮೊದಲ ಹರಟೆ ಅಥವಾ ಮತದಾನ ಆರಂಭಿಸಿ!' : 'Start the tea, drop a hot take poll, or share circle news!')}
           </Text>
           <PrimaryButton
-            title={isKn ? 'ಹೊಸ ಪೋಸ್ಟ್ ಮಾಡಿ' : 'Start Buzz 🚀'}
-            style={{ marginTop: 14 }}
-            onPress={() => router.push('/buzz/create' as any)}
+            title={
+              selectedCategory === BuzzCategory.SPILL_THE_TEA
+                ? (isKn ? '+ ಟೀ ಹರಟೆ ಹಂಚಿಕೊಳ್ಳಿ ☕' : '+ Spill the Tea ☕')
+                : selectedCategory === BuzzCategory.POLL_HOT_TAKE
+                ? (isKn ? '+ ಹೊಸ ಪೋಲ್ ರಚಿಸಿ 🗳️' : '+ Create a Poll 🗳️')
+                : selectedFilter === 'trending'
+                ? (isKn ? '+ ಹಾಟ್ ಟಾಪಿಕ್ ಆರಂಭಿಸಿ 🔥' : '+ Start Hot Topic 🔥')
+                : selectedCategory === BuzzCategory.CONFESSION
+                ? (isKn ? '+ ಕನ್ಫೆಷನ್ ಬರೆಯಿರಿ 👀' : '+ Write Confession 👀')
+                : (isKn ? '+ ಹೊಸ ಬಜ್ ಪೋಸ್ಟ್ ಮಾಡಿ 🚀' : '+ Start Buzz 🚀')
+            }
+            style={{ marginTop: 16 }}
+            onPress={() => {
+              const targetCat =
+                selectedCategory === BuzzCategory.ALL
+                  ? selectedFilter === 'trending'
+                    ? BuzzCategory.HOT_TAKE
+                    : BuzzCategory.SPILL_THE_TEA
+                  : selectedCategory;
+              router.push(`/buzz/create?category=${targetCat}&addaId=${selectedAddaId}` as any);
+            }}
           />
         </GlassCard>
       ) : (
