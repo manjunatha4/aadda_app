@@ -177,7 +177,7 @@ export default function ProfileScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Daily Chaos Shortcut */}
+        {/* News Feed Shortcut */}
         <TouchableOpacity
           onPress={() => router.push('/(tabs)/chaos')}
           activeOpacity={0.8}
@@ -191,10 +191,10 @@ export default function ProfileScreen() {
         >
           <View>
             <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
-              ⚡ {isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್ ಮ್ಯಾನೇಜರ್' : 'Daily Chaos Tasks'}
+              📰 {isKn ? 'ಸುದ್ದಿ ಮತ್ತು ಫೋಟೋ ಫೀಡ್' : 'Real Photo News Feed'}
             </Text>
             <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
-              {isKn ? 'ನಿಮ್ಮ ಕಾರ್ಯಗಳನ್ನು ನಿರ್ವಹಿಸಿ' : 'View and track your daily tasks'}
+              {isKn ? 'ನಿಮ್ಮ ವೃತ್ತದ ನೈಜ ಸ್ಥಳೀಯ & ಕಾಲೇಜು ಸುದ್ದಿ' : 'View verified circle news and photos'}
             </Text>
           </View>
           <Text style={{ color: DS_TOKENS.colors.textMuted, fontSize: 16, fontWeight: '800' }}>›</Text>

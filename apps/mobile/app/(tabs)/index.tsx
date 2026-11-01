@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, RefreshControl, Platform } from 'react-na
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
-import { clientStore } from '../../src/services/clientStore';
 import { useAuthStore } from '../../src/stores/authStore';
 import {
   MainLayout,
@@ -11,8 +10,6 @@ import {
   GlassCard,
   PrimaryButton,
   SecondaryButton,
-  InputField,
-  EmptyState,
   LoadingState,
   ToastNotification,
   DS_TOKENS,
@@ -26,10 +23,6 @@ export default function TodayScreen() {
   const [addas, setAddas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [inviteCode, setInviteCode] = useState('');
-  const [joining, setJoining] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [joinStatus, setJoinStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const isKn = i18n.language === 'kn';
@@ -60,59 +53,6 @@ export default function TodayScreen() {
     await loadData();
   };
 
-  const handleJoinByCode = async () => {
-    const code = inviteCode.trim().toUpperCase();
-    if (!code) {
-      setJoinStatus({
-        type: 'error',
-        message: isKn ? 'ದಯವಿಟ್ಟು ಕೊಠಡಿ ಕೋಡ್ ನಮೂದಿಸಿ' : 'Please enter room code',
-      });
-      return;
-    }
-    try {
-      setJoining(true);
-      setJoinStatus(null);
-      let res;
-      try {
-        res = await api.post('/invitations/accept', { code });
-      } catch (apiErr) {
-        // Direct cloud fallback
-        res = await clientStore.acceptInvite(code);
-      }
-
-      setJoinStatus({
-        type: 'success',
-        message: `Welcome to ${res?.adda?.name || 'the Room'}! 🎉`,
-      });
-      setInviteCode('');
-      await loadData();
-      if (res?.conversationId) {
-        setTimeout(() => {
-          router.push(`/chat/${res.conversationId}`);
-        }, 800);
-      }
-    } catch (e: any) {
-      setJoinStatus({
-        type: 'error',
-        message: e.message || (isKn ? 'ಅಮಾನ್ಯ ಕೊಠಡಿ ಕೋಡ್. ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.' : 'Invalid Room Code. Please check the code and try again.'),
-      });
-    } finally {
-      setJoining(false);
-    }
-  };
-
-  const copyCode = (code: string, id: string) => {
-    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(code);
-    }
-    setCopiedId(id);
-    setToastMessage(isKn ? 'ಕೋಡ್ ನಕಲಿಸಲಾಗಿದೆ!' : `Copied code ${code} to clipboard!`);
-    setTimeout(() => {
-      setCopiedId(null);
-      setToastMessage(null);
-    }, 2500);
-  };
-
   const displayName = user?.displayName || user?.username || 'Friend';
 
   return (
@@ -127,65 +67,66 @@ export default function TodayScreen() {
         onDismiss={() => setToastMessage(null)}
       />
 
-      {/* Top Header */}
+      {/* Top Header - Pure Dashboard & Hangout Hub */}
       <PageHeader
         title={isKn ? 'ಇಂದು' : 'Dashboard'}
         subtitle={`${dateFormatted} · ${dayFormatted}`}
-        badge={`${addas.length} ${isKn ? 'ರೂಮ್ಸ್' : 'rooms'}`}
+        badge={`📍 ${user?.district || 'Bengaluru'}`}
         actions={
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <SecondaryButton
-              title={isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್' : 'Daily Chaos'}
-              icon="⚡"
+              title={isKn ? 'ಸುದ್ದಿ ಫೀಡ್' : 'News Feed'}
+              icon="📰"
               onPress={() => router.push('/(tabs)/chaos')}
             />
             <PrimaryButton
-              title={isKn ? '+ ಹೊಸ ರೂಮ್' : '+ Create Room'}
-              icon="🛖"
-              onPress={() => router.push('/create-adda')}
+              title={isKn ? 'ಅಡ್ಡ ಬಜ್' : 'Adda Buzz'}
+              icon="🔥"
+              onPress={() => router.push('/(tabs)/buzz')}
             />
           </View>
         }
       />
 
       {/* Hero Welcome Glass Card */}
-      <GlassCard elevated style={{ marginBottom: 20 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: DS_TOKENS.colors.purpleLight,
-                borderWidth: 1.5,
-                borderColor: DS_TOKENS.colors.purpleBorder,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 20 }}>👋</Text>
-            </View>
-            <View>
-              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 18, fontWeight: '900' }}>
-                {isKn ? `ನಮಸ್ಕಾರ, ${displayName}!` : `Welcome back, ${displayName}!`}
-              </Text>
-              <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 13, fontWeight: '600' }}>
-                {isKn ? 'ನಿಮ್ಮ ಸ್ನೇಹಿತರೊಂದಿಗೆ ಸಂಪರ್ಕದಲ್ಲಿರಿ ಮತ್ತು ವೈಬ್ ಹಂಚಿಕೊಳ್ಳಿ' : 'Real-time hangouts and collaborative daily chaos'}
-              </Text>
-            </View>
+      <GlassCard elevated style={{ marginBottom: 18 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 25,
+              backgroundColor: '#EEF2FF',
+              borderWidth: 1.5,
+              borderColor: '#C7D2FE',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 24 }}>👋</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: '#0F172A', fontSize: 18, fontWeight: '900' }}>
+              {isKn ? `ನಮಸ್ಕಾರ, ${displayName}!` : `Welcome back, ${displayName}!`}
+            </Text>
+            <Text style={{ color: '#64748B', fontSize: 13, fontWeight: '600', marginTop: 2 }}>
+              {isKn
+                ? 'ನಿಮ್ಮ ಖಾಸಗಿ ಅಡ್ಡ ವೃತ್ತ ಮತ್ತು ಇಂದಿನ ಸುದ್ದಿ ಕೇಂದ್ರ'
+                : 'Your private circle hangout & real-time updates hub'}
+            </Text>
           </View>
         </View>
 
-        {/* Quick action buttons row */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+        {/* Quick Navigation Chips */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/chaos')}
+            activeOpacity={0.75}
             style={{
-              backgroundColor: DS_TOKENS.colors.purpleLight,
+              backgroundColor: '#EFF6FF',
               borderWidth: 1,
-              borderColor: DS_TOKENS.colors.purpleBorder,
-              borderRadius: DS_TOKENS.radii.pill,
+              borderColor: '#BFDBFE',
+              borderRadius: 9999,
               paddingHorizontal: 12,
               paddingVertical: 6,
               flexDirection: 'row',
@@ -193,19 +134,41 @@ export default function TodayScreen() {
               gap: 6,
             }}
           >
-            <Text style={{ fontSize: 13 }}>⚡</Text>
-            <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
-              {isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್ ಟಾಸ್ಕ್ ಟ್ರ್ಯಾಕರ್' : 'Daily Chaos Tasks'}
+            <Text style={{ fontSize: 13 }}>📰</Text>
+            <Text style={{ color: '#1D4ED8', fontSize: 12, fontWeight: '800' }}>
+              {isKn ? 'ನೈಜ ಫೋಟೋ ಸುದ್ದಿ' : 'Real Photo News'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/buzz')}
+            activeOpacity={0.75}
+            style={{
+              backgroundColor: '#FAF5FF',
+              borderWidth: 1,
+              borderColor: '#E9D5FF',
+              borderRadius: 9999,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <Text style={{ fontSize: 13 }}>☕</Text>
+            <Text style={{ color: '#7E22CE', fontSize: 12, fontWeight: '800' }}>
+              {isKn ? 'ಟೀ ಕುಡಿತಾ ಹರಟೆ & ಮತದಾನ' : 'Spill Tea & Polls'}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/chats')}
+            activeOpacity={0.75}
             style={{
-              backgroundColor: DS_TOKENS.colors.skyLight,
+              backgroundColor: '#ECFDF5',
               borderWidth: 1,
-              borderColor: DS_TOKENS.colors.skyBorder,
-              borderRadius: DS_TOKENS.radii.pill,
+              borderColor: '#A7F3D0',
+              borderRadius: 9999,
               paddingHorizontal: 12,
               paddingVertical: 6,
               flexDirection: 'row',
@@ -214,97 +177,93 @@ export default function TodayScreen() {
             }}
           >
             <Text style={{ fontSize: 13 }}>💬</Text>
-            <Text style={{ color: DS_TOKENS.colors.sky, fontSize: 12, fontWeight: '800' }}>
-              {isKn ? 'ಸಕ್ರಿಯ ಚಾಟ್‌ಗಳು' : 'Active Chats'}
+            <Text style={{ color: '#047857', fontSize: 12, fontWeight: '800' }}>
+              {isKn ? 'ರೂಮ್ಸ್ ಮತ್ತು ಚಾಟ್' : 'Rooms & Chats'}
             </Text>
           </TouchableOpacity>
+        </View>
+      </GlassCard>
 
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/profile')}
+      {/* Unified Link to Rooms & Chats Banner */}
+      <TouchableOpacity
+        onPress={() => router.push('/(tabs)/chats')}
+        activeOpacity={0.85}
+        style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: 20,
+          borderWidth: 1.5,
+          borderColor: '#E2E8F0',
+          padding: 16,
+          marginBottom: 18,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.05,
+          shadowRadius: 10,
+          elevation: 2,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, marginRight: 8 }}>
+          <View
             style={{
-              backgroundColor: DS_TOKENS.colors.emeraldLight,
-              borderWidth: 1,
-              borderColor: DS_TOKENS.colors.emeraldBorder,
-              borderRadius: DS_TOKENS.radii.pill,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              flexDirection: 'row',
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: '#EEF2FF',
               alignItems: 'center',
-              gap: 6,
+              justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 13 }}>📍</Text>
-            <Text style={{ color: DS_TOKENS.colors.emerald, fontSize: 12, fontWeight: '800' }}>
-              {user?.district || 'Bengaluru'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </GlassCard>
-
-      {/* Secret Invite Code Join Box */}
-      <GlassCard style={{ marginBottom: 20 }}>
-        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 15, fontWeight: '800', marginBottom: 10 }}>
-          🔑 {isKn ? 'ಸೀಕ್ರೆಟ್ ಕೋಡ್ ಮೂಲಕ ರೂಮ್‌ಗೆ ಸೇರಿ' : 'Join a Room with Secret Code'}
-        </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View style={{ flex: 1 }}>
-            <InputField
-              value={inviteCode}
-              onChangeText={(txt) => setInviteCode(txt.toUpperCase())}
-              placeholder={isKn ? 'ಕೋಡ್ ನಮೂದಿಸಿ (ಉದಾ: ADDA-XYZ)' : 'Enter Code (e.g. ADDA-XYZ)'}
-              autoCapitalize="characters"
-              style={{ marginBottom: 0 }}
-            />
+            <Text style={{ fontSize: 22 }}>🛖</Text>
           </View>
-          <PrimaryButton
-            title={joining ? '...' : (isKn ? 'ಸೇರಿ' : 'Join')}
-            onPress={handleJoinByCode}
-            disabled={joining}
-            style={{ paddingVertical: 11 }}
-          />
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
+              {isKn ? 'ರೂಮ್‌ಗಳು ಮತ್ತು ಸೀಕ್ರೆಟ್ ಕೋಡ್' : 'Your Hangout Rooms & Chats'}
+            </Text>
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#64748B', marginTop: 2 }}>
+              {isKn
+                ? 'ಹೊಸ ರೂಮ್ ರಚಿಸಲು ಅಥವಾ ಕೋಡ್ ಬಳಸಿ ಸೇರಲು ಇಲ್ಲಿ ಟ್ಯಾಪ್ ಮಾಡಿ'
+                : 'Create new rooms or join friends using a secret invite code'}
+            </Text>
+          </View>
         </View>
+        <Text style={{ fontSize: 20, color: '#6366F1', fontWeight: '900' }}>›</Text>
+      </TouchableOpacity>
 
-        {joinStatus && (
-          <Text
-            style={{
-              marginTop: 10,
-              fontSize: 13,
-              fontWeight: '700',
-              color: joinStatus.type === 'success' ? DS_TOKENS.colors.emerald : DS_TOKENS.colors.rose,
-            }}
-          >
-            {joinStatus.message}
-          </Text>
-        )}
-      </GlassCard>
-
-      {/* Active Rooms Section */}
+      {/* Primary Active Room Quick Launcher */}
       <View style={{ marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 18, fontWeight: '900' }}>
-          {isKn ? 'ನಿಮ್ಮ ರೂಮ್ಸ್‌ಗಳು' : 'Your Rooms & Addas'}
+        <Text style={{ color: '#0F172A', fontSize: 17, fontWeight: '900' }}>
+          {isKn ? 'ಸಕ್ರಿಯ ರೂಮ್ ಕ್ವಿಕ್ ಲಾಂಚರ್' : 'Quick Room Launcher'}
         </Text>
-        <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '700' }}>
-          {addas.length} {isKn ? 'ಸಕ್ರಿಯ' : 'active'}
-        </Text>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/chats')}>
+          <Text style={{ color: '#6366F1', fontSize: 12, fontWeight: '800' }}>
+            {isKn ? 'ಎಲ್ಲಾ ರೂಮ್‌ಗಳು ›' : 'View All Rooms ›'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {loading ? (
-        <LoadingState message={isKn ? 'ರೂಮ್ಸ್ ಲೋಡ್ ಆಗುತ್ತಿದೆ...' : 'Loading your rooms...'} />
+        <LoadingState message={isKn ? 'ಲೋಡ್ ಆಗುತ್ತಿದೆ...' : 'Loading active rooms...'} />
       ) : addas.length === 0 ? (
-        <EmptyState
-          icon="🛖"
-          title={isKn ? 'ಯಾವುದೇ ರೂಮ್ ಇಲ್ಲ' : 'No rooms joined yet'}
-          description={
-            isKn
-              ? 'ಹೊಸ ರೂಮ್ ರಚಿಸಿ ಅಥವಾ ನಿಮ್ಮ ಸ್ನೇಹಿತರು ಹಂಚಿಕೊಂಡ ಕೋಡ್ ಬಳಸಿ ಸೇರಿ!'
-              : 'Create your first room or join one using an invite code shared by friends!'
-          }
-          actionLabel={isKn ? '+ ಹೊಸ ರೂಮ್ ರಚಿಸಿ' : '+ Create Your First Room'}
-          onAction={() => router.push('/create-adda')}
-        />
+        <GlassCard style={{ padding: 24, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 36, marginBottom: 8 }}>🛖</Text>
+          <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A', textAlign: 'center' }}>
+            {isKn ? 'ಯಾವುದೇ ರೂಮ್ ಸೇರಿಲ್ಲ' : 'No active rooms yet'}
+          </Text>
+          <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center', marginTop: 4 }}>
+            {isKn ? 'ರೂಮ್ಸ್ ಟ್ಯಾಬ್‌ನಲ್ಲಿ ಹೊಸ ರೂಮ್ ರಚಿಸಿ ಅಥವಾ ಸೇರಿ!' : 'Hop into the Rooms & Chats tab to create or join!'}
+          </Text>
+          <PrimaryButton
+            title={isKn ? 'ರೂಮ್ಸ್ ಮತ್ತು ಚಾಟ್‌ಗೆ ಹೋಗಿ 💬' : 'Go to Rooms & Chats 💬'}
+            onPress={() => router.push('/(tabs)/chats')}
+            style={{ marginTop: 14 }}
+          />
+        </GlassCard>
       ) : (
-        <View style={{ gap: 12 }}>
-          {addas.map((adda) => (
+        <View style={{ gap: 10, paddingBottom: 110 }}>
+          {addas.slice(0, 3).map((adda) => (
             <GlassCard
               key={adda.id}
               onPress={() => {
@@ -314,18 +273,18 @@ export default function TodayScreen() {
                   router.push(`/adda/${adda.id}`);
                 }
               }}
-              style={{ padding: 16 }}
+              style={{ padding: 14 }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 10 }}>
                   <View
                     style={{
                       width: 44,
                       height: 44,
                       borderRadius: 22,
-                      backgroundColor: DS_TOKENS.colors.bgSecondary,
+                      backgroundColor: '#F8FAFC',
                       borderWidth: 1,
-                      borderColor: DS_TOKENS.colors.borderSubtle,
+                      borderColor: '#E2E8F0',
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginRight: 12,
@@ -335,41 +294,26 @@ export default function TodayScreen() {
                       {adda.name?.match(/[\p{Emoji}\u200d]+/gu)?.[0] || '🛖'}
                     </Text>
                   </View>
-
                   <View style={{ flex: 1 }}>
-                    <Text numberOfLines={1} style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 16, fontWeight: '900' }}>
+                    <Text numberOfLines={1} style={{ color: '#0F172A', fontSize: 15, fontWeight: '800' }}>
                       {adda.name}
                     </Text>
-                    <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
-                      👥 {adda.memberCount || 1} {isKn ? 'ಸದಸ್ಯರು' : 'members'}
+                    <Text style={{ color: '#64748B', fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                      👥 {adda.memberCount || 1} {isKn ? 'ಸದಸ್ಯರು' : 'members'} · Active now
                     </Text>
                   </View>
                 </View>
 
-                {/* Invite Code Badge & Copy */}
-                {Boolean(adda.inviteCode) && (
-                  <TouchableOpacity
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      copyCode(adda.inviteCode, adda.id);
-                    }}
-                    style={{
-                      backgroundColor: copiedId === adda.id ? DS_TOKENS.colors.emeraldLight : DS_TOKENS.colors.bgSecondary,
-                      borderWidth: 1,
-                      borderColor: copiedId === adda.id ? DS_TOKENS.colors.emeraldBorder : DS_TOKENS.colors.borderSubtle,
-                      borderRadius: DS_TOKENS.radii.pill,
-                      paddingHorizontal: 10,
-                      paddingVertical: 5,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                    }}
-                  >
-                    <Text style={{ color: copiedId === adda.id ? DS_TOKENS.colors.emerald : DS_TOKENS.colors.textPrimary, fontSize: 11, fontWeight: '800' }}>
-                      {copiedId === adda.id ? '✓ COPIED' : `🔑 ${adda.inviteCode}`}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                <View
+                  style={{
+                    backgroundColor: '#EEF2FF',
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 9999,
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#4F46E5' }}>Open 💬</Text>
+                </View>
               </View>
             </GlassCard>
           ))}

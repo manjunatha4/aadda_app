@@ -15,13 +15,14 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-// 3. Exclude backend and data from metro crawling to conserve memory
+// 3. Exclude backend, api, and data from metro crawling to conserve memory
 config.resolver.blockList = [
-  /.*[/\\]apps[/\\]api[/\\]node_modules[/\\].*/,
-  /.*[/\\]apps[/\\]api[/\\]dist[/\\].*/,
+  /.*[/\\]api[/\\].*/,
+  /.*[/\\]apps[/\\]api[/\\].*/,
   /.*[/\\]infrastructure[/\\].*/,
   /.*[/\\]data[/\\].*/,
 ];
 
-module.exports = config;
+config.maxWorkers = 2;
 
+module.exports = config;

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Modal, StyleSheet } from 'react-native';
 
 interface TabItemConfig {
   name: string;
@@ -12,17 +12,20 @@ interface TabItemConfig {
 }
 
 const LEFT_TABS: TabItemConfig[] = [
-  { name: 'index', activeIcon: '📑', inactiveIcon: '📑', labelEn: 'Feed', labelKn: 'ಫೀಡ್' },
+  { name: 'index', activeIcon: '📑', inactiveIcon: '📑', labelEn: 'Feed', labelKn: 'ಮುಖಪುಟ' },
   { name: 'buzz', activeIcon: '🔍', inactiveIcon: '🔍', labelEn: 'Search', labelKn: 'ಹುಡುಕಿ' },
 ];
 
 const RIGHT_TABS: TabItemConfig[] = [
   { name: 'chaos', activeIcon: '📰', inactiveIcon: '📰', labelEn: 'News', labelKn: 'ಸುದ್ದಿ' },
-  { name: 'chats', activeIcon: '💬', inactiveIcon: '💬', labelEn: 'Chats', labelKn: 'ಚಾಟ್' },
+  { name: 'chats', activeIcon: '💬', inactiveIcon: '💬', labelEn: 'Rooms', labelKn: 'ರೂಮ್ಸ್' },
 ];
 
 function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
   const router = useRouter();
+  const { i18n } = useTranslation();
+  const isKn = i18n.language === 'kn';
+  const [showCreateSheet, setShowCreateSheet] = useState(false);
 
   // Helper to render a tab item
   const renderTab = (tabConfig: TabItemConfig) => {
@@ -71,8 +74,8 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
             },
             isFocused && Platform.OS === 'web'
               ? ({
-                boxShadow: '0 2px 10px rgba(99, 102, 241, 0.2)',
-              } as any)
+                  boxShadow: '0 2px 10px rgba(99, 102, 241, 0.2)',
+                } as any)
               : {},
           ]}
         >
@@ -91,100 +94,266 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
   };
 
   return (
-    <View
-      pointerEvents="box-none"
-      style={{
-        position: Platform.OS === 'web' ? ('fixed' as any) : 'absolute',
-        bottom: 22,
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-      }}
-    >
+    <>
       <View
-        pointerEvents="auto"
-        style={[
-          {
-            width: '92%',
-            maxWidth: 380,
-            height: 68,
-            borderRadius: 36,
-            backgroundColor: '#FFFFFF',
-            borderWidth: 1.5,
-            borderColor: 'rgba(0, 0, 0, 0.08)',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingHorizontal: 8,
-            shadowColor: '#000000',
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.14,
-            shadowRadius: 22,
-            elevation: 12,
-          },
-          Platform.OS === 'web'
-            ? ({
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              boxShadow:
-                '0 12px 36px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.06)',
-            } as any)
-            : {},
-        ]}
+        pointerEvents="box-none"
+        style={{
+          position: Platform.OS === 'web' ? ('fixed' as any) : 'absolute',
+          bottom: 22,
+          left: 0,
+          right: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+        }}
       >
-        {/* Left Tabs (Feed & Search) */}
-        {LEFT_TABS.map((tab) => renderTab(tab))}
-
-        {/* Center Floating Action Button (Dribbble Mockup Exact Center + Circle) */}
-        <View style={{ width: 64, alignItems: 'center', justifyContent: 'center' }}>
-          <TouchableOpacity
-            onPress={() => router.push('/buzz/create' as any)}
-            activeOpacity={0.85}
-            style={[
-              {
-                width: 52,
-                height: 52,
-                borderRadius: 26,
-                backgroundColor: '#6366F1',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transform: [{ translateY: -14 }],
-                shadowColor: '#6366F1',
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.38,
-                shadowRadius: 12,
-                elevation: 10,
-                borderWidth: 3,
-                borderColor: '#FFFFFF',
-              },
-              Platform.OS === 'web'
-                ? ({
-                  boxShadow: '0 8px 20px rgba(99, 102, 241, 0.45)',
+        <View
+          pointerEvents="auto"
+          style={[
+            {
+              width: '92%',
+              maxWidth: 380,
+              height: 68,
+              borderRadius: 36,
+              backgroundColor: '#FFFFFF',
+              borderWidth: 1.5,
+              borderColor: 'rgba(0, 0, 0, 0.08)',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: 8,
+              shadowColor: '#000000',
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.14,
+              shadowRadius: 22,
+              elevation: 12,
+            },
+            Platform.OS === 'web'
+              ? ({
+                  backdropFilter: 'blur(24px)',
+                  WebkitBackdropFilter: 'blur(24px)',
+                  boxShadow:
+                    '0 12px 36px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.06)',
                 } as any)
-                : {},
-            ]}
-          >
-            <Text
-              style={{
-                fontSize: 28,
-                color: '#FFFFFF',
-                fontWeight: '600',
-                lineHeight: 30,
-                textAlign: 'center',
-                marginTop: -2,
-              }}
-            >
-              +
-            </Text>
-          </TouchableOpacity>
-        </View>
+              : {},
+          ]}
+        >
+          {/* Left Tabs (Feed & Search) */}
+          {LEFT_TABS.map((tab) => renderTab(tab))}
 
-        {/* Right Tabs (Real News & Chats) */}
-        {RIGHT_TABS.map((tab) => renderTab(tab))}
+          {/* Center Floating Action Button (Dribbble Mockup Exact Center + Circle) */}
+          <View style={{ width: 64, alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity
+              onPress={() => setShowCreateSheet(true)}
+              activeOpacity={0.85}
+              style={[
+                {
+                  width: 52,
+                  height: 52,
+                  borderRadius: 26,
+                  backgroundColor: '#6366F1',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: [{ translateY: -14 }],
+                  shadowColor: '#6366F1',
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.38,
+                  shadowRadius: 12,
+                  elevation: 10,
+                  borderWidth: 3,
+                  borderColor: '#FFFFFF',
+                },
+                Platform.OS === 'web'
+                  ? ({
+                      boxShadow: '0 8px 20px rgba(99, 102, 241, 0.45)',
+                    } as any)
+                  : {},
+              ]}
+            >
+              <Text
+                style={{
+                  fontSize: 28,
+                  color: '#FFFFFF',
+                  fontWeight: '600',
+                  lineHeight: 30,
+                  textAlign: 'center',
+                  marginTop: -2,
+                }}
+              >
+                +
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Right Tabs (Real News & Rooms/Chats) */}
+          {RIGHT_TABS.map((tab) => renderTab(tab))}
+        </View>
       </View>
-    </View>
+
+      {/* Unified Creation Sheet (One place to create Room, Photo News, or Spill Tea) */}
+      <Modal visible={showCreateSheet} transparent animationType="fade">
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setShowCreateSheet(false)}
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            justifyContent: 'flex-end',
+            padding: 20,
+            paddingBottom: 100,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 28,
+              padding: 20,
+              borderWidth: 1.5,
+              borderColor: '#E2E8F0',
+              shadowColor: '#000000',
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.2,
+              shadowRadius: 20,
+              elevation: 10,
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>
+                {isKn ? 'ಹೊಸದನ್ನು ರಚಿಸಿ ✨' : 'Create Something New ✨'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowCreateSheet(false)}>
+                <Text style={{ fontSize: 18, color: '#94A3B8', fontWeight: '800' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ gap: 10 }}>
+              {/* Option 1: Create Adda Room (The ONE place to create room) */}
+              <TouchableOpacity
+                onPress={() => {
+                  setShowCreateSheet(false);
+                  router.push('/create-adda');
+                }}
+                activeOpacity={0.8}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 14,
+                  borderRadius: 18,
+                  backgroundColor: '#EEF2FF',
+                  borderWidth: 1.5,
+                  borderColor: '#C7D2FE',
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: '#6366F1',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 12,
+                  }}
+                >
+                  <Text style={{ fontSize: 22, color: '#FFFFFF' }}>🛖</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
+                    {isKn ? 'ಹೊಸ ರೂಮ್ ರಚಿಸಿ (Adda)' : 'Create New Room (Adda)'}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                    {isKn ? 'ಸ್ನೇಹಿತರೊಂದಿಗೆ ಹರಟೆ ಹೊಡೆಯಲು ಖಾಸಗಿ ಕೊಠಡಿ' : 'Start a private hangout room with invite code'}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 18, color: '#6366F1', fontWeight: '900' }}>›</Text>
+              </TouchableOpacity>
+
+              {/* Option 2: Share Photo News */}
+              <TouchableOpacity
+                onPress={() => {
+                  setShowCreateSheet(false);
+                  router.push('/(tabs)/chaos');
+                }}
+                activeOpacity={0.8}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 14,
+                  borderRadius: 18,
+                  backgroundColor: '#F0FDF4',
+                  borderWidth: 1.5,
+                  borderColor: '#BBF7D0',
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: '#15803D',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 12,
+                  }}
+                >
+                  <Text style={{ fontSize: 22, color: '#FFFFFF' }}>📷</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
+                    {isKn ? 'ಫೋಟೋ ಸುದ್ದಿ ಹಂಚಿಕೊಳ್ಳಿ' : 'Share Photo News'}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                    {isKn ? 'ಸ್ಥಳೀಯ ಅಥವಾ ಕಾಲೇಜು ಸುದ್ದಿ ಫೋಟೋ ಸಹಿತ' : 'Post verified news with photos & full details'}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 18, color: '#15803D', fontWeight: '900' }}>›</Text>
+              </TouchableOpacity>
+
+              {/* Option 3: Spill the Tea / Buzz */}
+              <TouchableOpacity
+                onPress={() => {
+                  setShowCreateSheet(false);
+                  router.push('/buzz/create');
+                }}
+                activeOpacity={0.8}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 14,
+                  borderRadius: 18,
+                  backgroundColor: '#FAF5FF',
+                  borderWidth: 1.5,
+                  borderColor: '#E9D5FF',
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: '#7E22CE',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 12,
+                  }}
+                >
+                  <Text style={{ fontSize: 22, color: '#FFFFFF' }}>☕</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
+                    {isKn ? 'ಟೀ ಕುಡಿತಾ ಹರಟೆ ಅಥವಾ ಮತದಾನ' : 'Spill the Tea or Start a Poll'}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                    {isKn ? 'ಗುಪ್ತ ಕನ್ಫೆಷನ್ ಅಥವಾ ಸರ್ಕಲ್ ಮತದಾನ' : 'Confessions, polls, or juicy circle stories'}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 18, color: '#7E22CE', fontWeight: '900' }}>›</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 }
 
@@ -220,14 +389,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="chats"
         options={{
-          title: isKn ? 'ಚಾಟ್‌ಗಳು' : 'Chats',
+          title: isKn ? 'ರೂಮ್ಸ್ ಮತ್ತು ಚಾಟ್‌ಗಳು' : 'Rooms & Chats',
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: isKn ? 'ಪ್ರೊಫೈಲ್' : 'Profile',
-          href: null, // accessible via top-right avatar
+          href: null,
         }}
       />
     </Tabs>
