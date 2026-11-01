@@ -79,6 +79,11 @@ var BuzzCategory;
     BuzzCategory["COLLEGE_RADAR"] = "COLLEGE_RADAR";
     BuzzCategory["POLL_HOT_TAKE"] = "POLL_HOT_TAKE";
     BuzzCategory["CONFESSION"] = "CONFESSION";
+    BuzzCategory["GUESS_WHO"] = "GUESS_WHO";
+    BuzzCategory["LATE_NIGHT_ADDA"] = "LATE_NIGHT_ADDA";
+    BuzzCategory["THROWBACK_TEA"] = "THROWBACK_TEA";
+    BuzzCategory["HOT_TAKE"] = "HOT_TAKE";
+    BuzzCategory["SCREENSHOT_OF_DAY"] = "SCREENSHOT_OF_DAY";
 })(BuzzCategory || (exports.BuzzCategory = BuzzCategory = {}));
 var BuzzCredibility;
 (function (BuzzCredibility) {

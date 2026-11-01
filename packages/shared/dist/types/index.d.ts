@@ -134,6 +134,7 @@ export interface CreateBuzzPostDto {
     credibility?: BuzzCredibility;
     expiry?: BuzzExpiry;
     isAnonymous?: boolean;
+    anonymousPersona?: string;
     title?: string;
     content: string;
     mediaUrl?: string;

@@ -5,9 +5,9 @@ import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native
 
 const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
   index: { active: '🏠', inactive: '🏠' },
-  buzz: { active: '🔥', inactive: '🔥' },
-  chaos: { active: '📁', inactive: '📁' },
   chats: { active: '💬', inactive: '💬' },
+  buzz: { active: '🔥', inactive: '🔥' },
+  chaos: { active: '👥', inactive: '👥' },
   profile: { active: '👤', inactive: '👤' },
 };
 
@@ -144,6 +144,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="chats"
+        options={{
+          title: isKn ? 'ಚಾಟ್‌ಗಳು' : 'Chats',
+        }}
+      />
+      <Tabs.Screen
         name="buzz"
         options={{
           title: isKn ? 'ಅಡ್ಡ ಬಜ್' : 'Adda Buzz',
@@ -152,13 +158,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="chaos"
         options={{
-          title: isKn ? 'ಡೈಲಿ ಕೆಯೋಸ್' : 'Daily Chaos',
-        }}
-      />
-      <Tabs.Screen
-        name="chats"
-        options={{
-          title: isKn ? 'ಚಾಟ್‌ಗಳು' : 'Chats',
+          title: isKn ? 'ವೃತ್ತಗಳು' : 'Circles',
         }}
       />
       <Tabs.Screen

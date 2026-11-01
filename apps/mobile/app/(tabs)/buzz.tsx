@@ -8,7 +8,7 @@ import {
   RefreshControl,
   Modal,
   TextInput,
-  ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -31,22 +31,36 @@ import {
   DS_TOKENS,
 } from '../../src/components/DesignSystem';
 
-const CATEGORY_ITEMS: Array<{ key: BuzzCategory; labelEn: string; labelKn: string; icon: string }> = [
+const SCREEN_WIDTH = Dimensions.get('window').width;
+
+const REACTION_EMOJIS = ['😂', '👀', '🍿', '☕', '🔥', '💀', '❤️'];
+
+const CIRCLE_STORIES = [
+  { id: 'st_my', name: 'My Story', avatar: '✨', mood: 'LIVE', isMe: true },
+  { id: 'st_1', name: 'Rohit K', avatar: '☕', mood: 'Need Gossip 👀', hasUnread: true, storyContent: 'Canteen Coffee Saga: table 4 disappeared 😭' },
+  { id: 'st_2', name: 'Deepa M', avatar: '🚇', mood: 'Metro Run', hasUnread: true, storyContent: 'Purple line peak trains every 3 mins now! 🚀' },
+  { id: 'st_3', name: 'Karthik', avatar: '🎮', mood: 'Gaming Mode', hasUnread: true, storyContent: 'ChakraVyuh Hackathon mock interviews in Hall 2' },
+  { id: 'st_4', name: 'Ananya S', avatar: '🥑', mood: 'Chill Mode 🌿', hasUnread: false, storyContent: 'Weekend Chai Adda playlist updated' },
+  { id: 'st_5', name: 'Suresh', avatar: '🧈', mood: 'CTR Hunter', hasUnread: false, storyContent: 'CTR Benne Dosa is officially top tier' },
+];
+
+const CATEGORY_CHIPS: Array<{ key: BuzzCategory; labelEn: string; labelKn: string; icon: string }> = [
   { key: BuzzCategory.ALL, labelEn: 'All Buzz', labelKn: 'ಎಲ್ಲಾ ಬಜ್', icon: '🌟' },
   { key: BuzzCategory.SPILL_THE_TEA, labelEn: 'Spill the Tea', labelKn: 'ಟೀ ಕುಡಿತಾ ಹರಟೆ', icon: '☕' },
+  { key: BuzzCategory.POLL_HOT_TAKE, labelEn: "What's the Verdict?", labelKn: 'ಮತದಾನ & ತೀರ್ಪು', icon: '🗳️' },
+  { key: BuzzCategory.CONFESSION, labelEn: 'Confession Corner', labelKn: 'ಕನ್ಫೆಷನ್ ಕಾರ್ನರ್', icon: '👀' },
   { key: BuzzCategory.NEWS, labelEn: 'News & Links', labelKn: 'ಸುದ್ದಿ & ಲಿಂಕ್ಸ್', icon: '📰' },
   { key: BuzzCategory.OORU_UPDATES, labelEn: 'Ooru Updates', labelKn: 'ಊರು ಅಪ್‌ಡೇಟ್ಸ್', icon: '🏙️' },
   { key: BuzzCategory.COLLEGE_RADAR, labelEn: 'College Radar', labelKn: 'ಕಾಲೇಜು ರೇಡಾರ್', icon: '🎓' },
-  { key: BuzzCategory.POLL_HOT_TAKE, labelEn: 'Polls & Hot Takes', labelKn: 'ಮತದಾನ & ಚರ್ಚೆ', icon: '🔥' },
-  { key: BuzzCategory.CONFESSION, labelEn: 'Confession Corner', labelKn: 'ಕನ್ಫೆಷನ್ ಕಾರ್ನರ್', icon: '🤫' },
+  { key: BuzzCategory.GUESS_WHO, labelEn: 'Guess Who?', labelKn: 'ಯಾರು ಅಂತ ಊಹಿಸಿ?', icon: '🎭' },
+  { key: BuzzCategory.LATE_NIGHT_ADDA, labelEn: 'Late Night Adda', labelKn: 'ರಾತ್ರಿ ಹರಟೆ', icon: '🌙' },
+  { key: BuzzCategory.HOT_TAKE, labelEn: 'Hot Take of the Day', labelKn: 'ಇಂದಿನ ಹಾಟ್ ಟೇಕ್', icon: '⚡' },
 ];
-
-const REACTION_EMOJIS = ['😂', '👀', '🍿', '☕', '🔥', '💀', '❤️'];
 
 export default function BuzzFeedScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ addaId?: string }>();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const currentUser = useAuthStore((state) => state.user);
   const isKn = i18n.language === 'kn';
 
@@ -59,6 +73,9 @@ export default function BuzzFeedScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Active Story Modal
+  const [activeStory, setActiveStory] = useState<any | null>(null);
 
   // Report Modal State
   const [reportingPostId, setReportingPostId] = useState<string | null>(null);
@@ -118,10 +135,9 @@ export default function BuzzFeedScreen() {
     fetchPosts();
   };
 
-  // Reactions
+  // Reactions Toggle
   const handleToggleReaction = async (postId: string, emoji: string) => {
     try {
-      // Optimistic update
       setPosts((prev) =>
         prev.map((post) => {
           if (post.id !== postId) return post;
@@ -234,16 +250,13 @@ export default function BuzzFeedScreen() {
     }
   };
 
-  // Copy share link
   const handleSharePost = (post: BuzzPost) => {
     if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(`${window.location.origin}/buzz/${post.id}`);
     }
-    setToastMessage(isKn ? 'ಪೋಸ್ಟ್ ಲಿಂಕ್ ನಕಲಿಸಲಾಗಿದೆ!' : 'Circle link copied to clipboard!');
+    setToastMessage(isKn ? 'ಲಿಂಕ್ ನಕಲಿಸಲಾಗಿದೆ!' : 'Circle link copied to clipboard!');
     setTimeout(() => setToastMessage(null), 2000);
   };
-
-  const currentAddaName = addas.find((a) => a.id === selectedAddaId)?.name || 'Chai Adda 🔥';
 
   return (
     <MainLayout>
@@ -253,172 +266,410 @@ export default function BuzzFeedScreen() {
         onDismiss={() => setToastMessage(null)}
       />
 
-      {/* Top Header */}
+      {/* ------------------------------------------------------------- */}
+      {/* 1. TOP BAR (Screenshot 1: Menu Icon, Pencil Action, More Dots) */}
+      {/* ------------------------------------------------------------- */}
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 16,
-          flexWrap: 'wrap',
-          gap: 12,
+          paddingVertical: 8,
+          marginBottom: 12,
         }}
       >
-        <View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={{ fontSize: 24, fontWeight: '900', color: DS_TOKENS.colors.textPrimary }}>
-              {isKn ? 'ಅಡ್ಡ ಬಜ್' : 'ADDA BUZZ'}
-            </Text>
-            <View
-              style={{
-                backgroundColor: DS_TOKENS.colors.purpleLight,
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: DS_TOKENS.radii.pill,
-                borderWidth: 1,
-                borderColor: DS_TOKENS.colors.purpleBorder,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: '800',
-                  color: DS_TOKENS.colors.purple,
-                  letterSpacing: 0.5,
-                }}
-              >
-                LIVE CIRCLE
-              </Text>
-            </View>
-          </View>
-          <Text style={{ fontSize: 13, color: DS_TOKENS.colors.textSecondary, fontWeight: '500', marginTop: 2 }}>
-            {isKn ? `${currentAddaName} ಖಾಸಗಿ ಹರಟೆ ಮತ್ತು ಸುದ್ದಿ` : `Private social feed for ${currentAddaName}`}
-          </Text>
-        </View>
-
-        {/* Post Buzz Action Button */}
+        {/* Hamburger Menu Icon */}
         <TouchableOpacity
-          onPress={() => router.push('/buzz/create' as any)}
+          onPress={() => router.push('/(tabs)/chaos' as any)}
+          activeOpacity={0.7}
           style={{
-            backgroundColor: DS_TOKENS.colors.purple,
-            paddingHorizontal: 16,
-            paddingVertical: 10,
-            borderRadius: DS_TOKENS.radii.pill,
-            flexDirection: 'row',
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: '#FFFFFF',
+            borderWidth: 1.5,
+            borderColor: 'rgba(0, 0, 0, 0.08)',
             alignItems: 'center',
-            gap: 6,
-            shadowColor: '#6366F1',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
-            shadowRadius: 10,
-            elevation: 4,
+            justifyContent: 'center',
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.06,
+            shadowRadius: 6,
+            elevation: 2,
           }}
-          activeOpacity={0.8}
         >
-          <Text style={{ fontSize: 16 }}>✨</Text>
-          <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 14 }}>
-            {isKn ? 'ಹೊಸ ಬಜ್ ಪೋಸ್ಟ್' : 'Post Buzz'}
-          </Text>
+          <Text style={{ fontSize: 18, color: '#0F172A', fontWeight: '900' }}>☰</Text>
         </TouchableOpacity>
+
+        {/* Right Action Icons: Pencil / Create + Options */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity
+            onPress={() => router.push('/buzz/create' as any)}
+            activeOpacity={0.8}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: '#FFFFFF',
+              borderWidth: 1.5,
+              borderColor: 'rgba(0, 0, 0, 0.08)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: '#000000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 6,
+              elevation: 2,
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>✏️</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => {
+              setToastMessage(
+                isKn
+                  ? 'ಅಡ್ಡ ಬಜ್: ಖಾಸಗಿ ಹರಟೆ ಮತ್ತು ಸುರಕ್ಷಿತ ಸಂಭಾಷಣೆ ವೇದಿಕೆ'
+                  : 'Adda Buzz: Safe, invite-only circle social sharing',
+              );
+              setTimeout(() => setToastMessage(null), 3000);
+            }}
+            activeOpacity={0.8}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: '#FFFFFF',
+              borderWidth: 1.5,
+              borderColor: 'rgba(0, 0, 0, 0.08)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: '#000000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 6,
+              elevation: 2,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>⋮</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Circle Selector Chips (if user belongs to multiple Addas) */}
-      {addas.length > 1 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8, paddingBottom: 10 }}
+      {/* ------------------------------------------------------------- */}
+      {/* 2. HEADER: VARAVU ADDA + Private circle Badge                  */}
+      {/* ------------------------------------------------------------- */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <Text
+          style={{
+            fontSize: 15,
+            fontWeight: '800',
+            color: '#334155',
+            letterSpacing: 0.8,
+            textTransform: 'uppercase',
+          }}
         >
-          {addas.map((adda) => {
-            const isSelected = adda.id === selectedAddaId;
-            return (
-              <TouchableOpacity
-                key={adda.id}
-                onPress={() => setSelectedAddaId(adda.id)}
-                activeOpacity={0.7}
-                style={{
-                  paddingHorizontal: 14,
-                  paddingVertical: 6,
-                  borderRadius: DS_TOKENS.radii.pill,
-                  backgroundColor: isSelected ? DS_TOKENS.colors.purple : '#FFFFFF',
-                  borderWidth: 1.5,
-                  borderColor: isSelected ? DS_TOKENS.colors.purple : DS_TOKENS.colors.borderSubtle,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: isSelected ? '800' : '600',
-                    color: isSelected ? '#FFFFFF' : DS_TOKENS.colors.textPrimary,
-                  }}
-                >
-                  🛖 {adda.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      )}
+          VARAVU ADDA
+        </Text>
+        <View
+          style={{
+            backgroundColor: '#E6F7ED',
+            borderWidth: 1,
+            borderColor: '#B4E8C6',
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            borderRadius: 9999,
+          }}
+        >
+          <Text style={{ fontSize: 11, fontWeight: '700', color: '#0D8244' }}>
+            Private circle
+          </Text>
+        </View>
+      </View>
 
-      {/* Feed Filters: Latest vs Trending vs Saved */}
+      {/* Giant Kannada Title (Screenshot 1) */}
+      <Text
+        style={{
+          fontSize: 28,
+          fontWeight: '900',
+          color: '#0F172A',
+          letterSpacing: -0.5,
+          lineHeight: 36,
+          marginTop: 2,
+        }}
+      >
+        ಏನ್ ಸಮಾಚಾರ ಗುರು? 👀
+      </Text>
+
+      {/* Subtitle */}
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '800',
+          color: '#64748B',
+          letterSpacing: 0.9,
+          textTransform: 'uppercase',
+          marginTop: 4,
+          marginBottom: 16,
+        }}
+      >
+        YOUR FRIENDS ARE UP TO SOMETHING
+      </Text>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 3. 2x2 VIBRANT QUICK FEATURE GRID (SCREENSHOT 1 EXACT THEME)  */}
+      {/* ------------------------------------------------------------- */}
       <View
         style={{
           flexDirection: 'row',
-          alignItems: 'center',
-          gap: 8,
-          marginBottom: 12,
-          backgroundColor: DS_TOKENS.colors.bgSecondary,
-          padding: 4,
-          borderRadius: DS_TOKENS.radii.md,
-          borderWidth: 1,
-          borderColor: DS_TOKENS.colors.borderSubtle,
-          alignSelf: 'flex-start',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          gap: 12,
+          marginBottom: 20,
         }}
       >
-        {[
-          { key: 'all', labelEn: 'Latest Feed ⚡', labelKn: 'ಇತ್ತೀಚಿನ ⚡' },
-          { key: 'trending', labelEn: 'Trending in Circle 🔥', labelKn: 'ಟ್ರೆಂಡಿಂಗ್ 🔥' },
-          { key: 'saved', labelEn: 'Saved 🔖', labelKn: 'ಉಳಿಸಿದವು 🔖' },
-        ].map((tab) => {
-          const isActive = selectedFilter === tab.key;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              onPress={() => setSelectedFilter(tab.key as any)}
-              activeOpacity={0.7}
-              style={{
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: DS_TOKENS.radii.sm,
-                backgroundColor: isActive ? '#FFFFFF' : 'transparent',
-                shadowColor: '#000000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: isActive ? 0.08 : 0,
-                shadowRadius: 3,
-                elevation: isActive ? 2 : 0,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: isActive ? '800' : '600',
-                  color: isActive ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
-                }}
-              >
-                {isKn ? tab.labelKn : tab.labelEn}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        {/* CARD 1: Spill the Tea ☕ (Deep Purple / Navy) */}
+        <TouchableOpacity
+          onPress={() => {
+            setSelectedCategory(BuzzCategory.SPILL_THE_TEA);
+            setSelectedFilter('all');
+          }}
+          activeOpacity={0.85}
+          style={{
+            width: '48%',
+            height: 124,
+            borderRadius: 22,
+            backgroundColor: '#27204A',
+            padding: 14,
+            justifyContent: 'space-between',
+            shadowColor: '#27204A',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.22,
+            shadowRadius: 12,
+            elevation: 5,
+          }}
+        >
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: 'rgba(255, 255, 255, 0.14)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>☕</Text>
+          </View>
+          <View>
+            <Text style={{ fontSize: 16, fontWeight: '900', color: '#FFFFFF', letterSpacing: -0.2 }}>
+              Spill the Tea
+            </Text>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: '#C4B5FD', marginTop: 2 }}>
+              Gossip starts here
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* CARD 2: Buzz Feed 📰 (Coral / Salmon) */}
+        <TouchableOpacity
+          onPress={() => {
+            setSelectedCategory(BuzzCategory.ALL);
+            setSelectedFilter('all');
+          }}
+          activeOpacity={0.85}
+          style={{
+            width: '48%',
+            height: 124,
+            borderRadius: 22,
+            backgroundColor: '#FF6464',
+            padding: 14,
+            justifyContent: 'space-between',
+            shadowColor: '#FF6464',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.22,
+            shadowRadius: 12,
+            elevation: 5,
+          }}
+        >
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: 'rgba(255, 255, 255, 0.22)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>📰</Text>
+          </View>
+          <View>
+            <Text style={{ fontSize: 16, fontWeight: '900', color: '#FFFFFF', letterSpacing: -0.2 }}>
+              Buzz Feed
+            </Text>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: '#FED7AA', marginTop: 2 }}>
+              What's happening?
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* CARD 3: Trending 🔥 (Electric Lime / Neon Yellow-Green) */}
+        <TouchableOpacity
+          onPress={() => {
+            setSelectedFilter(selectedFilter === 'trending' ? 'all' : 'trending');
+          }}
+          activeOpacity={0.85}
+          style={{
+            width: '48%',
+            height: 124,
+            borderRadius: 22,
+            backgroundColor: '#D4FF32',
+            padding: 14,
+            justifyContent: 'space-between',
+            borderWidth: selectedFilter === 'trending' ? 2 : 0,
+            borderColor: '#0F172A',
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.12,
+            shadowRadius: 12,
+            elevation: 5,
+          }}
+        >
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: 'rgba(0, 0, 0, 0.08)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>🔥</Text>
+          </View>
+          <View>
+            <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A', letterSpacing: -0.2 }}>
+              Trending
+            </Text>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: '#334155', marginTop: 2 }}>
+              Circle's hot topics
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* CARD 4: Tribunal 🗳️ (Soft Lavender / What's the Verdict?) */}
+        <TouchableOpacity
+          onPress={() => {
+            setSelectedCategory(BuzzCategory.POLL_HOT_TAKE);
+            setSelectedFilter('all');
+          }}
+          activeOpacity={0.85}
+          style={{
+            width: '48%',
+            height: 124,
+            borderRadius: 22,
+            backgroundColor: '#EDE9FE',
+            padding: 14,
+            justifyContent: 'space-between',
+            borderWidth: 1,
+            borderColor: '#DDD6FE',
+            shadowColor: '#8B5CF6',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.12,
+            shadowRadius: 10,
+            elevation: 3,
+          }}
+        >
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: '#FFFFFF',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>🗳️</Text>
+          </View>
+          <View>
+            <Text style={{ fontSize: 16, fontWeight: '900', color: '#4338CA', letterSpacing: -0.2 }}>
+              Tribunal
+            </Text>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: '#6366F1', marginTop: 2 }}>
+              Let's vote, guru!
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
-      {/* Categories Horizontal Scroller */}
+      {/* ------------------------------------------------------------- */}
+      {/* 4. CIRCLE MEMBER STORY BUBBLES (Screenshot 2 & 5)             */}
+      {/* ------------------------------------------------------------- */}
+      <View style={{ marginBottom: 16 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 14, paddingRight: 8 }}
+        >
+          {CIRCLE_STORIES.map((st) => (
+            <TouchableOpacity
+              key={st.id}
+              onPress={() => setActiveStory(st)}
+              activeOpacity={0.75}
+              style={{ alignItems: 'center', width: 68 }}
+            >
+              <View
+                style={{
+                  width: 58,
+                  height: 58,
+                  borderRadius: 29,
+                  padding: 2.5,
+                  backgroundColor: st.hasUnread ? '#6366F1' : '#E2E8F0',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <View
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 26,
+                    backgroundColor: '#FFFFFF',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 24 }}>{st.avatar}</Text>
+                </View>
+              </View>
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontSize: 11,
+                  fontWeight: '700',
+                  color: '#0F172A',
+                  marginTop: 4,
+                  textAlign: 'center',
+                }}
+              >
+                {st.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 5. FILTER CHIPS (All, Spill the Tea, Verdict, Confessions...) */}
+      {/* ------------------------------------------------------------- */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 8, paddingBottom: 14 }}
       >
-        {CATEGORY_ITEMS.map((cat) => {
+        {CATEGORY_CHIPS.map((cat) => {
           const isSelected = selectedCategory === cat.key;
           return (
             <TouchableOpacity
@@ -431,18 +682,18 @@ export default function BuzzFeedScreen() {
                 gap: 6,
                 paddingHorizontal: 13,
                 paddingVertical: 7,
-                borderRadius: DS_TOKENS.radii.pill,
-                backgroundColor: isSelected ? DS_TOKENS.colors.purpleLight : '#FFFFFF',
+                borderRadius: 9999,
+                backgroundColor: isSelected ? '#EEF2FF' : '#FFFFFF',
                 borderWidth: 1.5,
-                borderColor: isSelected ? DS_TOKENS.colors.purple : DS_TOKENS.colors.borderSubtle,
+                borderColor: isSelected ? '#6366F1' : '#E2E8F0',
               }}
             >
               <Text style={{ fontSize: 14 }}>{cat.icon}</Text>
               <Text
                 style={{
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: isSelected ? '800' : '600',
-                  color: isSelected ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
+                  color: isSelected ? '#6366F1' : '#475569',
                 }}
               >
                 {isKn ? cat.labelKn : cat.labelEn}
@@ -452,44 +703,47 @@ export default function BuzzFeedScreen() {
         })}
       </ScrollView>
 
-      {/* Posts Feed */}
+      {/* ------------------------------------------------------------- */}
+      {/* 6. TODAY'S ADDA BUZZ SECTION (SCREENSHOT 1)                   */}
+      {/* ------------------------------------------------------------- */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 10,
+          marginTop: 4,
+        }}
+      >
+        <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>
+          Today's Adda Buzz 👀
+        </Text>
+        <Text style={{ fontSize: 12, fontWeight: '700', color: '#6366F1' }}>
+          {posts.length} {isKn ? 'ಹರಟೆಗಳು' : 'stories'}
+        </Text>
+      </View>
+
       {loading ? (
-        <LoadingState message={isKn ? 'ಬಜ್ ಪೋಸ್ಟ್‌ಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...' : 'Loading Adda Buzz feed...'} />
+        <LoadingState message={isKn ? 'ಲೋಡ್ ಆಗುತ್ತಿದೆ...' : 'Loading Adda Buzz...'} />
       ) : posts.length === 0 ? (
-        <GlassCard style={{ padding: 32, alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
-          <Text style={{ fontSize: 48, marginBottom: 12 }}>✨</Text>
-          <Text style={{ fontSize: 18, fontWeight: '800', color: DS_TOKENS.colors.textPrimary, textAlign: 'center' }}>
-            {selectedFilter === 'saved'
-              ? isKn
-                ? 'ಯಾವುದೇ ಉಳಿಸಿದ ಪೋಸ್ಟ್‌ಗಳಿಲ್ಲ'
-                : 'No bookmarked posts yet'
-              : isKn
-              ? 'ಈ ವಿಭಾಗದಲ್ಲಿ ಇನ್ನೂ ಯಾವುದೇ ಪೋಸ್ಟ್ ಇಲ್ಲ'
-              : 'No buzz in this category yet'}
+        <GlassCard style={{ padding: 32, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 44, marginBottom: 10 }}>✨</Text>
+          <Text style={{ fontSize: 16, fontWeight: '800', color: '#0F172A', textAlign: 'center' }}>
+            {isKn ? 'ಯಾವುದೇ ಬಜ್ ಪೋಸ್ಟ್‌ಗಳಿಲ್ಲ' : 'No circle buzz right now'}
           </Text>
-          <Text
-            style={{
-              fontSize: 13,
-              color: DS_TOKENS.colors.textSecondary,
-              textAlign: 'center',
-              marginTop: 6,
-              maxWidth: 320,
-            }}
-          >
-            {isKn
-              ? 'ನಿಮ್ಮ ಅಡ್ಡ ಸದಸ್ಯರೊಂದಿಗೆ ಮೊದಲ ಸುದ್ದಿ ಅಥವಾ ಹರಟೆಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ!'
-              : 'Be the first to spill the tea, drop campus news, or ask a hot take poll!'}
+          <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center', marginTop: 4 }}>
+            {isKn ? 'ಮೊದಲ ಹರಟೆ ಅಥವಾ ಮತದಾನ ಆರಂಭಿಸಿ!' : 'Start the tea or drop a hot take poll!'}
           </Text>
           <PrimaryButton
-            title={isKn ? 'ಮೊದಲ ಬಜ್ ಪೋಸ್ಟ್ ಮಾಡಿ' : 'Start the Buzz 🚀'}
-            style={{ marginTop: 16 }}
+            title={isKn ? 'ಹೊಸ ಪೋಸ್ಟ್ ಮಾಡಿ' : 'Start Buzz 🚀'}
+            style={{ marginTop: 14 }}
             onPress={() => router.push('/buzz/create' as any)}
           />
         </GlassCard>
       ) : (
-        <View style={{ gap: 16, paddingBottom: 110 }}>
+        <View style={{ gap: 14, paddingBottom: 120 }}>
           {posts.map((post) => (
-            <BuzzPostCard
+            <ModernBuzzCard
               key={post.id}
               post={post}
               isKn={isKn}
@@ -506,15 +760,99 @@ export default function BuzzFeedScreen() {
         </View>
       )}
 
+      {/* Story View Modal */}
+      {activeStory && (
+        <Modal visible={Boolean(activeStory)} transparent animationType="fade">
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(15, 23, 42, 0.85)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 20,
+            }}
+          >
+            <View
+              style={{
+                width: '100%',
+                maxWidth: 380,
+                backgroundColor: '#FFFFFF',
+                borderRadius: 28,
+                padding: 24,
+                borderWidth: 1.5,
+                borderColor: '#E2E8F0',
+                shadowColor: '#000000',
+                shadowOffset: { width: 0, height: 12 },
+                shadowOpacity: 0.3,
+                shadowRadius: 24,
+                elevation: 10,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Text style={{ fontSize: 32 }}>{activeStory.avatar}</Text>
+                  <View>
+                    <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>
+                      {activeStory.name}
+                    </Text>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#6366F1' }}>
+                      {activeStory.mood}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => setActiveStory(null)}>
+                  <Text style={{ fontSize: 18, color: '#94A3B8', fontWeight: '800' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View
+                style={{
+                  backgroundColor: '#F8FAFC',
+                  borderRadius: 18,
+                  padding: 18,
+                  borderWidth: 1,
+                  borderColor: '#E2E8F0',
+                  marginBottom: 18,
+                }}
+              >
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#1E293B', lineHeight: 22 }}>
+                  "{activeStory.storyContent || 'Chilling at the Adda ☕'}"
+                </Text>
+              </View>
+
+              {/* Floating Story Reactions */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingTop: 6 }}>
+                {['❤️', '🔥', '😂', '👏', '👀'].map((emoji) => (
+                  <TouchableOpacity
+                    key={emoji}
+                    onPress={() => {
+                      setToastMessage(`Sent ${emoji} to ${activeStory.name}! ✨`);
+                      setTimeout(() => setToastMessage(null), 2000);
+                      setActiveStory(null);
+                    }}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      backgroundColor: '#EEF2FF',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 22 }}>{emoji}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
         visible={Boolean(deletingPostId)}
         title={isKn ? 'ಪೋಸ್ಟ್ ಅಳಿಸಬೇಕೆ?' : 'Delete Buzz Post?'}
-        message={
-          isKn
-            ? 'ಈ ಪೋಸ್ಟ್ ಅನ್ನು ನಿಮ್ಮ ಅಡ್ಡದಿಂದ ಶಾಶ್ವತವಾಗಿ ತೆಗೆದುಹಾಕಲಾಗುತ್ತದೆ.'
-            : 'This post and its reactions will be permanently deleted from this Adda circle.'
-        }
+        message={isKn ? 'ಈ ಪೋಸ್ಟ್ ಅನ್ನು ಅಡ್ಡದಿಂದ ಶಾಶ್ವತವಾಗಿ ತೆಗೆದುಹಾಕಲಾಗುತ್ತದೆ.' : 'This post will be permanently deleted from the circle feed.'}
         confirmText={isKn ? 'ಅಳಿಸಿ' : 'Delete'}
         cancelText={isKn ? 'ರದ್ದು' : 'Cancel'}
         destructive
@@ -523,7 +861,7 @@ export default function BuzzFeedScreen() {
       />
 
       {/* Report Modal */}
-      <RNReportModal
+      <ReportModal
         visible={Boolean(reportingPostId)}
         isKn={isKn}
         submitting={isSubmittingReport}
@@ -539,9 +877,9 @@ export default function BuzzFeedScreen() {
 }
 
 // ---------------------------------------------------------------------
-// BUZZ POST CARD COMPONENT
+// MODERN BUZZ CARD COMPONENT (SCREENSHOT 1 & SCREENSHOT 5 REFINEMENT)
 // ---------------------------------------------------------------------
-function BuzzPostCard({
+function ModernBuzzCard({
   post,
   isKn,
   currentUserId,
@@ -567,195 +905,74 @@ function BuzzPostCard({
   const isAuthor = currentUserId === post.authorId;
   const timeAgo = formatTimeAgo(post.createdAt, isKn);
 
-  // Credibility Badge Configuration
-  const credibilityConfig = {
-    [BuzzCredibility.VERIFIED_NEWS]: {
-      labelEn: 'Verified News',
-      labelKn: 'ಖಚಿತ ಸುದ್ದಿ',
-      icon: '✓',
-      bg: '#EFF6FF',
-      border: '#BFDBFE',
-      text: '#1D4ED8',
-    },
-    [BuzzCredibility.PERSONAL_EXPERIENCE]: {
-      labelEn: 'Personal Experience',
-      labelKn: 'ಸ್ವಂತ ಅನುಭವ',
-      icon: '🗣️',
-      bg: '#F0FDF4',
-      border: '#BBF7D0',
-      text: '#15803D',
-    },
-    [BuzzCredibility.UNVERIFIED_CLAIM]: {
-      labelEn: 'Unverified Gossip',
-      labelKn: 'ದೃಢಪಡಿಸದ ಮಾತು',
-      icon: '⚠️',
-      bg: '#FEF3C7',
-      border: '#FDE68A',
-      text: '#B45309',
-    },
-  }[post.credibility] || {
-    labelEn: 'Personal Experience',
-    labelKn: 'ಸ್ವಂತ ಅನುಭವ',
-    icon: '🗣️',
-    bg: '#F0FDF4',
-    border: '#BBF7D0',
-    text: '#15803D',
-  };
-
-  // Expiry Pill
-  const expiryPill = post.expiresAt ? (
-    <View
-      style={{
-        backgroundColor: '#FFF1F2',
-        borderWidth: 1,
-        borderColor: '#FECDD3',
-        paddingHorizontal: 7,
-        paddingVertical: 2,
-        borderRadius: DS_TOKENS.radii.pill,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 3,
-      }}
-    >
-      <Text style={{ fontSize: 10 }}>⏳</Text>
-      <Text style={{ fontSize: 10, fontWeight: '700', color: '#BE123C' }}>
-        {post.expiry === 'EXP_24H' ? '24h' : '48h'}
-      </Text>
-    </View>
-  ) : null;
+  // Total reactions count for summary
+  const totalReactionsCount = Object.values(post.reactions || {}).reduce(
+    (acc, c) => acc + (Number(c) || 0),
+    0,
+  );
 
   return (
-    <GlassCard elevated style={{ padding: 18 }}>
-      {/* Header Row: Author, Circle, Credibility, Menu */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 10,
-        }}
-      >
+    <GlassCard elevated style={{ padding: 18, borderRadius: 24, borderWidth: 1.5, borderColor: '#F1F5F9' }}>
+      {/* Header: Author & Credibility Tag */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-          {/* Avatar or Mask */}
           <View
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: 21,
-              backgroundColor: post.isAnonymous ? '#F3E8FF' : DS_TOKENS.colors.purpleLight,
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: post.isAnonymous ? '#FAF5FF' : '#EEF2FF',
               borderWidth: 1.5,
-              borderColor: post.isAnonymous ? '#D8B4FE' : DS_TOKENS.colors.purpleBorder,
+              borderColor: post.isAnonymous ? '#E9D5FF' : '#C7D2FE',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 20 }}>{post.isAnonymous ? '🤫' : '👤'}</Text>
+            <Text style={{ fontSize: 18 }}>
+              {post.isAnonymous ? '🦍' : '👤'}
+            </Text>
           </View>
-
           <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <Text
-                style={{
-                  fontSize: 15,
-                  fontWeight: '800',
-                  color: post.isAnonymous ? '#7E22CE' : DS_TOKENS.colors.textPrimary,
-                }}
-              >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 14, fontWeight: '900', color: post.isAnonymous ? '#7E22CE' : '#0F172A' }}>
                 {post.authorName}
               </Text>
-              {post.isTrending && (
-                <View
-                  style={{
-                    backgroundColor: '#FEF3C7',
-                    paddingHorizontal: 6,
-                    paddingVertical: 1,
-                    borderRadius: DS_TOKENS.radii.pill,
-                    borderWidth: 1,
-                    borderColor: '#FDE68A',
-                  }}
-                >
-                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#B45309' }}>
-                    🔥 TRENDING
-                  </Text>
+              {post.isAnonymous && (
+                <View style={{ backgroundColor: '#FAF5FF', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 9999 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#9333EA' }}>ANON</Text>
                 </View>
               )}
             </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-              <Text style={{ fontSize: 12, color: DS_TOKENS.colors.textMuted }}>{timeAgo}</Text>
-              <Text style={{ fontSize: 10, color: DS_TOKENS.colors.textMuted }}>•</Text>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: DS_TOKENS.colors.purple }}>
-                {post.addaName || 'Circle Adda'}
-              </Text>
-            </View>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: '#94A3B8' }}>
+              {timeAgo} · {post.addaName || 'Private circle'}
+            </Text>
           </View>
         </View>
 
-        {/* Right tags & options */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          {expiryPill}
-
-          {/* Credibility Badge */}
-          <View
-            style={{
-              backgroundColor: credibilityConfig.bg,
-              borderWidth: 1,
-              borderColor: credibilityConfig.border,
-              paddingHorizontal: 8,
-              paddingVertical: 3,
-              borderRadius: DS_TOKENS.radii.pill,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-            }}
-          >
-            <Text style={{ fontSize: 11 }}>{credibilityConfig.icon}</Text>
-            <Text style={{ fontSize: 11, fontWeight: '700', color: credibilityConfig.text }}>
-              {isKn ? credibilityConfig.labelKn : credibilityConfig.labelEn}
-            </Text>
-          </View>
-
-          {/* Action trigger: Delete or Report */}
-          <TouchableOpacity
-            onPress={isAuthor ? onDelete : onReport}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={{ padding: 4 }}
-          >
-            <Text style={{ fontSize: 14, color: DS_TOKENS.colors.textMuted }}>
-              {isAuthor ? '🗑️' : '🚩'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {/* Action Trigger */}
+        <TouchableOpacity
+          onPress={isAuthor ? onDelete : onReport}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{ padding: 4 }}
+        >
+          <Text style={{ fontSize: 14, color: '#94A3B8' }}>{isAuthor ? '🗑️' : '🚩'}</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Post Title */}
-      {Boolean(post.title) && (
-        <Text
-          style={{
-            fontSize: 17,
-            fontWeight: '900',
-            color: DS_TOKENS.colors.textPrimary,
-            marginBottom: 6,
-            lineHeight: 23,
-          }}
-        >
-          {post.title}
-        </Text>
-      )}
-
-      {/* Post Body Content */}
+      {/* Main Quote / Headline (Screenshot 1: "Apparently, something crazy happened in college today...") */}
       <Text
         style={{
-          fontSize: 14,
-          lineHeight: 21,
-          color: DS_TOKENS.colors.textSecondary,
-          marginBottom: 12,
+          fontSize: 16,
+          fontWeight: '800',
+          color: '#0F172A',
+          lineHeight: 23,
+          marginBottom: 8,
         }}
       >
-        {post.content}
+        "{post.content}"
       </Text>
 
-      {/* External Link Preview */}
+      {/* Link Preview (if present) */}
       {Boolean(post.linkPreview) && (
         <TouchableOpacity
           onPress={() => {
@@ -765,11 +982,11 @@ function BuzzPostCard({
           }}
           activeOpacity={0.8}
           style={{
-            backgroundColor: DS_TOKENS.colors.bgSecondary,
-            borderRadius: DS_TOKENS.radii.md,
+            backgroundColor: '#F8FAFC',
+            borderRadius: 14,
             padding: 12,
             borderWidth: 1,
-            borderColor: DS_TOKENS.colors.borderSubtle,
+            borderColor: '#E2E8F0',
             marginBottom: 12,
             flexDirection: 'row',
             alignItems: 'center',
@@ -777,28 +994,20 @@ function BuzzPostCard({
           }}
         >
           <View style={{ flex: 1, marginRight: 8 }}>
-            <Text style={{ fontSize: 11, fontWeight: '800', color: DS_TOKENS.colors.sky, letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 10, fontWeight: '800', color: '#0284C7' }}>
               🔗 {post.linkPreview?.siteName?.toUpperCase() || 'ARTICLE'}
             </Text>
-            <Text style={{ fontSize: 14, fontWeight: '700', color: DS_TOKENS.colors.textPrimary, marginTop: 2 }}>
+            <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: '700', color: '#0F172A', marginTop: 2 }}>
               {post.linkPreview?.title || post.linkPreview?.url}
             </Text>
-            {Boolean(post.linkPreview?.description) && (
-              <Text
-                numberOfLines={1}
-                style={{ fontSize: 12, color: DS_TOKENS.colors.textMuted, marginTop: 2 }}
-              >
-                {post.linkPreview?.description}
-              </Text>
-            )}
           </View>
-          <Text style={{ fontSize: 18, color: DS_TOKENS.colors.purple }}>↗</Text>
+          <Text style={{ fontSize: 16, color: '#6366F1' }}>↗</Text>
         </TouchableOpacity>
       )}
 
-      {/* Interactive Polls & Hot Takes */}
+      {/* Interactive Polls (Screenshot 5 Style: Option rows with real progress %, voter count, expires in 2d) */}
       {Array.isArray(post.pollOptions) && post.pollOptions.length > 0 && (
-        <View style={{ marginBottom: 14, gap: 8 }}>
+        <View style={{ marginBottom: 12, gap: 8 }}>
           {(() => {
             const totalVotes = post.pollOptions.reduce((acc, opt) => acc + (opt.votesCount || 0), 0);
             return (
@@ -815,14 +1024,13 @@ function BuzzPostCard({
                         position: 'relative',
                         backgroundColor: '#FFFFFF',
                         borderWidth: 1.5,
-                        borderColor: hasVotedThis ? DS_TOKENS.colors.purple : DS_TOKENS.colors.borderSubtle,
-                        borderRadius: DS_TOKENS.radii.md,
+                        borderColor: hasVotedThis ? '#6366F1' : '#E2E8F0',
+                        borderRadius: 14,
                         paddingVertical: 10,
                         paddingHorizontal: 14,
                         overflow: 'hidden',
                       }}
                     >
-                      {/* Percentage fill bar background */}
                       <View
                         style={{
                           position: 'absolute',
@@ -833,150 +1041,114 @@ function BuzzPostCard({
                           backgroundColor: hasVotedThis ? '#EEF2FF' : '#F1F5F9',
                         }}
                       />
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          zIndex: 1,
-                        }}
-                      >
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                          {hasVotedThis && <Text style={{ fontSize: 14 }}>✓</Text>}
-                          <Text
-                            style={{
-                              fontSize: 13,
-                              fontWeight: hasVotedThis ? '800' : '600',
-                              color: DS_TOKENS.colors.textPrimary,
-                            }}
-                          >
+                          {hasVotedThis && <Text style={{ fontSize: 13, color: '#6366F1', fontWeight: '900' }}>✓</Text>}
+                          <Text style={{ fontSize: 13, fontWeight: hasVotedThis ? '800' : '600', color: '#0F172A' }}>
                             {opt.text}
                           </Text>
                         </View>
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            fontWeight: '700',
-                            color: hasVotedThis ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
-                            marginLeft: 8,
-                          }}
-                        >
-                          {pct}% ({opt.votesCount || 0})
+                        <Text style={{ fontSize: 12, fontWeight: '800', color: hasVotedThis ? '#6366F1' : '#64748B' }}>
+                          {pct}%
                         </Text>
                       </View>
                     </TouchableOpacity>
                   );
                 })}
-                <Text style={{ fontSize: 11, color: DS_TOKENS.colors.textMuted, textAlign: 'right' }}>
-                  👥 {totalVotes} {isKn ? 'ಒಟ್ಟು ಮತಗಳು' : 'total votes'}
-                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#94A3B8' }}>
+                    👥 {totalVotes} {isKn ? 'ಒಟ್ಟು ಮತಗಳು' : 'votes'} · {isKn ? 'ಮುಕ್ತಾಯಕ್ಕೆ 2 ದಿನ' : 'Expires in 2d'}
+                  </Text>
+                </View>
               </>
             );
           })()}
         </View>
       )}
 
-      {/* 7 Specific Reaction Buttons (😂, 👀, 🍿, ☕, 🔥, 💀, ❤️) */}
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: 6,
-          paddingVertical: 8,
-          borderTopWidth: 1,
-          borderTopColor: DS_TOKENS.colors.borderSubtle,
-          marginBottom: 10,
-        }}
-      >
-        {REACTION_EMOJIS.map((emoji) => {
-          const count = post.reactions?.[emoji] || 0;
-          const userReacted = (post.userReactions || []).includes(emoji);
-          return (
-            <TouchableOpacity
-              key={emoji}
-              onPress={() => onReact(emoji)}
-              activeOpacity={0.6}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-                paddingHorizontal: 9,
-                paddingVertical: 5,
-                borderRadius: DS_TOKENS.radii.pill,
-                backgroundColor: userReacted ? DS_TOKENS.colors.purpleLight : '#F8FAFC',
-                borderWidth: 1,
-                borderColor: userReacted ? DS_TOKENS.colors.purpleBorder : DS_TOKENS.colors.borderSubtle,
-              }}
-            >
-              <Text style={{ fontSize: 15 }}>{emoji}</Text>
-              {count > 0 && (
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: '800',
-                    color: userReacted ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
-                  }}
-                >
-                  {count}
-                </Text>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* Action Bar: Comments, Save / Bookmark, Share */}
+      {/* Metadata Row (Screenshot 1: "12 reactions · 8 comments      2 min ago") */}
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          paddingTop: 6,
+          paddingVertical: 4,
+          borderTopWidth: 1,
+          borderTopColor: '#F1F5F9',
+          marginTop: 2,
         }}
       >
+        <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748B' }}>
+          {totalReactionsCount} {isKn ? 'ಪ್ರತಿಕ್ರಿಯೆಗಳು' : 'reactions'} · {post.commentsCount || 0} {isKn ? 'ಕಾಮೆಂಟ್‌ಗಳು' : 'comments'}
+        </Text>
+        <Text style={{ fontSize: 11, color: '#94A3B8', fontWeight: '600' }}>
+          {timeAgo}
+        </Text>
+      </View>
+
+      {/* Reaction Buttons & Comment Bar (Screenshot 1: "😂 8  👀 3  🍿 6      Comment") */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingTop: 8,
+          borderTopWidth: 1,
+          borderTopColor: '#F8FAFC',
+        }}
+      >
+        {/* Top Reactions Emojis */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {REACTION_EMOJIS.map((emoji) => {
+            const count = post.reactions?.[emoji] || 0;
+            const userReacted = (post.userReactions || []).includes(emoji);
+            return (
+              <TouchableOpacity
+                key={emoji}
+                onPress={() => onReact(emoji)}
+                activeOpacity={0.6}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 3,
+                  paddingHorizontal: 7,
+                  paddingVertical: 4,
+                  borderRadius: 9999,
+                  backgroundColor: userReacted ? '#EEF2FF' : '#F8FAFC',
+                  borderWidth: 1,
+                  borderColor: userReacted ? '#C7D2FE' : '#E2E8F0',
+                }}
+              >
+                <Text style={{ fontSize: 13 }}>{emoji}</Text>
+                {count > 0 && (
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: userReacted ? '#6366F1' : '#475569' }}>
+                    {count}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Comment Action */}
         <TouchableOpacity
           onPress={onComment}
           activeOpacity={0.7}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+            borderRadius: 9999,
+            backgroundColor: '#F1F5F9',
+          }}
         >
-          <Text style={{ fontSize: 16 }}>💬</Text>
-          <Text style={{ fontSize: 13, fontWeight: '700', color: DS_TOKENS.colors.textSecondary }}>
-            {post.commentsCount || 0} {isKn ? 'ಕಾಮೆಂಟ್‌ಗಳು' : 'Comments'}
+          <Text style={{ fontSize: 12 }}>💬</Text>
+          <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155' }}>
+            {isKn ? 'ಕಾಮೆಂಟ್' : 'Comment'}
           </Text>
         </TouchableOpacity>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          {/* Bookmark Button */}
-          <TouchableOpacity
-            onPress={onBookmark}
-            activeOpacity={0.7}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-          >
-            <Text style={{ fontSize: 16 }}>{post.isBookmarked ? '🔖' : '🏷️'}</Text>
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: '700',
-                color: post.isBookmarked ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
-              }}
-            >
-              {post.bookmarksCount || 0}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Share Button */}
-          <TouchableOpacity
-            onPress={onShare}
-            activeOpacity={0.7}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-          >
-            <Text style={{ fontSize: 16 }}>📤</Text>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: DS_TOKENS.colors.textSecondary }}>
-              {isKn ? 'ಹಂಚಿ' : 'Share'}
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </GlassCard>
   );
@@ -985,7 +1157,7 @@ function BuzzPostCard({
 // ---------------------------------------------------------------------
 // REPORT INAPPROPRIATE CONTENT MODAL
 // ---------------------------------------------------------------------
-function RNReportModal({
+function ReportModal({
   visible,
   isKn,
   submitting,
@@ -1028,12 +1200,12 @@ function RNReportModal({
         <View
           style={{
             backgroundColor: '#FFFFFF',
-            borderRadius: DS_TOKENS.radii.xl,
-            maxWidth: 440,
+            borderRadius: 24,
+            maxWidth: 420,
             width: '100%',
             padding: 24,
             borderWidth: 1,
-            borderColor: DS_TOKENS.colors.borderSubtle,
+            borderColor: '#E2E8F0',
             shadowColor: '#000000',
             shadowOffset: { width: 0, height: 10 },
             shadowOpacity: 0.15,
@@ -1041,12 +1213,12 @@ function RNReportModal({
             elevation: 10,
           }}
         >
-          <Text style={{ fontSize: 18, fontWeight: '900', color: DS_TOKENS.colors.textPrimary }}>
+          <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>
             {isKn ? 'ಅನುಚಿತ ವಿಷಯ ವರದಿ ಮಾಡಿ' : 'Report Inappropriate Content'}
           </Text>
-          <Text style={{ fontSize: 13, color: DS_TOKENS.colors.textSecondary, marginTop: 4, marginBottom: 14 }}>
+          <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4, marginBottom: 14 }}>
             {isKn
-              ? 'ನಿಮ್ಮ ಅಡ್ಡವನ್ನು ಸುರಕ್ಷಿತ ಹಾಗೂ ಸ್ನೇಹಪರವಾಗಿರಿಸಲು ಸಹಾಯ ಮಾಡಿ.'
+              ? 'ನಿಮ್ಮ ಅಡ್ಡವನ್ನು ಸುರಕ್ಷಿತವಾಗಿರಿಸಲು ಸಹಾಯ ಮಾಡಿ.'
               : 'Help keep this Adda circle safe, respectful, and friendly.'}
           </Text>
 
@@ -1060,10 +1232,10 @@ function RNReportModal({
                   activeOpacity={0.7}
                   style={{
                     padding: 10,
-                    borderRadius: DS_TOKENS.radii.md,
-                    backgroundColor: isSelected ? DS_TOKENS.colors.roseLight : '#F8FAFC',
+                    borderRadius: 12,
+                    backgroundColor: isSelected ? '#FEF2F2' : '#F8FAFC',
                     borderWidth: 1,
-                    borderColor: isSelected ? DS_TOKENS.colors.roseBorder : DS_TOKENS.colors.borderSubtle,
+                    borderColor: isSelected ? '#FECACA' : '#E2E8F0',
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -1073,12 +1245,12 @@ function RNReportModal({
                     style={{
                       fontSize: 13,
                       fontWeight: isSelected ? '800' : '600',
-                      color: isSelected ? DS_TOKENS.colors.rose : DS_TOKENS.colors.textPrimary,
+                      color: isSelected ? '#EF4444' : '#0F172A',
                     }}
                   >
                     {isKn ? item.kn : item.en}
                   </Text>
-                  {isSelected && <Text style={{ fontSize: 14, color: DS_TOKENS.colors.rose }}>✓</Text>}
+                  {isSelected && <Text style={{ fontSize: 14, color: '#EF4444' }}>✓</Text>}
                 </TouchableOpacity>
               );
             })}
@@ -1090,15 +1262,15 @@ function RNReportModal({
             onChangeText={onChangeDetails}
             multiline
             numberOfLines={3}
-            placeholderTextColor={DS_TOKENS.colors.textMuted}
+            placeholderTextColor="#94A3B8"
             style={{
-              backgroundColor: DS_TOKENS.colors.bgSecondary,
-              borderRadius: DS_TOKENS.radii.md,
+              backgroundColor: '#F8FAFC',
+              borderRadius: 12,
               borderWidth: 1,
-              borderColor: DS_TOKENS.colors.borderSubtle,
+              borderColor: '#E2E8F0',
               padding: 12,
               fontSize: 13,
-              color: DS_TOKENS.colors.textPrimary,
+              color: '#0F172A',
               minHeight: 60,
               marginBottom: 16,
             }}
@@ -1123,10 +1295,9 @@ function formatTimeAgo(dateString: string, isKn: boolean): string {
   const diffSec = Math.max(1, Math.floor((Date.now() - new Date(dateString).getTime()) / 1000));
   if (diffSec < 60) return isKn ? 'ಈಗಷ್ಟೇ' : 'Just now';
   const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return isKn ? `${diffMin}ನಿ ಹಿಂದೆ` : `${diffMin}m ago`;
+  if (diffMin < 60) return isKn ? `${diffMin}ನಿ ಹಿಂದೆ` : `${diffMin} min ago`;
   const diffHr = Math.floor(diffMin / 60);
   if (diffHr < 24) return isKn ? `${diffHr}ಗಂ ಹಿಂದೆ` : `${diffHr}h ago`;
   const diffDays = Math.floor(diffHr / 24);
   return isKn ? `${diffDays} ದಿನಗಳ ಹಿಂದೆ` : `${diffDays}d ago`;
 }
-

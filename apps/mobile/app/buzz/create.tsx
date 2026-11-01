@@ -31,11 +31,24 @@ import {
 
 const CATEGORIES = [
   { key: BuzzCategory.SPILL_THE_TEA, labelEn: 'Spill the Tea', labelKn: 'ಟೀ ಕುಡಿತಾ ಹರಟೆ', icon: '☕' },
+  { key: BuzzCategory.POLL_HOT_TAKE, labelEn: "What's the Verdict?", labelKn: 'ಮತದಾನ & ತೀರ್ಪು', icon: '🗳️' },
+  { key: BuzzCategory.CONFESSION, labelEn: 'Confession Corner', labelKn: 'ಕನ್ಫೆಷನ್ ಕಾರ್ನರ್', icon: '👀' },
   { key: BuzzCategory.NEWS, labelEn: 'News & Links', labelKn: 'ಸುದ್ದಿ & ಲಿಂಕ್ಸ್', icon: '📰' },
   { key: BuzzCategory.OORU_UPDATES, labelEn: 'Ooru Updates', labelKn: 'ಊರು ಅಪ್‌ಡೇಟ್ಸ್', icon: '🏙️' },
   { key: BuzzCategory.COLLEGE_RADAR, labelEn: 'College Radar', labelKn: 'ಕಾಲೇಜು ರೇಡಾರ್', icon: '🎓' },
-  { key: BuzzCategory.POLL_HOT_TAKE, labelEn: 'Polls & Hot Takes', labelKn: 'ಮತದಾನ & ಚರ್ಚೆ', icon: '🔥' },
-  { key: BuzzCategory.CONFESSION, labelEn: 'Confession Corner', labelKn: 'ಕನ್ಫೆಷನ್ ಕಾರ್ನರ್', icon: '🤫' },
+  { key: BuzzCategory.GUESS_WHO, labelEn: 'Guess Who?', labelKn: 'ಯಾರು ಅಂತ ಊಹಿಸಿ?', icon: '🎭' },
+  { key: BuzzCategory.HOT_TAKE, labelEn: 'Hot Take of the Day', labelKn: 'ಹಾಟ್ ಟೇಕ್', icon: '⚡' },
+  { key: BuzzCategory.LATE_NIGHT_ADDA, labelEn: 'Late Night Adda', labelKn: 'ರಾತ್ರಿ ಹರಟೆ', icon: '🌙' },
+  { key: BuzzCategory.THROWBACK_TEA, labelEn: 'Throwback Tea', labelKn: 'ಹಳೆಯ ಹರಟೆ', icon: '🕰️' },
+  { key: BuzzCategory.SCREENSHOT_OF_DAY, labelEn: 'Screenshot of the Day', labelKn: 'ಸ್ಕ್ರೀನ್‌ಶಾಟ್', icon: '📸' },
+];
+
+const ANONYMOUS_PERSONAS = [
+  { name: 'Blue Gorilla 🦍', icon: '🦍' },
+  { name: 'Green Dino 🦕', icon: '🦕' },
+  { name: 'Pink Starfish ⭐', icon: '⭐' },
+  { name: 'Purple Butterfly 🦋', icon: '🦋' },
+  { name: 'Golden Eagle 🦅', icon: '🦅' },
 ];
 
 const CREDIBILITIES = [
@@ -87,6 +100,7 @@ export default function CreateBuzzScreen() {
   const [credibility, setCredibility] = useState<BuzzCredibility>(BuzzCredibility.PERSONAL_EXPERIENCE);
   const [expiry, setExpiry] = useState<BuzzExpiry>(BuzzExpiry.PERMANENT);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [anonymousPersona, setAnonymousPersona] = useState('Blue Gorilla 🦍');
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -170,6 +184,7 @@ export default function CreateBuzzScreen() {
         credibility,
         expiry,
         isAnonymous,
+        anonymousPersona: isAnonymous ? anonymousPersona : undefined,
         title: title.trim() || undefined,
         content: content.trim(),
         linkUrl: linkUrl.trim() || undefined,
@@ -351,6 +366,48 @@ export default function CreateBuzzScreen() {
               thumbColor={isAnonymous ? '#9333EA' : '#FFFFFF'}
             />
           </View>
+
+          {isAnonymous && (
+            <View style={{ marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F3E8FF' }}>
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#7E22CE', marginBottom: 8 }}>
+                {isKn ? 'ನಿಮ್ಮ ಅನಾಮಧೇಯ ಪ್ರಾಣಿ ಅವತಾರ (Screenshot 3 Style)' : 'CHOOSE SECRET ANIMAL AVATAR'}
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {ANONYMOUS_PERSONAS.map((p) => {
+                  const isSelected = anonymousPersona === p.name;
+                  return (
+                    <TouchableOpacity
+                      key={p.name}
+                      onPress={() => setAnonymousPersona(p.name)}
+                      activeOpacity={0.75}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingHorizontal: 12,
+                        paddingVertical: 7,
+                        borderRadius: DS_TOKENS.radii.pill,
+                        backgroundColor: isSelected ? '#7E22CE' : '#FFFFFF',
+                        borderWidth: 1.5,
+                        borderColor: isSelected ? '#7E22CE' : '#E9D5FF',
+                      }}
+                    >
+                      <Text style={{ fontSize: 14 }}>{p.icon}</Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: isSelected ? '800' : '600',
+                          color: isSelected ? '#FFFFFF' : '#7E22CE',
+                        }}
+                      >
+                        {p.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
         </GlassCard>
 
         {/* 5. Title & Body Content */}
