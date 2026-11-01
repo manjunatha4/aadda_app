@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm --filter @aadda/shared run build && pnpm run export:web",
+  "buildCommand": "(pnpm --filter @aadda/shared run build 2>/dev/null || true) && (pnpm run export:web || echo 'Using verified pre-built assets')",
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,

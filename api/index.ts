@@ -1204,13 +1204,13 @@ export default async function handler(req: any, res: any) {
         // Calculate engagement score & enrich posts
         const userBookmarksSet = new Set(userSaved);
         const enriched = posts.map((p) => {
-          const totalReactions = Object.values(p.reactions || {}).reduce(
+          const totalReactions: number = Object.values(p.reactions || {}).reduce(
             (sum: number, count: any) => sum + (Number(count) || 0),
             0,
-          );
+          ) as number;
           const hoursOld = Math.max(1, (now - new Date(p.createdAt).getTime()) / 3600000);
-          const score =
-            (totalReactions * 2 + (p.commentsCount || 0) * 3 + (p.bookmarksCount || 0) * 1.5) /
+          const score: number =
+            Number((totalReactions * 2 + (Number(p.commentsCount) || 0) * 3 + (Number(p.bookmarksCount) || 0) * 1.5)) /
             Math.pow(hoursOld + 2, 1.2);
 
           const userReactions = p.reactionsByUser?.[currentUserId] || [];
