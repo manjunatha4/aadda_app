@@ -472,7 +472,7 @@ export default function AuthScreen() {
       try {
         const local = await clientStore.verifyEmail(email.trim().toLowerCase(), code);
         if (local && local.tokens && local.user) {
-          await setAuth(local.user, local.tokens.accessToken, local.tokens.refreshToken);
+          await setAuth(local.user as any, local.tokens.accessToken, local.tokens.refreshToken);
           router.replace('/(tabs)');
           return;
         }
@@ -555,7 +555,7 @@ export default function AuthScreen() {
       try {
         const local = await clientStore.login(cleanLogin, loginPassword);
         if (local?.user && local?.tokens) {
-          await setAuth(local.user, local.tokens.accessToken, local.tokens.refreshToken);
+          await setAuth(local.user as any, local.tokens.accessToken, local.tokens.refreshToken);
           router.replace('/(tabs)');
           return;
         }

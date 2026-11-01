@@ -43,6 +43,8 @@ export default function RootLayout() {
         <Stack.Screen name="adda/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="chaos/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="buzz/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="buzz/create" options={{ presentation: 'modal', headerShown: false }} />
         <Stack.Screen name="create-adda" options={{ headerShown: false }} />
         <Stack.Screen name="modal/vibe" options={{ presentation: 'modal', headerShown: false }} />
         <Stack.Screen name="modal/create-adda" options={{ presentation: 'modal', headerShown: false }} />

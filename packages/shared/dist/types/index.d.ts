@@ -1,4 +1,4 @@
-import { AddaRole, ConversationType, Language, VibeMood } from '../enums';
+import { AddaRole, BuzzCategory, BuzzCredibility, BuzzExpiry, ConversationType, Language, VibeMood } from '../enums';
 export interface UserProfile {
     id: string;
     email: string;
@@ -74,4 +74,84 @@ export interface DailyChaosStats {
     pending: number;
     inProgress: number;
     completed: number;
+}
+export interface BuzzPollOption {
+    id: string;
+    text: string;
+    votesCount: number;
+    voterIds: string[];
+}
+export interface BuzzLinkPreview {
+    url: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    siteName?: string;
+}
+export interface BuzzComment {
+    id: string;
+    postId: string;
+    authorId: string;
+    authorName: string;
+    authorAvatar?: string | null;
+    content: string;
+    parentId?: string | null;
+    mentions: string[];
+    createdAt: string;
+    replies?: BuzzComment[];
+}
+export interface BuzzPost {
+    id: string;
+    addaId: string;
+    addaName?: string;
+    authorId: string;
+    authorName: string;
+    authorAvatar?: string | null;
+    isAnonymous: boolean;
+    category: BuzzCategory;
+    credibility: BuzzCredibility;
+    expiry: BuzzExpiry;
+    expiresAt?: string | null;
+    title?: string;
+    content: string;
+    mediaUrl?: string | null;
+    mediaType?: 'IMAGE' | 'VIDEO' | 'AUDIO' | null;
+    linkPreview?: BuzzLinkPreview | null;
+    pollOptions?: BuzzPollOption[];
+    reactions: Record<string, number>;
+    userReactions: string[];
+    commentsCount: number;
+    bookmarksCount: number;
+    isBookmarked?: boolean;
+    isTrending?: boolean;
+    engagementScore?: number;
+    createdAt: string;
+    updatedAt: string;
+}
+export interface CreateBuzzPostDto {
+    addaId: string;
+    category: BuzzCategory;
+    credibility?: BuzzCredibility;
+    expiry?: BuzzExpiry;
+    isAnonymous?: boolean;
+    title?: string;
+    content: string;
+    mediaUrl?: string;
+    mediaType?: 'IMAGE' | 'VIDEO' | 'AUDIO';
+    linkUrl?: string;
+    pollOptions?: string[];
+}
+export interface AddBuzzCommentDto {
+    content: string;
+    parentId?: string | null;
+}
+export interface VoteBuzzPollDto {
+    optionId: string;
+}
+export interface ToggleBuzzReactionDto {
+    emoji: string;
+}
+export interface ReportBuzzPostDto {
+    reason: string;
+    details?: string;
 }

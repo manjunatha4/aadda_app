@@ -234,6 +234,68 @@ class ApiClient {
       }
     }
 
+    // 11. Adda Buzz Full Fallback
+    if (endpoint === '/buzz' || endpoint.startsWith('/buzz?') || endpoint.startsWith('/buzz/')) {
+      if (endpoint === '/buzz' || endpoint.startsWith('/buzz?')) {
+        if (method === 'GET') {
+          const queryStr = endpoint.includes('?') ? endpoint.split('?')[1] : '';
+          const params = new URLSearchParams(queryStr);
+          const addaId = params.get('addaId') || undefined;
+          const category = params.get('category') || undefined;
+          const filter = params.get('filter') || undefined;
+          const posts = await clientStore.getBuzzFeed(addaId, category, filter);
+          return posts as unknown as T;
+        }
+
+        if (method === 'POST') {
+          const post = await clientStore.createBuzzPost(data);
+          return post as unknown as T;
+        }
+      }
+
+      if (endpoint.startsWith('/buzz/') && method === 'DELETE') {
+        const id = endpoint.replace('/buzz/', '').split('?')[0];
+        const success = await clientStore.deleteBuzzPost(id);
+        return { success, id } as unknown as T;
+      }
+
+      if (endpoint.startsWith('/buzz/') && endpoint.endsWith('/react') && method === 'POST') {
+        const id = endpoint.replace('/buzz/', '').replace('/react', '').split('?')[0];
+        const res = await clientStore.toggleBuzzReaction(id, data?.emoji);
+        return res as unknown as T;
+      }
+
+      if (endpoint.startsWith('/buzz/') && endpoint.endsWith('/comments')) {
+        const id = endpoint.replace('/buzz/', '').replace('/comments', '').split('?')[0];
+        if (method === 'GET') {
+          const comments = await clientStore.getBuzzComments(id);
+          return comments as unknown as T;
+        }
+        if (method === 'POST') {
+          const comment = await clientStore.addBuzzComment(id, data?.content, data?.parentId);
+          return comment as unknown as T;
+        }
+      }
+
+      if (endpoint.startsWith('/buzz/') && endpoint.endsWith('/vote') && method === 'POST') {
+        const id = endpoint.replace('/buzz/', '').replace('/vote', '').split('?')[0];
+        const res = await clientStore.voteBuzzPoll(id, data?.optionId);
+        return res as unknown as T;
+      }
+
+      if (endpoint.startsWith('/buzz/') && endpoint.endsWith('/bookmark') && method === 'POST') {
+        const id = endpoint.replace('/buzz/', '').replace('/bookmark', '').split('?')[0];
+        const res = await clientStore.toggleBuzzBookmark(id);
+        return res as unknown as T;
+      }
+
+      if (endpoint.startsWith('/buzz/') && endpoint.endsWith('/report') && method === 'POST') {
+        const id = endpoint.replace('/buzz/', '').replace('/report', '').split('?')[0];
+        const res = await clientStore.reportBuzzPost(id, data?.reason, data?.details);
+        return res as unknown as T;
+      }
+    }
+
     if (endpoint.startsWith('/vibe')) {
       return [] as unknown as T;
     }

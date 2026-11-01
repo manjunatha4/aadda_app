@@ -1,5 +1,16 @@
 import { storage } from './storage';
-import { DailyChaosItem, DailyChaosStats, ChaosPriority, ChaosStatus } from '@aadda/shared';
+import {
+  DailyChaosItem,
+  DailyChaosStats,
+  ChaosPriority,
+  ChaosStatus,
+  BuzzPost,
+  BuzzCategory,
+  BuzzCredibility,
+  BuzzExpiry,
+  BuzzComment,
+  CreateBuzzPostDto,
+} from '@aadda/shared';
 
 export interface LocalUser {
   id: string;
@@ -84,6 +95,10 @@ const STORAGE_KEYS = {
   FOLDERS: 'aadda_client_folders',
   FOLDER_ITEMS: 'aadda_client_folder_items',
   DAILY_CHAOS: 'aadda_client_daily_chaos',
+  BUZZ_POSTS: 'aadda_client_buzz_posts',
+  BUZZ_COMMENTS: 'aadda_client_buzz_comments',
+  BUZZ_BOOKMARKS: 'aadda_client_buzz_bookmarks',
+  BUZZ_REPORTS: 'aadda_client_buzz_reports',
 };
 
 const DEFAULT_FOLDERS: SavedFolder[] = [
@@ -127,6 +142,184 @@ const DEFAULT_FOLDER_ITEMS: Record<string, SavedItem[]> = {
 
 const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19413d89279c4';
 
+const DEFAULT_BUZZ_POSTS: BuzzPost[] = [
+  {
+    id: 'buzz_seed_1',
+    addaId: 'default',
+    addaName: 'Chai Adda',
+    authorId: 'usr_seed_1',
+    authorName: 'Rohit K',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: BuzzCategory.SPILL_THE_TEA,
+    credibility: BuzzCredibility.PERSONAL_EXPERIENCE,
+    expiry: BuzzExpiry.PERMANENT,
+    expiresAt: null,
+    title: 'Spicy Canteen Coffee Saga ☕',
+    content: 'Someone in our block ordered 14 filter coffees for table 4 and vanished into thin air the exact second the bill arrived. We ended up doing a UPI split roulette 😂',
+    mediaUrl: null,
+    mediaType: null,
+    linkPreview: null,
+    pollOptions: undefined,
+    reactions: { '😂': 14, '☕': 9, '🍿': 7, '🔥': 5 },
+    userReactions: [],
+    commentsCount: 2,
+    bookmarksCount: 4,
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+  {
+    id: 'buzz_seed_2',
+    addaId: 'default',
+    addaName: 'Chai Adda',
+    authorId: 'usr_seed_2',
+    authorName: 'Deepa M',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: BuzzCategory.NEWS,
+    credibility: BuzzCredibility.VERIFIED_NEWS,
+    expiry: BuzzExpiry.PERMANENT,
+    expiresAt: null,
+    title: 'Namma Metro Purple Line Updates 🚇',
+    content: 'BMRCL confirmed train frequency is increased to every 3.5 minutes during peak hours from Majestic to Whitefield. Commute times are finally cut by 25 minutes!',
+    mediaUrl: null,
+    mediaType: null,
+    linkPreview: {
+      url: 'https://bmrcl.co.in',
+      title: 'BMRCL Peak Frequency Expansion',
+      description: 'Higher frequency operations active starting this Monday.',
+      siteName: 'Namma Metro',
+    },
+    pollOptions: undefined,
+    reactions: { '🔥': 22, '❤️': 16, '👀': 8 },
+    userReactions: [],
+    commentsCount: 0,
+    bookmarksCount: 9,
+    createdAt: new Date(Date.now() - 3600000 * 7).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 7).toISOString(),
+  },
+  {
+    id: 'buzz_seed_3',
+    addaId: 'default',
+    addaName: 'Chai Adda',
+    authorId: 'usr_seed_3',
+    authorName: 'Campus Lead',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: BuzzCategory.COLLEGE_RADAR,
+    credibility: BuzzCredibility.VERIFIED_NEWS,
+    expiry: BuzzExpiry.PERMANENT,
+    expiresAt: null,
+    title: "Campus Tech Fest 'ChakraVyuh 2026' Registrations Open! 🎓",
+    content: '₹1,00,000 total prize pool across AI & Web3 tracks. Placement cell is also conducting tech mock interviews this Thursday at Seminar Hall 2. Don\'t miss out!',
+    mediaUrl: null,
+    mediaType: null,
+    linkPreview: null,
+    pollOptions: undefined,
+    reactions: { '🔥': 31, '👀': 15, '❤️': 24 },
+    userReactions: [],
+    commentsCount: 0,
+    bookmarksCount: 12,
+    createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+  },
+  {
+    id: 'buzz_seed_4',
+    addaId: 'default',
+    addaName: 'Chai Adda',
+    authorId: 'usr_seed_4',
+    authorName: 'Suresh Rao',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: BuzzCategory.POLL_HOT_TAKE,
+    credibility: BuzzCredibility.UNVERIFIED_CLAIM,
+    expiry: BuzzExpiry.PERMANENT,
+    expiresAt: null,
+    title: 'HOT TAKE: Masala Dosa Championship 🧈',
+    content: 'Settle the eternal debate once and for all. Which one reigns supreme in Bengaluru?',
+    mediaUrl: null,
+    mediaType: null,
+    linkPreview: null,
+    pollOptions: [
+      { id: 'opt_1', text: 'CTR Malleshwaram (Benne Masala) 🧈', votesCount: 28, voterIds: [] },
+      { id: 'opt_2', text: 'Vidyarthi Bhavan Gandhi Bazaar ☕', votesCount: 19, voterIds: [] },
+      { id: 'opt_3', text: 'Taaza Thindi Jayanagar 🌿', votesCount: 14, voterIds: [] },
+      { id: 'opt_4', text: 'MTR Near Lalbagh ❤️', votesCount: 8, voterIds: [] },
+    ],
+    reactions: { '🍿': 18, '🔥': 26, '😂': 9 },
+    userReactions: [],
+    commentsCount: 1,
+    bookmarksCount: 6,
+    createdAt: new Date(Date.now() - 3600000 * 16).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 16).toISOString(),
+  },
+  {
+    id: 'buzz_seed_5',
+    addaId: 'default',
+    addaName: 'Chai Adda',
+    authorId: 'usr_seed_5',
+    authorName: 'Anonymous Adda Member',
+    authorAvatar: null,
+    isAnonymous: true,
+    category: BuzzCategory.CONFESSION,
+    credibility: BuzzCredibility.PERSONAL_EXPERIENCE,
+    expiry: BuzzExpiry.PERMANENT,
+    expiresAt: null,
+    title: 'Confession Corner 🤫',
+    content: 'I accidentally submitted an unedited Kannada meme audio as the background soundtrack for my final design project video presentation. The professor laughed and gave me an A- 😂',
+    mediaUrl: null,
+    mediaType: null,
+    linkPreview: null,
+    pollOptions: undefined,
+    reactions: { '💀': 35, '😂': 49, '🍿': 18 },
+    userReactions: [],
+    commentsCount: 0,
+    bookmarksCount: 7,
+    createdAt: new Date(Date.now() - 3600000 * 20).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 20).toISOString(),
+  },
+];
+
+const DEFAULT_BUZZ_COMMENTS: Record<string, BuzzComment[]> = {
+  buzz_seed_1: [
+    {
+      id: 'comm_1_1',
+      postId: 'buzz_seed_1',
+      authorId: 'usr_seed_2',
+      authorName: 'Ananya S',
+      authorAvatar: null,
+      content: 'Classic table 4 behavior lmao! Next time make everyone scan the QR first 💀',
+      parentId: null,
+      mentions: [],
+      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    },
+    {
+      id: 'comm_1_2',
+      postId: 'buzz_seed_1',
+      authorId: 'usr_seed_3',
+      authorName: 'Karthik B',
+      authorAvatar: null,
+      content: '@Ananya S exactly, the UPI split roulette was brutal 😂',
+      parentId: 'comm_1_1',
+      mentions: ['Ananya S'],
+      createdAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+    },
+  ],
+  buzz_seed_4: [
+    {
+      id: 'comm_4_1',
+      postId: 'buzz_seed_4',
+      authorId: 'usr_seed_2',
+      authorName: 'Pooja V',
+      authorAvatar: null,
+      content: 'CTR Benne Dosa with that mint chutney is unbeatable, no contest! 🧈',
+      parentId: null,
+      mentions: [],
+      createdAt: new Date(Date.now() - 3600000 * 10).toISOString(),
+    },
+  ],
+};
+
 class ClientStore {
   private users: LocalUser[] = [];
   private addas: LocalAdda[] = [];
@@ -135,13 +328,17 @@ class ClientStore {
   private folders: SavedFolder[] = DEFAULT_FOLDERS;
   private folderItems: Record<string, SavedItem[]> = DEFAULT_FOLDER_ITEMS;
   private dailyChaos: Record<string, DailyChaosItem[]> = {};
+  private buzzPosts: Record<string, BuzzPost[]> = {};
+  private buzzComments: Record<string, BuzzComment[]> = {};
+  private buzzBookmarks: Record<string, string[]> = {};
+  private buzzReports: any[] = [];
   private initialized = false;
 
   async init() {
     if (this.initialized) return;
 
     try {
-      const [u, a, c, m, f, fi, dc] = await Promise.all([
+      const [u, a, c, m, f, fi, dc, bp, bc, bb, br] = await Promise.all([
         storage.getItem(STORAGE_KEYS.USERS),
         storage.getItem(STORAGE_KEYS.ADDAS),
         storage.getItem(STORAGE_KEYS.CONVERSATIONS),
@@ -149,6 +346,10 @@ class ClientStore {
         storage.getItem(STORAGE_KEYS.FOLDERS),
         storage.getItem(STORAGE_KEYS.FOLDER_ITEMS),
         storage.getItem(STORAGE_KEYS.DAILY_CHAOS),
+        storage.getItem(STORAGE_KEYS.BUZZ_POSTS),
+        storage.getItem(STORAGE_KEYS.BUZZ_COMMENTS),
+        storage.getItem(STORAGE_KEYS.BUZZ_BOOKMARKS),
+        storage.getItem(STORAGE_KEYS.BUZZ_REPORTS),
       ]);
 
       this.users = u ? JSON.parse(u) : [];
@@ -158,6 +359,14 @@ class ClientStore {
       this.folders = f ? JSON.parse(f) : DEFAULT_FOLDERS;
       this.folderItems = fi ? JSON.parse(fi) : DEFAULT_FOLDER_ITEMS;
       this.dailyChaos = dc ? JSON.parse(dc) : {};
+      this.buzzPosts = bp ? JSON.parse(bp) : { default: DEFAULT_BUZZ_POSTS };
+      this.buzzComments = bc ? JSON.parse(bc) : DEFAULT_BUZZ_COMMENTS;
+      this.buzzBookmarks = bb ? JSON.parse(bb) : {};
+      this.buzzReports = br ? JSON.parse(br) : [];
+
+      if (!this.buzzPosts.default || this.buzzPosts.default.length === 0) {
+        this.buzzPosts.default = DEFAULT_BUZZ_POSTS;
+      }
 
       // Try background sync with global cloud store
       if (typeof fetch !== 'undefined') {
@@ -206,6 +415,10 @@ class ClientStore {
         storage.setItem(STORAGE_KEYS.FOLDERS, JSON.stringify(this.folders)),
         storage.setItem(STORAGE_KEYS.FOLDER_ITEMS, JSON.stringify(this.folderItems)),
         storage.setItem(STORAGE_KEYS.DAILY_CHAOS, JSON.stringify(this.dailyChaos)),
+        storage.setItem(STORAGE_KEYS.BUZZ_POSTS, JSON.stringify(this.buzzPosts)),
+        storage.setItem(STORAGE_KEYS.BUZZ_COMMENTS, JSON.stringify(this.buzzComments)),
+        storage.setItem(STORAGE_KEYS.BUZZ_BOOKMARKS, JSON.stringify(this.buzzBookmarks)),
+        storage.setItem(STORAGE_KEYS.BUZZ_REPORTS, JSON.stringify(this.buzzReports)),
       ]);
     } catch {
       // ignore
@@ -795,6 +1008,382 @@ class ClientStore {
     items.splice(index, 1);
     await this.persist();
     return true;
+  }
+
+  // -------------------------------------------------------------
+  // ADDA BUZZ CLIENT STORE METHODS
+  // -------------------------------------------------------------
+  async getBuzzFeed(
+    addaId?: string,
+    category?: string,
+    filter?: string,
+  ): Promise<BuzzPost[]> {
+    await this.init();
+    const currentUser = await this.getCurrentUser();
+    const currentUserId = currentUser?.id || this.users[0]?.id || 'usr_default';
+    const targetAddaId = addaId || this.addas[0]?.id || 'default';
+
+    if (!this.buzzPosts[targetAddaId] || this.buzzPosts[targetAddaId].length === 0) {
+      const addaName = this.addas.find((a) => a.id === targetAddaId)?.name || 'Chai Adda';
+      this.buzzPosts[targetAddaId] = DEFAULT_BUZZ_POSTS.map((p) => ({
+        ...p,
+        addaId: targetAddaId,
+        addaName,
+      }));
+    }
+
+    let posts = [...(this.buzzPosts[targetAddaId] || [])];
+    const now = Date.now();
+
+    // Exclude expired posts
+    posts = posts.filter((p) => {
+      if (p.expiresAt) {
+        return new Date(p.expiresAt).getTime() > now;
+      }
+      return true;
+    });
+
+    // Category filter
+    if (category && category !== 'ALL') {
+      posts = posts.filter((p) => p.category === category);
+    }
+
+    // Saved filter
+    const userSaved = this.buzzBookmarks[currentUserId] || [];
+    if (filter === 'saved') {
+      posts = posts.filter((p) => userSaved.includes(p.id));
+    }
+
+    const savedSet = new Set(userSaved);
+    const enriched = posts.map((p) => {
+      const totalReactions = Object.values(p.reactions || {}).reduce(
+        (sum, count) => sum + (Number(count) || 0),
+        0,
+      );
+      const hoursOld = Math.max(1, (now - new Date(p.createdAt).getTime()) / 3600000);
+      const score =
+        (totalReactions * 2 + (p.commentsCount || 0) * 3 + (p.bookmarksCount || 0) * 1.5) /
+        Math.pow(hoursOld + 2, 1.2);
+
+      const userReactions = (p as any).reactionsByUser?.[currentUserId] || p.userReactions || [];
+
+      return {
+        ...p,
+        engagementScore: Number(score.toFixed(2)),
+        isBookmarked: savedSet.has(p.id),
+        userReactions,
+      };
+    });
+
+    if (filter === 'trending') {
+      enriched.sort((a, b) => (b.engagementScore || 0) - (a.engagementScore || 0));
+    } else {
+      enriched.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    enriched.forEach((p, idx) => {
+      p.isTrending = idx < 3 && (p.engagementScore || 0) > 2;
+    });
+
+    return enriched;
+  }
+
+  async createBuzzPost(dto: CreateBuzzPostDto): Promise<BuzzPost> {
+    await this.init();
+    const currentUser = await this.getCurrentUser();
+    const currentUserId = currentUser?.id || this.users[0]?.id || 'usr_default';
+    const targetAddaId = dto.addaId || this.addas[0]?.id || 'default';
+    const targetAdda = this.addas.find((a) => a.id === targetAddaId);
+
+    let expiresAt: string | null = null;
+    if (dto.expiry === BuzzExpiry.EXP_24H) {
+      expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+    } else if (dto.expiry === BuzzExpiry.EXP_48H) {
+      expiresAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+    }
+
+    let pollOptions = undefined;
+    if (
+      dto.category === BuzzCategory.POLL_HOT_TAKE &&
+      Array.isArray(dto.pollOptions) &&
+      dto.pollOptions.length >= 2
+    ) {
+      pollOptions = dto.pollOptions.map((text, idx) => ({
+        id: `opt_${Date.now()}_${idx}`,
+        text: text.trim(),
+        votesCount: 0,
+        voterIds: [],
+      }));
+    }
+
+    let linkPreview = null;
+    if (dto.linkUrl && dto.linkUrl.startsWith('http')) {
+      try {
+        const urlObj = new URL(dto.linkUrl);
+        linkPreview = {
+          url: dto.linkUrl,
+          title: (urlObj.hostname.replace('www.', '') + ' Article').toUpperCase(),
+          description: `Shared via ${urlObj.hostname}`,
+          siteName: urlObj.hostname,
+        };
+      } catch {
+        linkPreview = { url: dto.linkUrl, siteName: 'External Link' };
+      }
+    }
+
+    const newPost: BuzzPost = {
+      id: `buzz_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      addaId: targetAddaId,
+      addaName: targetAdda?.name || 'Circle Adda',
+      authorId: currentUserId,
+      authorName: dto.isAnonymous
+        ? 'Anonymous Member'
+        : currentUser?.displayName || currentUser?.username || 'Circle Member',
+      authorAvatar: dto.isAnonymous ? null : currentUser?.avatarUrl || null,
+      isAnonymous: Boolean(dto.isAnonymous),
+      category: dto.category || BuzzCategory.SPILL_THE_TEA,
+      credibility: dto.credibility || BuzzCredibility.PERSONAL_EXPERIENCE,
+      expiry: dto.expiry || BuzzExpiry.PERMANENT,
+      expiresAt,
+      title: dto.title ? dto.title.trim() : undefined,
+      content: dto.content.trim(),
+      mediaUrl: dto.mediaUrl || null,
+      mediaType: dto.mediaType || null,
+      linkPreview,
+      pollOptions,
+      reactions: {},
+      userReactions: [],
+      commentsCount: 0,
+      bookmarksCount: 0,
+      isBookmarked: false,
+      isTrending: false,
+      engagementScore: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (!this.buzzPosts[targetAddaId]) {
+      this.buzzPosts[targetAddaId] = [];
+    }
+    this.buzzPosts[targetAddaId].unshift(newPost);
+    await this.persist();
+    return newPost;
+  }
+
+  async deleteBuzzPost(id: string): Promise<boolean> {
+    await this.init();
+    let found = false;
+    for (const key of Object.keys(this.buzzPosts)) {
+      const idx = this.buzzPosts[key].findIndex((p) => p.id === id);
+      if (idx !== -1) {
+        this.buzzPosts[key].splice(idx, 1);
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      await this.persist();
+    }
+    return found;
+  }
+
+  async toggleBuzzReaction(
+    id: string,
+    emoji: string,
+  ): Promise<{ reactions: Record<string, number>; userReactions: string[] }> {
+    await this.init();
+    const currentUser = await this.getCurrentUser();
+    const currentUserId = currentUser?.id || this.users[0]?.id || 'usr_default';
+
+    let targetPost: BuzzPost | undefined;
+    for (const key of Object.keys(this.buzzPosts)) {
+      const p = this.buzzPosts[key].find((x) => x.id === id);
+      if (p) {
+        targetPost = p;
+        break;
+      }
+    }
+
+    if (!targetPost) {
+      throw new Error('Buzz post not found');
+    }
+
+    if (!targetPost.reactions) targetPost.reactions = {};
+    if (!(targetPost as any).reactionsByUser) (targetPost as any).reactionsByUser = {};
+    if (!(targetPost as any).reactionsByUser[currentUserId]) {
+      (targetPost as any).reactionsByUser[currentUserId] = [];
+    }
+
+    const userReactions: string[] = (targetPost as any).reactionsByUser[currentUserId];
+    const hasReacted = userReactions.includes(emoji);
+
+    if (hasReacted) {
+      (targetPost as any).reactionsByUser[currentUserId] = userReactions.filter((e) => e !== emoji);
+      targetPost.reactions[emoji] = Math.max(0, (targetPost.reactions[emoji] || 1) - 1);
+      if (targetPost.reactions[emoji] === 0) {
+        delete targetPost.reactions[emoji];
+      }
+    } else {
+      userReactions.push(emoji);
+      targetPost.reactions[emoji] = (targetPost.reactions[emoji] || 0) + 1;
+    }
+
+    targetPost.userReactions = (targetPost as any).reactionsByUser[currentUserId];
+    await this.persist();
+    return {
+      reactions: targetPost.reactions,
+      userReactions: targetPost.userReactions,
+    };
+  }
+
+  async getBuzzComments(postId: string): Promise<BuzzComment[]> {
+    await this.init();
+    return this.buzzComments[postId] || [];
+  }
+
+  async addBuzzComment(
+    postId: string,
+    content: string,
+    parentId?: string | null,
+  ): Promise<BuzzComment> {
+    await this.init();
+    const currentUser = await this.getCurrentUser();
+    const currentUserId = currentUser?.id || this.users[0]?.id || 'usr_default';
+
+    const mentions = (content.match(/@([a-zA-Z0-9_]+)/g) || []).map((m) => m.substring(1));
+
+    const newComment: BuzzComment = {
+      id: `comm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      postId,
+      authorId: currentUserId,
+      authorName: currentUser?.displayName || currentUser?.username || 'Circle Member',
+      authorAvatar: currentUser?.avatarUrl || null,
+      content: content.trim(),
+      parentId: parentId || null,
+      mentions,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (!this.buzzComments[postId]) {
+      this.buzzComments[postId] = [];
+    }
+    this.buzzComments[postId].push(newComment);
+
+    for (const key of Object.keys(this.buzzPosts)) {
+      const p = this.buzzPosts[key].find((x) => x.id === postId);
+      if (p) {
+        p.commentsCount = (p.commentsCount || 0) + 1;
+        break;
+      }
+    }
+
+    await this.persist();
+    return newComment;
+  }
+
+  async voteBuzzPoll(postId: string, optionId: string): Promise<{ pollOptions: any[] }> {
+    await this.init();
+    const currentUser = await this.getCurrentUser();
+    const currentUserId = currentUser?.id || this.users[0]?.id || 'usr_default';
+
+    let targetPost: BuzzPost | undefined;
+    for (const key of Object.keys(this.buzzPosts)) {
+      const p = this.buzzPosts[key].find((x) => x.id === postId);
+      if (p) {
+        targetPost = p;
+        break;
+      }
+    }
+
+    if (!targetPost || !targetPost.pollOptions) {
+      throw new Error('Poll not found');
+    }
+
+    targetPost.pollOptions.forEach((opt) => {
+      if (!opt.voterIds) opt.voterIds = [];
+      opt.voterIds = opt.voterIds.filter((uid) => uid !== currentUserId);
+    });
+
+    const opt = targetPost.pollOptions.find((o) => o.id === optionId);
+    if (opt) {
+      opt.voterIds.push(currentUserId);
+    }
+
+    targetPost.pollOptions.forEach((o) => {
+      o.votesCount = o.voterIds.length;
+    });
+
+    await this.persist();
+    return { pollOptions: targetPost.pollOptions };
+  }
+
+  async toggleBuzzBookmark(
+    postId: string,
+  ): Promise<{ isBookmarked: boolean; bookmarksCount: number }> {
+    await this.init();
+    const currentUser = await this.getCurrentUser();
+    const currentUserId = currentUser?.id || this.users[0]?.id || 'usr_default';
+
+    if (!this.buzzBookmarks[currentUserId]) {
+      this.buzzBookmarks[currentUserId] = [];
+    }
+
+    const bookmarks = this.buzzBookmarks[currentUserId];
+    const isBookmarked = bookmarks.includes(postId);
+
+    let targetPost: BuzzPost | undefined;
+    for (const key of Object.keys(this.buzzPosts)) {
+      const p = this.buzzPosts[key].find((x) => x.id === postId);
+      if (p) {
+        targetPost = p;
+        break;
+      }
+    }
+
+    if (isBookmarked) {
+      this.buzzBookmarks[currentUserId] = bookmarks.filter((id) => id !== postId);
+      if (targetPost) {
+        targetPost.bookmarksCount = Math.max(0, (targetPost.bookmarksCount || 1) - 1);
+        targetPost.isBookmarked = false;
+      }
+    } else {
+      bookmarks.push(postId);
+      if (targetPost) {
+        targetPost.bookmarksCount = (targetPost.bookmarksCount || 0) + 1;
+        targetPost.isBookmarked = true;
+      }
+    }
+
+    await this.persist();
+    return {
+      isBookmarked: !isBookmarked,
+      bookmarksCount: targetPost?.bookmarksCount || 0,
+    };
+  }
+
+  async reportBuzzPost(
+    postId: string,
+    reason: string,
+    details?: string,
+  ): Promise<{ success: boolean; message: string }> {
+    await this.init();
+    const currentUser = await this.getCurrentUser();
+    const currentUserId = currentUser?.id || this.users[0]?.id || 'usr_default';
+
+    this.buzzReports.push({
+      id: `rep_${Date.now()}`,
+      postId,
+      reporterId: currentUserId,
+      reason,
+      details: details || '',
+      createdAt: new Date().toISOString(),
+    });
+
+    await this.persist();
+    return {
+      success: true,
+      message: 'Report submitted. Circle moderators have been notified.',
+    };
   }
 }
 

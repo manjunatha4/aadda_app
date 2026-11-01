@@ -15,7 +15,184 @@ interface CloudData {
   folderItems: Record<string, any[]>;
   invitations: any[];
   dailyChaos: Record<string, any[]>;
+  buzzPosts?: Record<string, any[]>;
+  buzzComments?: Record<string, any[]>;
+  buzzBookmarks?: Record<string, string[]>;
+  buzzReports?: any[];
 }
+
+const SEED_BUZZ_POSTS: any[] = [
+  {
+    id: 'buzz_seed_1',
+    addaId: 'default',
+    authorId: 'usr_seed_1',
+    authorName: 'Rohit K',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: 'SPILL_THE_TEA',
+    credibility: 'PERSONAL_EXPERIENCE',
+    expiry: 'PERMANENT',
+    expiresAt: null,
+    title: 'Spicy Canteen Coffee Saga ☕',
+    content: 'Someone in our block ordered 14 filter coffees for table 4 and vanished into thin air the exact second the bill arrived. We ended up doing a UPI split roulette 😂',
+    mediaUrl: null,
+    mediaType: null,
+    linkPreview: null,
+    pollOptions: null,
+    reactions: { '😂': 14, '☕': 9, '🍿': 7, '🔥': 5 },
+    userReactions: [],
+    commentsCount: 2,
+    bookmarksCount: 4,
+    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+  {
+    id: 'buzz_seed_2',
+    addaId: 'default',
+    authorId: 'usr_seed_2',
+    authorName: 'Deepa M',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: 'NEWS',
+    credibility: 'VERIFIED_NEWS',
+    expiry: 'PERMANENT',
+    expiresAt: null,
+    title: 'Namma Metro Purple Line Updates 🚇',
+    content: 'BMRCL confirmed train frequency is increased to every 3.5 minutes during peak hours from Majestic to Whitefield. Commute times are finally cut by 25 minutes!',
+    mediaUrl: null,
+    mediaType: null,
+    linkPreview: {
+      url: 'https://bmrcl.co.in',
+      title: 'BMRCL Peak Frequency Expansion',
+      description: 'Higher frequency operations active starting this Monday.',
+      siteName: 'Namma Metro',
+    },
+    pollOptions: null,
+    reactions: { '🔥': 22, '❤️': 16, '👀': 8 },
+    userReactions: [],
+    commentsCount: 0,
+    bookmarksCount: 9,
+    createdAt: new Date(Date.now() - 3600000 * 7).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 7).toISOString(),
+  },
+  {
+    id: 'buzz_seed_3',
+    addaId: 'default',
+    authorId: 'usr_seed_3',
+    authorName: 'Campus Lead',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: 'COLLEGE_RADAR',
+    credibility: 'VERIFIED_NEWS',
+    expiry: 'PERMANENT',
+    expiresAt: null,
+    title: "Campus Tech Fest 'ChakraVyuh 2026' Registrations Open! 🎓",
+    content: '₹1,00,000 total prize pool across AI & Web3 tracks. Placement cell is also conducting tech mock interviews this Thursday at Seminar Hall 2. Don\'t miss out!',
+    mediaUrl: null,
+    mediaType: null,
+    linkPreview: null,
+    pollOptions: null,
+    reactions: { '🔥': 31, '👀': 15, '❤️': 24 },
+    userReactions: [],
+    commentsCount: 0,
+    bookmarksCount: 12,
+    createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+  },
+  {
+    id: 'buzz_seed_4',
+    addaId: 'default',
+    authorId: 'usr_seed_4',
+    authorName: 'Suresh Rao',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: 'POLL_HOT_TAKE',
+    credibility: 'UNVERIFIED_CLAIM',
+    expiry: 'PERMANENT',
+    expiresAt: null,
+    title: 'HOT TAKE: Masala Dosa Championship 🧈',
+    content: 'Settle the eternal debate once and for all. Which one reigns supreme in Bengaluru?',
+    mediaUrl: null,
+    mediaType: null,
+    linkPreview: null,
+    pollOptions: [
+      { id: 'opt_1', text: 'CTR Malleshwaram (Benne Masala) 🧈', votesCount: 28, voterIds: [] },
+      { id: 'opt_2', text: 'Vidyarthi Bhavan Gandhi Bazaar ☕', votesCount: 19, voterIds: [] },
+      { id: 'opt_3', text: 'Taaza Thindi Jayanagar 🌿', votesCount: 14, voterIds: [] },
+      { id: 'opt_4', text: 'MTR Near Lalbagh ❤️', votesCount: 8, voterIds: [] },
+    ],
+    reactions: { '🍿': 18, '🔥': 26, '😂': 9 },
+    userReactions: [],
+    commentsCount: 1,
+    bookmarksCount: 6,
+    createdAt: new Date(Date.now() - 3600000 * 16).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 16).toISOString(),
+  },
+  {
+    id: 'buzz_seed_5',
+    addaId: 'default',
+    authorId: 'usr_seed_5',
+    authorName: 'Anonymous Adda Member',
+    authorAvatar: null,
+    isAnonymous: true,
+    category: 'CONFESSION',
+    credibility: 'PERSONAL_EXPERIENCE',
+    expiry: 'PERMANENT',
+    expiresAt: null,
+    title: 'Confession Corner 🤫',
+    content: 'I accidentally submitted an unedited Kannada meme audio as the background soundtrack for my final design project video presentation. The professor laughed and gave me an A- 😂',
+    mediaUrl: null,
+    mediaType: null,
+    linkPreview: null,
+    pollOptions: null,
+    reactions: { '💀': 35, '😂': 49, '🍿': 18 },
+    userReactions: [],
+    commentsCount: 0,
+    bookmarksCount: 7,
+    createdAt: new Date(Date.now() - 3600000 * 20).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 20).toISOString(),
+  },
+];
+
+const SEED_BUZZ_COMMENTS: Record<string, any[]> = {
+  buzz_seed_1: [
+    {
+      id: 'comm_1_1',
+      postId: 'buzz_seed_1',
+      authorId: 'usr_seed_2',
+      authorName: 'Ananya S',
+      authorAvatar: null,
+      content: 'Classic table 4 behavior lmao! Next time make everyone scan the QR first 💀',
+      parentId: null,
+      mentions: [],
+      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    },
+    {
+      id: 'comm_1_2',
+      postId: 'buzz_seed_1',
+      authorId: 'usr_seed_3',
+      authorName: 'Karthik B',
+      authorAvatar: null,
+      content: '@Ananya S exactly, the UPI split roulette was brutal 😂',
+      parentId: 'comm_1_1',
+      mentions: ['Ananya S'],
+      createdAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+    },
+  ],
+  buzz_seed_4: [
+    {
+      id: 'comm_4_1',
+      postId: 'buzz_seed_4',
+      authorId: 'usr_seed_2',
+      authorName: 'Pooja V',
+      authorAvatar: null,
+      content: 'CTR Benne Dosa with that mint chutney is unbeatable, no contest! 🧈',
+      parentId: null,
+      mentions: [],
+      createdAt: new Date(Date.now() - 3600000 * 10).toISOString(),
+    },
+  ],
+};
 
 // In-memory cache for fast response times
 let memoryCache: CloudData = {
@@ -56,6 +233,12 @@ let memoryCache: CloudData = {
     ],
   },
   invitations: [],
+  buzzPosts: {
+    default: SEED_BUZZ_POSTS,
+  },
+  buzzComments: SEED_BUZZ_COMMENTS,
+  buzzBookmarks: {},
+  buzzReports: [],
 };
 
 let lastSyncTime = 0;
@@ -870,6 +1053,437 @@ export default async function handler(req: any, res: any) {
         userItems.splice(itemIndex, 1);
         await saveToCloud(store);
         return json({ success: true, id: chaosId });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // ADDA BUZZ FULL PRODUCTION REST API & REAL ENGAGEMENT
+    // -------------------------------------------------------------
+    if (pathname === '/buzz' || pathname.startsWith('/buzz/')) {
+      if (!store.buzzPosts) store.buzzPosts = {};
+      if (!store.buzzComments) store.buzzComments = {};
+      if (!store.buzzBookmarks) store.buzzBookmarks = {};
+      if (!store.buzzReports) store.buzzReports = [];
+
+      // Identify current user
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.replace('Bearer ', '').trim();
+      const queryParams = new URL(req.url || '', 'http://localhost').searchParams;
+      const currentUserId =
+        token.replace('token_', '') ||
+        queryParams.get('userId') ||
+        body.userId ||
+        store.users[0]?.id ||
+        'usr_default';
+      const currentUser = store.users.find((u) => u.id === currentUserId) || {
+        id: currentUserId,
+        displayName: 'Circle Member',
+        username: 'circle_member',
+      };
+
+      // 1. GET /buzz - FEED, TRENDING, SAVED FILTERING
+      if (pathname === '/buzz' && method === 'GET') {
+        const rawAddaId = queryParams.get('addaId');
+        const category = queryParams.get('category') || 'ALL';
+        const filter = queryParams.get('filter') || 'all'; // 'all' | 'trending' | 'saved'
+
+        const targetAddaId = rawAddaId || store.addas[0]?.id || 'default';
+
+        // Initialize posts for this adda if not present
+        if (!store.buzzPosts[targetAddaId] || store.buzzPosts[targetAddaId].length === 0) {
+          const addaName = store.addas.find((a) => a.id === targetAddaId)?.name || 'Circle Adda';
+          store.buzzPosts[targetAddaId] = SEED_BUZZ_POSTS.map((p) => ({
+            ...p,
+            addaId: targetAddaId,
+            addaName,
+          }));
+        }
+
+        let posts = [...(store.buzzPosts[targetAddaId] || [])];
+
+        // Filter out expired posts
+        const now = Date.now();
+        posts = posts.filter((p) => {
+          if (p.expiresAt) {
+            return new Date(p.expiresAt).getTime() > now;
+          }
+          return true;
+        });
+
+        // Filter by category
+        if (category && category !== 'ALL') {
+          posts = posts.filter((p) => p.category === category);
+        }
+
+        // Filter by saved if requested
+        const userSaved = store.buzzBookmarks[currentUserId] || [];
+        if (filter === 'saved') {
+          posts = posts.filter((p) => userSaved.includes(p.id));
+        }
+
+        // Calculate engagement score & enrich posts
+        const userBookmarksSet = new Set(userSaved);
+        const enriched = posts.map((p) => {
+          const totalReactions = Object.values(p.reactions || {}).reduce(
+            (sum: number, count: any) => sum + (Number(count) || 0),
+            0,
+          );
+          const hoursOld = Math.max(1, (now - new Date(p.createdAt).getTime()) / 3600000);
+          const score =
+            (totalReactions * 2 + (p.commentsCount || 0) * 3 + (p.bookmarksCount || 0) * 1.5) /
+            Math.pow(hoursOld + 2, 1.2);
+
+          const userReactions = p.reactionsByUser?.[currentUserId] || [];
+
+          return {
+            ...p,
+            engagementScore: Number(score.toFixed(2)),
+            isBookmarked: userBookmarksSet.has(p.id),
+            userReactions,
+          };
+        });
+
+        if (filter === 'trending') {
+          enriched.sort((a, b) => (b.engagementScore || 0) - (a.engagementScore || 0));
+        } else {
+          // Chronological default
+          enriched.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
+
+        // Mark top 3 as trending
+        enriched.forEach((p, idx) => {
+          p.isTrending = idx < 3 && (p.engagementScore || 0) > 2;
+        });
+
+        return json(enriched);
+      }
+
+      // 2. POST /buzz - CREATE NEW POST WITH SAFETY & MODERATION
+      if (pathname === '/buzz' && method === 'POST') {
+        const {
+          addaId,
+          category = 'SPILL_THE_TEA',
+          credibility = 'PERSONAL_EXPERIENCE',
+          expiry = 'PERMANENT',
+          isAnonymous = false,
+          title,
+          content,
+          mediaUrl,
+          mediaType,
+          linkUrl,
+          pollOptions,
+        } = body;
+
+        if (!content || !content.trim()) {
+          return json({ message: 'Post content is required' }, 400);
+        }
+
+        // Anti-Doxxing & Spam Filter: detect phone numbers or forbidden terms
+        const phoneRegex = /\b[6-9]\d{9}\b/;
+        if (phoneRegex.test(content) || (title && phoneRegex.test(title))) {
+          return json(
+            { message: 'Sharing private phone numbers or personal contact info is strictly prohibited in Adda Buzz.' },
+            400,
+          );
+        }
+
+        const targetAddaId = addaId || store.addas[0]?.id || 'default';
+        const targetAdda = store.addas.find((a) => a.id === targetAddaId);
+
+        // Expiry calculation
+        let expiresAt: string | null = null;
+        if (expiry === 'EXP_24H') {
+          expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+        } else if (expiry === 'EXP_48H') {
+          expiresAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+        }
+
+        // Poll Options builder
+        let formattedPollOptions: any[] | null = null;
+        if (category === 'POLL_HOT_TAKE' && Array.isArray(pollOptions) && pollOptions.length >= 2) {
+          formattedPollOptions = pollOptions.filter((o) => typeof o === 'string' && o.trim()).map((o, idx) => ({
+            id: `opt_${Date.now()}_${idx}`,
+            text: o.trim(),
+            votesCount: 0,
+            voterIds: [],
+          }));
+        }
+
+        // Link Preview builder
+        let linkPreview: any = null;
+        if (linkUrl && typeof linkUrl === 'string' && linkUrl.startsWith('http')) {
+          try {
+            const urlObj = new URL(linkUrl);
+            linkPreview = {
+              url: linkUrl,
+              title: (urlObj.hostname.replace('www.', '') + ' Article').toUpperCase(),
+              description: `Shared link via ${urlObj.hostname}`,
+              siteName: urlObj.hostname,
+            };
+          } catch {
+            linkPreview = { url: linkUrl, siteName: 'External Link' };
+          }
+        }
+
+        const newPost = {
+          id: `buzz_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          addaId: targetAddaId,
+          addaName: targetAdda?.name || 'Circle Adda',
+          authorId: currentUserId,
+          authorName: isAnonymous ? 'Anonymous Member' : currentUser.displayName || currentUser.username,
+          authorAvatar: isAnonymous ? null : currentUser.avatarUrl || null,
+          isAnonymous: Boolean(isAnonymous),
+          category,
+          credibility,
+          expiry,
+          expiresAt,
+          title: title ? title.trim() : null,
+          content: content.trim(),
+          mediaUrl: mediaUrl || null,
+          mediaType: mediaType || null,
+          linkPreview,
+          pollOptions: formattedPollOptions,
+          reactions: {},
+          reactionsByUser: {},
+          userReactions: [],
+          commentsCount: 0,
+          bookmarksCount: 0,
+          isBookmarked: false,
+          isTrending: false,
+          engagementScore: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        if (!store.buzzPosts[targetAddaId]) {
+          store.buzzPosts[targetAddaId] = [];
+        }
+
+        store.buzzPosts[targetAddaId].unshift(newPost);
+        await saveToCloud(store);
+        return json(newPost, 201);
+      }
+
+      // 3. DELETE /buzz/:id
+      if (pathname.startsWith('/buzz/') && method === 'DELETE') {
+        const postId = pathname.replace('/buzz/', '').split('?')[0];
+
+        let found = false;
+        for (const addaKey of Object.keys(store.buzzPosts)) {
+          const list = store.buzzPosts[addaKey];
+          const idx = list.findIndex((p) => p.id === postId);
+          if (idx !== -1) {
+            list.splice(idx, 1);
+            found = true;
+            break;
+          }
+        }
+
+        if (found) {
+          await saveToCloud(store);
+          return json({ success: true, id: postId });
+        }
+        return json({ message: 'Buzz post not found' }, 404);
+      }
+
+      // 4. POST /buzz/:id/react - TOGGLE REACTION (😂, 👀, 🍿, ☕, 🔥, 💀, ❤️)
+      if (pathname.startsWith('/buzz/') && pathname.endsWith('/react') && method === 'POST') {
+        const postId = pathname.replace('/buzz/', '').replace('/react', '').split('?')[0];
+        const emoji = body.emoji;
+        const validEmojis = ['😂', '👀', '🍿', '☕', '🔥', '💀', '❤️'];
+
+        if (!emoji || !validEmojis.includes(emoji)) {
+          return json({ message: 'Invalid reaction emoji' }, 400);
+        }
+
+        let targetPost: any = null;
+        for (const addaKey of Object.keys(store.buzzPosts)) {
+          const p = store.buzzPosts[addaKey].find((x: any) => x.id === postId);
+          if (p) {
+            targetPost = p;
+            break;
+          }
+        }
+
+        if (!targetPost) {
+          return json({ message: 'Buzz post not found' }, 404);
+        }
+
+        if (!targetPost.reactions) targetPost.reactions = {};
+        if (!targetPost.reactionsByUser) targetPost.reactionsByUser = {};
+        if (!targetPost.reactionsByUser[currentUserId]) {
+          targetPost.reactionsByUser[currentUserId] = [];
+        }
+
+        const userReactions: string[] = targetPost.reactionsByUser[currentUserId];
+        const hasReacted = userReactions.includes(emoji);
+
+        if (hasReacted) {
+          // Toggle off
+          targetPost.reactionsByUser[currentUserId] = userReactions.filter((e) => e !== emoji);
+          targetPost.reactions[emoji] = Math.max(0, (targetPost.reactions[emoji] || 1) - 1);
+          if (targetPost.reactions[emoji] === 0) {
+            delete targetPost.reactions[emoji];
+          }
+        } else {
+          // Toggle on
+          userReactions.push(emoji);
+          targetPost.reactions[emoji] = (targetPost.reactions[emoji] || 0) + 1;
+        }
+
+        await saveToCloud(store);
+        return json({
+          reactions: targetPost.reactions,
+          userReactions: targetPost.reactionsByUser[currentUserId],
+        });
+      }
+
+      // 5. COMMENTS: GET /buzz/:id/comments & POST /buzz/:id/comments
+      if (pathname.startsWith('/buzz/') && pathname.endsWith('/comments')) {
+        const postId = pathname.replace('/buzz/', '').replace('/comments', '').split('?')[0];
+
+        if (method === 'GET') {
+          const comments = store.buzzComments[postId] || [];
+          return json(comments);
+        }
+
+        if (method === 'POST') {
+          const { content, parentId } = body;
+          if (!content || !content.trim()) {
+            return json({ message: 'Comment content is required' }, 400);
+          }
+
+          // Extract mentions (@username)
+          const mentions = (content.match(/@([a-zA-Z0-9_]+)/g) || []).map((m: string) => m.substring(1));
+
+          const newComment = {
+            id: `comm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            postId,
+            authorId: currentUserId,
+            authorName: currentUser.displayName || currentUser.username,
+            authorAvatar: currentUser.avatarUrl || null,
+            content: content.trim(),
+            parentId: parentId || null,
+            mentions,
+            createdAt: new Date().toISOString(),
+          };
+
+          if (!store.buzzComments[postId]) {
+            store.buzzComments[postId] = [];
+          }
+          store.buzzComments[postId].push(newComment);
+
+          // Update comment count on post
+          for (const addaKey of Object.keys(store.buzzPosts)) {
+            const p = store.buzzPosts[addaKey].find((x: any) => x.id === postId);
+            if (p) {
+              p.commentsCount = (p.commentsCount || 0) + 1;
+              break;
+            }
+          }
+
+          await saveToCloud(store);
+          return json(newComment, 201);
+        }
+      }
+
+      // 6. POST /buzz/:id/vote - POLL VOTING
+      if (pathname.startsWith('/buzz/') && pathname.endsWith('/vote') && method === 'POST') {
+        const postId = pathname.replace('/buzz/', '').replace('/vote', '').split('?')[0];
+        const { optionId } = body;
+
+        let targetPost: any = null;
+        for (const addaKey of Object.keys(store.buzzPosts)) {
+          const p = store.buzzPosts[addaKey].find((x: any) => x.id === postId);
+          if (p) {
+            targetPost = p;
+            break;
+          }
+        }
+
+        if (!targetPost || !targetPost.pollOptions) {
+          return json({ message: 'Poll not found on this post' }, 404);
+        }
+
+        // Remove vote from previous option if any
+        targetPost.pollOptions.forEach((opt: any) => {
+          if (!opt.voterIds) opt.voterIds = [];
+          opt.voterIds = opt.voterIds.filter((uid: string) => uid !== currentUserId);
+        });
+
+        // Add vote to chosen option
+        const targetOption = targetPost.pollOptions.find((opt: any) => opt.id === optionId);
+        if (targetOption) {
+          targetOption.voterIds.push(currentUserId);
+        }
+
+        // Recalculate counts
+        targetPost.pollOptions.forEach((opt: any) => {
+          opt.votesCount = opt.voterIds.length;
+        });
+
+        await saveToCloud(store);
+        return json({ pollOptions: targetPost.pollOptions });
+      }
+
+      // 7. POST /buzz/:id/bookmark - SAVE / BOOKMARK TOGGLE
+      if (pathname.startsWith('/buzz/') && pathname.endsWith('/bookmark') && method === 'POST') {
+        const postId = pathname.replace('/buzz/', '').replace('/bookmark', '').split('?')[0];
+
+        if (!store.buzzBookmarks[currentUserId]) {
+          store.buzzBookmarks[currentUserId] = [];
+        }
+
+        const bookmarks: string[] = store.buzzBookmarks[currentUserId];
+        const isBookmarked = bookmarks.includes(postId);
+
+        let targetPost: any = null;
+        for (const addaKey of Object.keys(store.buzzPosts)) {
+          const p = store.buzzPosts[addaKey].find((x: any) => x.id === postId);
+          if (p) {
+            targetPost = p;
+            break;
+          }
+        }
+
+        if (isBookmarked) {
+          store.buzzBookmarks[currentUserId] = bookmarks.filter((id) => id !== postId);
+          if (targetPost) {
+            targetPost.bookmarksCount = Math.max(0, (targetPost.bookmarksCount || 1) - 1);
+          }
+        } else {
+          bookmarks.push(postId);
+          if (targetPost) {
+            targetPost.bookmarksCount = (targetPost.bookmarksCount || 0) + 1;
+          }
+        }
+
+        await saveToCloud(store);
+        return json({
+          isBookmarked: !isBookmarked,
+          bookmarksCount: targetPost?.bookmarksCount || 0,
+        });
+      }
+
+      // 8. POST /buzz/:id/report - REPORT INAPPROPRIATE CONTENT
+      if (pathname.startsWith('/buzz/') && pathname.endsWith('/report') && method === 'POST') {
+        const postId = pathname.replace('/buzz/', '').replace('/report', '').split('?')[0];
+        const { reason, details } = body;
+
+        store.buzzReports.push({
+          id: `rep_${Date.now()}`,
+          postId,
+          reporterId: currentUserId,
+          reason: reason || 'Inappropriate content',
+          details: details || '',
+          createdAt: new Date().toISOString(),
+        });
+
+        await saveToCloud(store);
+        return json({
+          success: true,
+          message: 'Report submitted. Circle moderators have been notified.',
+        });
       }
     }
 

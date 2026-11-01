@@ -64,7 +64,7 @@ export default function AddaDetailScreen() {
   const handleConfirmLeave = async () => {
     try {
       setLeaving(true);
-      await api.delete(`/addas/${id}/leave`).catch(() => {});
+      await api.delete(`/addas/${id}/leave`).catch(() => { });
       router.replace('/(tabs)');
     } catch (e: any) {
       console.error(e);
@@ -168,6 +168,27 @@ export default function AddaDetailScreen() {
               title={copied ? '✓ COPIED' : '📋 Copy'}
               onPress={() => copyCode(activeInvite)}
               variant={copied ? 'emerald' : 'purple'}
+            />
+          </View>
+        </GlassCard>
+
+        {/* Adda Buzz Feed Action */}
+        <GlassCard style={{ padding: 18, borderColor: DS_TOKENS.colors.purpleBorder, backgroundColor: DS_TOKENS.colors.purpleLight }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 18 }}>🔥</Text>
+                <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 16, fontWeight: '800' }}>
+                  {isKn ? 'ಅಡ್ಡ ಬಜ್ ಫೀಡ್' : 'Adda Buzz Feed'}
+                </Text>
+              </View>
+              <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                {isKn ? 'ಸ್ನೇಹಿತರ ಹರಟೆ, ಸುದ್ದಿ, ಮತದಾನ ಮತ್ತು ರಹಸ್ಯ ಕನ್ಫೆಷನ್' : 'Circle gossip, campus news, polls & confessions'}
+              </Text>
+            </View>
+            <PrimaryButton
+              title={isKn ? 'ಬಜ್ ವೀಕ್ಷಿಸಿ 🔥' : 'View Buzz 🔥'}
+              onPress={() => router.push(`/(tabs)/buzz?addaId=${adda.id}` as any)}
             />
           </View>
         </GlassCard>

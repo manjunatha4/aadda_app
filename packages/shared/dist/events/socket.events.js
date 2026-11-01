@@ -40,4 +40,10 @@ var SocketEvents;
     SocketEvents["CHAOS_SUBMISSION"] = "chaos:submission";
     SocketEvents["CHAOS_VOTE"] = "chaos:vote";
     SocketEvents["CHAOS_ROUND_ENDED"] = "chaos:round_ended";
+    // Adda Buzz
+    SocketEvents["BUZZ_POST_CREATED"] = "buzz:post:created";
+    SocketEvents["BUZZ_POST_DELETED"] = "buzz:post:deleted";
+    SocketEvents["BUZZ_REACTION_UPDATED"] = "buzz:reaction:updated";
+    SocketEvents["BUZZ_COMMENT_ADDED"] = "buzz:comment:added";
+    SocketEvents["BUZZ_POLL_VOTED"] = "buzz:poll:voted";
 })(SocketEvents || (exports.SocketEvents = SocketEvents = {}));

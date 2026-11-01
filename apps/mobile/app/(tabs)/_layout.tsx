@@ -5,6 +5,7 @@ import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native
 
 const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
   index: { active: '🏠', inactive: '🏠' },
+  buzz: { active: '🔥', inactive: '🔥' },
   chaos: { active: '📁', inactive: '📁' },
   chats: { active: '💬', inactive: '💬' },
   profile: { active: '👤', inactive: '👤' },
@@ -29,7 +30,7 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
         style={[
           {
             width: '92%',
-            maxWidth: 360,
+            maxWidth: 390,
             height: 64,
             borderRadius: 36,
             backgroundColor: '#FFFFFF',
@@ -140,6 +141,12 @@ export default function TabLayout() {
         name="index"
         options={{
           title: isKn ? 'ಇಂದು' : 'Today',
+        }}
+      />
+      <Tabs.Screen
+        name="buzz"
+        options={{
+          title: isKn ? 'ಅಡ್ಡ ಬಜ್' : 'Adda Buzz',
         }}
       />
       <Tabs.Screen

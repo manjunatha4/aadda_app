@@ -57,3 +57,31 @@ export declare enum DevicePlatform {
     IOS = "ios",
     WEB = "web"
 }
+export declare enum BuzzCategory {
+    ALL = "ALL",
+    SPILL_THE_TEA = "SPILL_THE_TEA",
+    NEWS = "NEWS",
+    OORU_UPDATES = "OORU_UPDATES",
+    COLLEGE_RADAR = "COLLEGE_RADAR",
+    POLL_HOT_TAKE = "POLL_HOT_TAKE",
+    CONFESSION = "CONFESSION"
+}
+export declare enum BuzzCredibility {
+    VERIFIED_NEWS = "VERIFIED_NEWS",
+    PERSONAL_EXPERIENCE = "PERSONAL_EXPERIENCE",
+    UNVERIFIED_CLAIM = "UNVERIFIED_CLAIM"
+}
+export declare enum BuzzExpiry {
+    EXP_24H = "EXP_24H",
+    EXP_48H = "EXP_48H",
+    PERMANENT = "PERMANENT"
+}
+export declare enum BuzzReactionEmoji {
+    LAUGH = "\uD83D\uDE02",
+    EYES = "\uD83D\uDC40",
+    POPCORN = "\uD83C\uDF7F",
+    TEA = "\u2615",
+    FIRE = "\uD83D\uDD25",
+    SKULL = "\uD83D\uDC80",
+    HEART = "\u2764\uFE0F"
+}

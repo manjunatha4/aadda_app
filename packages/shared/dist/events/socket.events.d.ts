@@ -27,7 +27,12 @@ export declare enum SocketEvents {
     CHAOS_NEW_CHALLENGE = "chaos:new_challenge",
     CHAOS_SUBMISSION = "chaos:submission",
     CHAOS_VOTE = "chaos:vote",
-    CHAOS_ROUND_ENDED = "chaos:round_ended"
+    CHAOS_ROUND_ENDED = "chaos:round_ended",
+    BUZZ_POST_CREATED = "buzz:post:created",
+    BUZZ_POST_DELETED = "buzz:post:deleted",
+    BUZZ_REACTION_UPDATED = "buzz:reaction:updated",
+    BUZZ_COMMENT_ADDED = "buzz:comment:added",
+    BUZZ_POLL_VOTED = "buzz:poll:voted"
 }
 export interface TypingPayload {
     conversationId: string;

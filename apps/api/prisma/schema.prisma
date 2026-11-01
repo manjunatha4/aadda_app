@@ -61,6 +61,28 @@ enum ReportStatus {
   ACTIONED
 }
 
+enum BuzzCategory {
+  ALL
+  SPILL_THE_TEA
+  NEWS
+  OORU_UPDATES
+  COLLEGE_RADAR
+  POLL_HOT_TAKE
+  CONFESSION
+}
+
+enum BuzzCredibility {
+  VERIFIED_NEWS
+  PERSONAL_EXPERIENCE
+  UNVERIFIED_CLAIM
+}
+
+enum BuzzExpiry {
+  EXP_24H
+  EXP_48H
+  PERMANENT
+}
+
 // 1. User
 model User {
   id           String    @id @default(uuid())
@@ -95,6 +117,11 @@ model User {
   reportsCreated      UserReport[]         @relation("Reporter")
   reportsReceived     UserReport[]         @relation("ReportedUser")
   mediaUploads        MediaUpload[]
+  buzzPosts           BuzzPost[]           @relation("BuzzAuthor")
+  buzzComments        BuzzComment[]
+  buzzReactions       BuzzReaction[]
+  buzzBookmarks       BuzzBookmark[]
+  buzzReports         BuzzReport[]
 
   @@index([username])
   @@index([email])
@@ -144,6 +171,7 @@ model Adda {
   conversation Conversation?
   activities   Activity[]
   vibeStatuses VibeStatus[]
+  buzzPosts    BuzzPost[]
 
   @@index([creatorId])
 }
@@ -364,4 +392,99 @@ model MediaUpload {
 
   @@index([userId])
 }
+
+// 18. BuzzPost
+model BuzzPost {
+  id              String          @id @default(uuid())
+  addaId          String
+  adda            Adda            @relation(fields: [addaId], references: [id], onDelete: Cascade)
+  authorId        String
+  author          User            @relation("BuzzAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  isAnonymous     Boolean         @default(false)
+  category        BuzzCategory    @default(ALL)
+  credibility     BuzzCredibility @default(PERSONAL_EXPERIENCE)
+  expiry          BuzzExpiry      @default(PERMANENT)
+  expiresAt       DateTime?
+  title           String?
+  content         String
+  mediaUrl        String?
+  mediaType       String?
+  linkPreviewJson Json?
+  pollOptionsJson Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  comments  BuzzComment[]
+  reactions BuzzReaction[]
+  bookmarks BuzzBookmark[]
+  reports   BuzzReport[]
+
+  @@index([addaId, createdAt])
+  @@index([authorId])
+  @@index([category])
+}
+
+// 19. BuzzComment
+model BuzzComment {
+  id        String        @id @default(uuid())
+  postId    String
+  post      BuzzPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  parentId  String?
+  parent    BuzzComment?  @relation("ThreadedReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   BuzzComment[] @relation("ThreadedReplies")
+  mentions  String[]      @default([])
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([postId, createdAt])
+  @@index([authorId])
+  @@index([parentId])
+}
+
+// 20. BuzzReaction
+model BuzzReaction {
+  id        String   @id @default(uuid())
+  postId    String
+  post      BuzzPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId, emoji])
+  @@index([postId])
+  @@index([userId])
+}
+
+// 21. BuzzBookmark
+model BuzzBookmark {
+  id        String   @id @default(uuid())
+  postId    String
+  post      BuzzPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId])
+}
+
+// 22. BuzzReport
+model BuzzReport {
+  id         String   @id @default(uuid())
+  postId     String
+  post       BuzzPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reason     String
+  details    String?
+  createdAt  DateTime @default(now())
+
+  @@index([postId])
+  @@index([reporterId])
+}
+
 

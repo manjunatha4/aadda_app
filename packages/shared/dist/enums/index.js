@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DevicePlatform = exports.NotificationType = exports.ReportStatus = exports.MediaType = exports.VibeMood = exports.ActivityCategory = exports.ActivityStatus = exports.ConversationType = exports.AddaRole = exports.Language = void 0;
+exports.BuzzReactionEmoji = exports.BuzzExpiry = exports.BuzzCredibility = exports.BuzzCategory = exports.DevicePlatform = exports.NotificationType = exports.ReportStatus = exports.MediaType = exports.VibeMood = exports.ActivityCategory = exports.ActivityStatus = exports.ConversationType = exports.AddaRole = exports.Language = void 0;
 var Language;
 (function (Language) {
     Language["KN"] = "kn";
@@ -70,3 +70,35 @@ var DevicePlatform;
     DevicePlatform["IOS"] = "ios";
     DevicePlatform["WEB"] = "web";
 })(DevicePlatform || (exports.DevicePlatform = DevicePlatform = {}));
+var BuzzCategory;
+(function (BuzzCategory) {
+    BuzzCategory["ALL"] = "ALL";
+    BuzzCategory["SPILL_THE_TEA"] = "SPILL_THE_TEA";
+    BuzzCategory["NEWS"] = "NEWS";
+    BuzzCategory["OORU_UPDATES"] = "OORU_UPDATES";
+    BuzzCategory["COLLEGE_RADAR"] = "COLLEGE_RADAR";
+    BuzzCategory["POLL_HOT_TAKE"] = "POLL_HOT_TAKE";
+    BuzzCategory["CONFESSION"] = "CONFESSION";
+})(BuzzCategory || (exports.BuzzCategory = BuzzCategory = {}));
+var BuzzCredibility;
+(function (BuzzCredibility) {
+    BuzzCredibility["VERIFIED_NEWS"] = "VERIFIED_NEWS";
+    BuzzCredibility["PERSONAL_EXPERIENCE"] = "PERSONAL_EXPERIENCE";
+    BuzzCredibility["UNVERIFIED_CLAIM"] = "UNVERIFIED_CLAIM";
+})(BuzzCredibility || (exports.BuzzCredibility = BuzzCredibility = {}));
+var BuzzExpiry;
+(function (BuzzExpiry) {
+    BuzzExpiry["EXP_24H"] = "EXP_24H";
+    BuzzExpiry["EXP_48H"] = "EXP_48H";
+    BuzzExpiry["PERMANENT"] = "PERMANENT";
+})(BuzzExpiry || (exports.BuzzExpiry = BuzzExpiry = {}));
+var BuzzReactionEmoji;
+(function (BuzzReactionEmoji) {
+    BuzzReactionEmoji["LAUGH"] = "\uD83D\uDE02";
+    BuzzReactionEmoji["EYES"] = "\uD83D\uDC40";
+    BuzzReactionEmoji["POPCORN"] = "\uD83C\uDF7F";
+    BuzzReactionEmoji["TEA"] = "\u2615";
+    BuzzReactionEmoji["FIRE"] = "\uD83D\uDD25";
+    BuzzReactionEmoji["SKULL"] = "\uD83D\uDC80";
+    BuzzReactionEmoji["HEART"] = "\u2764\uFE0F";
+})(BuzzReactionEmoji || (exports.BuzzReactionEmoji = BuzzReactionEmoji = {}));

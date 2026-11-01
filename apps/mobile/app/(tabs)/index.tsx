@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, RefreshControl, Platform } from 'react-na
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
+import { clientStore } from '../../src/services/clientStore';
 import { useAuthStore } from '../../src/stores/authStore';
 import {
   MainLayout,

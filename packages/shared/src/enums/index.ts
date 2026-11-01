@@ -67,3 +67,36 @@ export enum DevicePlatform {
   WEB = 'web',
 }
 
+export enum BuzzCategory {
+  ALL = 'ALL',
+  SPILL_THE_TEA = 'SPILL_THE_TEA',
+  NEWS = 'NEWS',
+  OORU_UPDATES = 'OORU_UPDATES',
+  COLLEGE_RADAR = 'COLLEGE_RADAR',
+  POLL_HOT_TAKE = 'POLL_HOT_TAKE',
+  CONFESSION = 'CONFESSION',
+}
+
+export enum BuzzCredibility {
+  VERIFIED_NEWS = 'VERIFIED_NEWS',
+  PERSONAL_EXPERIENCE = 'PERSONAL_EXPERIENCE',
+  UNVERIFIED_CLAIM = 'UNVERIFIED_CLAIM',
+}
+
+export enum BuzzExpiry {
+  EXP_24H = 'EXP_24H',
+  EXP_48H = 'EXP_48H',
+  PERMANENT = 'PERMANENT',
+}
+
+export enum BuzzReactionEmoji {
+  LAUGH = '😂',
+  EYES = '👀',
+  POPCORN = '🍿',
+  TEA = '☕',
+  FIRE = '🔥',
+  SKULL = '💀',
+  HEART = '❤️',
+}
+
+

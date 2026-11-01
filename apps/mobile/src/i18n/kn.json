@@ -82,6 +82,74 @@
     "switchLang": "Switch to English",
     "logout": "ಲಾಗ್ ಔಟ್",
     "verified": "ವೆರಿಫೈಡ್ ಸದಸ್ಯ"
+  },
+  "buzz": {
+    "title": "ಅಡ್ಡ ಬಜ್ 🔥",
+    "subtitle": "ಸ್ನೇಹಿತರ ವೃತ್ತ ಖಾಸಗಿ ಸಾಮಾಜಿಕ ಹಂಚಿಕೆ",
+    "categories": {
+      "ALL": "ಎಲ್ಲಾ ಬಜ್",
+      "SPILL_THE_TEA": "ಟೀ ಕುಡಿತಾ ಹರಟೆ ☕",
+      "NEWS": "ಸುದ್ದಿ & ಲಿಂಕ್ಸ್ 📰",
+      "OORU_UPDATES": "ಊರು ಅಪ್‌ಡೇಟ್ಸ್ 🏙️",
+      "COLLEGE_RADAR": "ಕಾಲೇಜು ರೇಡಾರ್ 🎓",
+      "POLL_HOT_TAKE": "ಮತದಾನ & ಚರ್ಚೆ 🔥",
+      "CONFESSION": "ಕನ್ಫೆಷನ್ ಕಾರ್ನರ್ 🤫"
+    },
+    "credibility": {
+      "VERIFIED_NEWS": "ಖಚಿತ ಸುದ್ದಿ",
+      "PERSONAL_EXPERIENCE": "ಸ್ವಂತ ಅನುಭವ",
+      "UNVERIFIED_CLAIM": "ದೃಢಪಡಿಸದ ಮಾತು"
+    },
+    "filters": {
+      "feed": "ಇತ್ತೀಚಿನ",
+      "trending": "ಟ್ರೆಂಡಿಂಗ್ 🔥",
+      "saved": "ಉಳಿಸಿದವು 🔖"
+    },
+    "actions": {
+      "createPost": "ಬಜ್ ಪೋಸ್ಟ್ ಮಾಡಿ",
+      "shareTea": "ಹರಟೆ ಹಂಚಿಕೊಳ್ಳಿ",
+      "vote": "ಮತ ನೀಡಿ",
+      "comment": "ಕಾಮೆಂಟ್",
+      "reply": "ಉತ್ತರಿಸಿ",
+      "report": "ವರದಿ ಮಾಡಿ",
+      "delete": "ಅಳಿಸಿ",
+      "save": "ಉಳಿಸಿ",
+      "saved": "ಉಳಿಸಲಾಗಿದೆ"
+    },
+    "create": {
+      "heading": "ಹೊಸ ಬಜ್ ಪೋಸ್ಟ್",
+      "selectAdda": "ಅಡ್ಡ ಆಯ್ಕೆಮಾಡಿ",
+      "selectCategory": "ವಿಭಾಗ ಆಯ್ಕೆಮಾಡಿ",
+      "credibilityLabel": "ವಿಶ್ವಾಸಾರ್ಹತೆ ಲೇಬಲ್",
+      "titlePlaceholder": "ಮುಖ್ಯ ಶೀರ್ಷಿಕೆ (ಐಚ್ಛಿಕ)...",
+      "contentPlaceholder": "ಇಂದು ನಿಮ್ಮ ಅಡ್ಡದಲ್ಲಿ ಏನು ಸುದ್ದಿ?",
+      "anonymousConfession": "ಗುಪ್ತವಾಗಿ ಪೋಸ್ಟ್ ಮಾಡಿ (ಕನ್ಫೆಷನ್)",
+      "anonymousHint": "ನಿಮ್ಮ ಹೆಸರು ಯಾರಿಗೂ ಕಾಣಿಸುವುದಿಲ್ಲ. ಆದರೆ ನಿಯಮಗಳು ಅನ್ವಯಿಸುತ್ತವೆ.",
+      "linkUrlPlaceholder": "ಸುದ್ದಿ ಅಥವಾ ಲೇಖನದ ಲಿಂಕ್ (ಐಚ್ಛಿಕ)",
+      "pollOptionsTitle": "ಮತದಾನ ಆಯ್ಕೆಗಳು (2-4)",
+      "addOption": "+ ಆಯ್ಕೆ ಸೇರಿಸಿ",
+      "expiryLabel": "ಪೋಸ್ಟ್ ಅವಧಿ",
+      "exp24": "24 ಗಂಟೆ",
+      "exp48": "48 ಗಂಟೆ",
+      "expPerm": "ಶಾಶ್ವತ",
+      "publish": "ಹಂಚಿಕೊಳ್ಳಿ 🚀"
+    },
+    "comments": {
+      "title": "ಅಡ್ಡ ಸಂಭಾಷಣೆ",
+      "placeholder": "ಕಾಮೆಂಟ್ ಬರೆಯಿರಿ... @ ಬಳಸಿ ಹೆಸರಿಸಿ",
+      "noComments": "ಇನ್ನೂ ಕಾಮೆಂಟ್‌ಗಳಿಲ್ಲ. ನೀವೇ ಆರಂಭಿಸಿ!",
+      "replyingTo": "ಉತ್ತರಿಸಲಾಗುತ್ತಿದೆ"
+    },
+    "reportModal": {
+      "title": "ಅನುಚಿತ ವಿಷಯ ವರದಿ ಮಾಡಿ",
+      "subtitle": "ನಿಮ್ಮ ಅಡ್ಡವನ್ನು ಸುರಕ್ಷಿತವಾಗಿರಿಸಲು ಸಹಾಯ ಮಾಡಿ.",
+      "harassment": "ಕಿರುಕುಳ / ಹೀಯಾಳಿಕೆ",
+      "doxxing": "ಖಾಸಗಿ ಮಾಹಿತಿ ಸೋರಿಕೆ",
+      "misinformation": "ದೃಢಪಡಿಸದ ಸುಳ್ಳು ಸುದ್ದಿ",
+      "offensive": "ಆಕ್ಷೇಪಾರ್ಹ ಚಿತ್ರ/ವಿಡಿಯೋ",
+      "other": "ಇತರ ಕಾರಣ",
+      "submit": "ವರದಿ ಸಲ್ಲಿಸಿ"
+    }
   }
 }
 

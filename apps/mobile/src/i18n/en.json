@@ -82,6 +82,74 @@
     "switchLang": "ಕನ್ನಡಕ್ಕೆ ಬದಲಿಸಿ",
     "logout": "Log Out",
     "verified": "Verified Member"
+  },
+  "buzz": {
+    "title": "Adda Buzz 🔥",
+    "subtitle": "Friend circle private social sharing",
+    "categories": {
+      "ALL": "All Buzz",
+      "SPILL_THE_TEA": "Spill the Tea ☕",
+      "NEWS": "News & Links 📰",
+      "OORU_UPDATES": "Ooru Updates 🏙️",
+      "COLLEGE_RADAR": "College Radar 🎓",
+      "POLL_HOT_TAKE": "Polls & Hot Takes 🔥",
+      "CONFESSION": "Confession Corner 🤫"
+    },
+    "credibility": {
+      "VERIFIED_NEWS": "Verified News",
+      "PERSONAL_EXPERIENCE": "Personal Experience",
+      "UNVERIFIED_CLAIM": "Unverified Gossip"
+    },
+    "filters": {
+      "feed": "Recent",
+      "trending": "Trending 🔥",
+      "saved": "Saved 🔖"
+    },
+    "actions": {
+      "createPost": "Post to Buzz",
+      "shareTea": "Spill Tea",
+      "vote": "Vote",
+      "comment": "Comment",
+      "reply": "Reply",
+      "report": "Report",
+      "delete": "Delete",
+      "save": "Bookmark",
+      "saved": "Saved"
+    },
+    "create": {
+      "heading": "Create Buzz Post",
+      "selectAdda": "Select Adda Circle",
+      "selectCategory": "Select Category",
+      "credibilityLabel": "Credibility Tag",
+      "titlePlaceholder": "Catchy headline (optional)...",
+      "contentPlaceholder": "What's the buzz in your circle today?",
+      "anonymousConfession": "Post Anonymously (Confession)",
+      "anonymousHint": "Your identity will be hidden from members. Circle rules and anti-harassment policies apply.",
+      "linkUrlPlaceholder": "News or article URL (optional)",
+      "pollOptionsTitle": "Poll Options (2-4)",
+      "addOption": "+ Add Option",
+      "expiryLabel": "Post Lifetime",
+      "exp24": "24 Hours",
+      "exp48": "48 Hours",
+      "expPerm": "Permanent",
+      "publish": "Share Buzz 🚀"
+    },
+    "comments": {
+      "title": "Circle Thread",
+      "placeholder": "Write a comment... use @ to mention",
+      "noComments": "No comments yet. Start the conversation!",
+      "replyingTo": "Replying to"
+    },
+    "reportModal": {
+      "title": "Report Inappropriate Content",
+      "subtitle": "Help keep your circle safe and friendly.",
+      "harassment": "Harassment / Bullying",
+      "doxxing": "Private Info / Doxxing",
+      "misinformation": "Unverified Misinformation",
+      "offensive": "Offensive Media",
+      "other": "Other reason",
+      "submit": "Submit Report"
+    }
   }
 }
 
