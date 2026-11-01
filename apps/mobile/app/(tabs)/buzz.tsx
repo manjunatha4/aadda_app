@@ -267,7 +267,7 @@ export default function BuzzFeedScreen() {
       />
 
       {/* ------------------------------------------------------------- */}
-      {/* 1. TOP BAR (Screenshot 1: Menu Icon, Pencil Action, More Dots) */}
+      {/* 1. TOP BAR (Unified Header without Hamburger Menu)            */}
       {/* ------------------------------------------------------------- */}
       <View
         style={{
@@ -278,28 +278,33 @@ export default function BuzzFeedScreen() {
           marginBottom: 12,
         }}
       >
-        {/* Hamburger Menu Icon */}
-        <TouchableOpacity
-          onPress={() => router.push('/(tabs)/chaos' as any)}
-          activeOpacity={0.7}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            backgroundColor: '#FFFFFF',
-            borderWidth: 1.5,
-            borderColor: 'rgba(0, 0, 0, 0.08)',
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: '#000000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.06,
-            shadowRadius: 6,
-            elevation: 2,
-          }}
-        >
-          <Text style={{ fontSize: 18, color: '#0F172A', fontWeight: '900' }}>☰</Text>
-        </TouchableOpacity>
+        {/* Title: VARAVU ADDA + Private circle Badge */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '900',
+              color: '#0F172A',
+              letterSpacing: -0.4,
+            }}
+          >
+            VARAVU ADDA
+          </Text>
+          <View
+            style={{
+              backgroundColor: '#F0FDF4',
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 9999,
+              borderWidth: 1,
+              borderColor: '#BBF7D0',
+            }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: '800', color: '#15803D' }}>
+              {isKn ? 'ಖಾಸಗಿ ಸರ್ಕಲ್' : 'Private circle'}
+            </Text>
+          </View>
+        </View>
 
         {/* Right Action Icons: Pencil / Create + Options */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -307,9 +312,9 @@ export default function BuzzFeedScreen() {
             onPress={() => router.push('/buzz/create' as any)}
             activeOpacity={0.8}
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
               backgroundColor: '#FFFFFF',
               borderWidth: 1.5,
               borderColor: 'rgba(0, 0, 0, 0.08)',
@@ -322,7 +327,7 @@ export default function BuzzFeedScreen() {
               elevation: 2,
             }}
           >
-            <Text style={{ fontSize: 18 }}>✏️</Text>
+            <Text style={{ fontSize: 16 }}>✏️</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -336,9 +341,9 @@ export default function BuzzFeedScreen() {
             }}
             activeOpacity={0.8}
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
               backgroundColor: '#FFFFFF',
               borderWidth: 1.5,
               borderColor: 'rgba(0, 0, 0, 0.08)',
@@ -351,39 +356,8 @@ export default function BuzzFeedScreen() {
               elevation: 2,
             }}
           >
-            <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>⋮</Text>
+            <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>⋮</Text>
           </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* ------------------------------------------------------------- */}
-      {/* 2. HEADER: VARAVU ADDA + Private circle Badge                  */}
-      {/* ------------------------------------------------------------- */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <Text
-          style={{
-            fontSize: 15,
-            fontWeight: '800',
-            color: '#334155',
-            letterSpacing: 0.8,
-            textTransform: 'uppercase',
-          }}
-        >
-          VARAVU ADDA
-        </Text>
-        <View
-          style={{
-            backgroundColor: '#E6F7ED',
-            borderWidth: 1,
-            borderColor: '#B4E8C6',
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            borderRadius: 9999,
-          }}
-        >
-          <Text style={{ fontSize: 11, fontWeight: '700', color: '#0D8244' }}>
-            Private circle
-          </Text>
         </View>
       </View>
 

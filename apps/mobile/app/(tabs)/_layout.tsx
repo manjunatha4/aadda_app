@@ -2,24 +2,108 @@ import React, { useState } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Platform, Modal, StyleSheet } from 'react-native';
+import Svg, { Path, Circle, Line, Polyline } from 'react-native-svg';
 
 interface TabItemConfig {
   name: string;
-  activeIcon: string;
-  inactiveIcon: string;
   labelEn: string;
   labelKn: string;
 }
 
 const LEFT_TABS: TabItemConfig[] = [
-  { name: 'index', activeIcon: '📑', inactiveIcon: '📑', labelEn: 'Feed', labelKn: 'ಮುಖಪುಟ' },
-  { name: 'buzz', activeIcon: '🔍', inactiveIcon: '🔍', labelEn: 'Search', labelKn: 'ಹುಡುಕಿ' },
+  { name: 'index', labelEn: 'Feed', labelKn: 'ಮುಖಪುಟ' },
+  { name: 'buzz', labelEn: 'Search', labelKn: 'ಹುಡುಕಿ' },
 ];
 
 const RIGHT_TABS: TabItemConfig[] = [
-  { name: 'chaos', activeIcon: '📰', inactiveIcon: '📰', labelEn: 'News', labelKn: 'ಸುದ್ದಿ' },
-  { name: 'chats', activeIcon: '💬', inactiveIcon: '💬', labelEn: 'Rooms', labelKn: 'ರೂಮ್ಸ್' },
+  { name: 'chaos', labelEn: 'News', labelKn: 'ಸುದ್ದಿ' },
+  { name: 'chats', labelEn: 'Rooms', labelKn: 'ರೂಮ್ಸ್' },
 ];
+
+function TabVectorIcon({ name, isFocused }: { name: string; isFocused: boolean }) {
+  const stroke = isFocused ? '#4F46E5' : '#94A3B8';
+  const size = 22;
+
+  switch (name) {
+    case 'index':
+      // 1st: Feed / Home Outline Icon
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+            stroke={stroke}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Polyline
+            points="9 22 9 12 15 12 15 22"
+            stroke={stroke}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      );
+    case 'buzz':
+      // 2nd: Search Lens Outline Icon
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <Circle
+            cx="11"
+            cy="11"
+            r="7.5"
+            stroke={stroke}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Line
+            x1="16.5"
+            y1="16.5"
+            x2="21.5"
+            y2="21.5"
+            stroke={stroke}
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        </Svg>
+      );
+    case 'chaos':
+      // 3rd: Real News Newspaper Outline Icon
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"
+            stroke={stroke}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Line x1="10" y1="6" x2="18" y2="6" stroke={stroke} strokeWidth={2} strokeLinecap="round" />
+          <Line x1="10" y1="10" x2="18" y2="10" stroke={stroke} strokeWidth={2} strokeLinecap="round" />
+          <Line x1="10" y1="14" x2="15" y2="14" stroke={stroke} strokeWidth={2} strokeLinecap="round" />
+        </Svg>
+      );
+    case 'chats':
+      // 4th (last): Rooms / Chat Bubble Outline Icon
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+            stroke={stroke}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Line x1="8" y1="9" x2="16" y2="9" stroke={stroke} strokeWidth={2} strokeLinecap="round" />
+          <Line x1="8" y1="13" x2="13" y2="13" stroke={stroke} strokeWidth={2} strokeLinecap="round" />
+        </Svg>
+      );
+    default:
+      return null;
+  }
+}
 
 function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
   const router = useRouter();
@@ -27,7 +111,7 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
   const isKn = i18n.language === 'kn';
   const [showCreateSheet, setShowCreateSheet] = useState(false);
 
-  // Helper to render a tab item
+  // Helper to render a tab item with identical dimensions & styling
   const renderTab = (tabConfig: TabItemConfig) => {
     const routeIndex = state.routes.findIndex((r: any) => r.name === tabConfig.name);
     if (routeIndex === -1) return null;
@@ -55,7 +139,7 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
         activeOpacity={0.7}
         style={{
           flex: 1,
-          height: 64,
+          height: 60,
           alignItems: 'center',
           justifyContent: 'center',
         }}
@@ -63,9 +147,9 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
         <View
           style={[
             {
-              width: 44,
-              height: 44,
-              borderRadius: 22,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: isFocused ? '#EEF2FF' : 'transparent',
@@ -79,16 +163,19 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
               : {},
           ]}
         >
-          <Text
-            style={{
-              fontSize: 20,
-              opacity: isFocused ? 1 : 0.6,
-              transform: [{ scale: isFocused ? 1.1 : 1 }],
-            }}
-          >
-            {isFocused ? tabConfig.activeIcon : tabConfig.inactiveIcon}
-          </Text>
+          <TabVectorIcon name={tabConfig.name} isFocused={isFocused} />
         </View>
+        <Text
+          style={{
+            fontSize: 10,
+            fontWeight: '700',
+            color: isFocused ? '#4F46E5' : '#94A3B8',
+            marginTop: 2,
+            letterSpacing: 0.2,
+          }}
+        >
+          {isKn ? tabConfig.labelKn : tabConfig.labelEn}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -113,7 +200,7 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
             {
               width: '92%',
               maxWidth: 380,
-              height: 68,
+              height: 70,
               borderRadius: 36,
               backgroundColor: '#FFFFFF',
               borderWidth: 1.5,
@@ -142,19 +229,19 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
           {LEFT_TABS.map((tab) => renderTab(tab))}
 
           {/* Center Floating Action Button (Dribbble Mockup Exact Center + Circle) */}
-          <View style={{ width: 64, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ width: 60, alignItems: 'center', justifyContent: 'center' }}>
             <TouchableOpacity
               onPress={() => setShowCreateSheet(true)}
               activeOpacity={0.85}
               style={[
                 {
-                  width: 52,
-                  height: 52,
-                  borderRadius: 26,
+                  width: 50,
+                  height: 50,
+                  borderRadius: 25,
                   backgroundColor: '#6366F1',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transform: [{ translateY: -14 }],
+                  transform: [{ translateY: -12 }],
                   shadowColor: '#6366F1',
                   shadowOffset: { width: 0, height: 6 },
                   shadowOpacity: 0.38,
@@ -170,18 +257,10 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
                   : {},
               ]}
             >
-              <Text
-                style={{
-                  fontSize: 28,
-                  color: '#FFFFFF',
-                  fontWeight: '600',
-                  lineHeight: 30,
-                  textAlign: 'center',
-                  marginTop: -2,
-                }}
-              >
-                +
-              </Text>
+              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                <Line x1="12" y1="5" x2="12" y2="19" stroke="#FFFFFF" strokeWidth={2.5} strokeLinecap="round" />
+                <Line x1="5" y1="12" x2="19" y2="12" stroke="#FFFFFF" strokeWidth={2.5} strokeLinecap="round" />
+              </Svg>
             </TouchableOpacity>
           </View>
 

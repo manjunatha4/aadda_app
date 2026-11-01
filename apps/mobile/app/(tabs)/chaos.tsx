@@ -395,7 +395,7 @@ export default function RealNewsFeedScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* ------------------------------------------------------------- */}
-        {/* 1. TOP HEADER (Dribbble Mockup: Menu, Large "Feed", User Avatar) */}
+        {/* 1. TOP HEADER (Unified White Theme Header without Hamburger) */}
         {/* ------------------------------------------------------------- */}
         <View
           style={{
@@ -403,90 +403,83 @@ export default function RealNewsFeedScreen() {
             alignItems: 'center',
             justifyContent: 'space-between',
             paddingVertical: 10,
-            marginBottom: 4,
+            marginBottom: 12,
           }}
         >
-          {/* Menu Button */}
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/buzz' as any)}
-            activeOpacity={0.75}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: '#FFFFFF',
-              borderWidth: 1.5,
-              borderColor: 'rgba(0, 0, 0, 0.08)',
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: '#000000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 6,
-              elevation: 2,
-            }}
-          >
-            <Text style={{ fontSize: 18, color: '#0F172A', fontWeight: '900' }}>☰</Text>
-          </TouchableOpacity>
-
-          {/* Share News Trigger Button */}
-          <TouchableOpacity
-            onPress={() => setCreateModalVisible(true)}
-            activeOpacity={0.8}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 9999,
-              backgroundColor: '#EEF2FF',
-              borderWidth: 1.5,
-              borderColor: '#818CF8',
-            }}
-          >
-            <Text style={{ fontSize: 14 }}>📷</Text>
-            <Text style={{ fontSize: 13, fontWeight: '800', color: '#4F46E5' }}>
-              {isKn ? '+ ಸುದ್ದಿ ಹಂಚಿಕೊಳ್ಳಿ' : '+ Share News'}
+          {/* Title & Badge */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text
+              style={{
+                fontSize: 26,
+                fontWeight: '900',
+                color: '#0F172A',
+                letterSpacing: -0.6,
+              }}
+            >
+              {isKn ? 'ಸುದ್ದಿ ಫೀಡ್' : 'Photo News'}
             </Text>
-          </TouchableOpacity>
+            <View
+              style={{
+                backgroundColor: '#EEF2FF',
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 9999,
+                borderWidth: 1,
+                borderColor: '#C7D2FE',
+              }}
+            >
+              <Text style={{ color: '#4F46E5', fontSize: 11, fontWeight: '800' }}>
+                📍 {isKn ? 'ಕರ್ನಾಟಕ ವೃತ್ತ' : 'Circle'}
+              </Text>
+            </View>
+          </View>
 
-          {/* User Profile Avatar */}
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/profile' as any)}
-            activeOpacity={0.8}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: '#FFFFFF',
-              borderWidth: 1.5,
-              borderColor: '#E2E8F0',
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: '#000000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 6,
-              elevation: 2,
-            }}
-          >
-            <Text style={{ fontSize: 20 }}>👤</Text>
-          </TouchableOpacity>
+          {/* Right Actions: Share News + Profile */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <TouchableOpacity
+              onPress={() => setCreateModalVisible(true)}
+              activeOpacity={0.8}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 9999,
+                backgroundColor: '#EEF2FF',
+                borderWidth: 1.5,
+                borderColor: '#818CF8',
+              }}
+            >
+              <Text style={{ fontSize: 14 }}>📷</Text>
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#4F46E5' }}>
+                {isKn ? '+ ಸುದ್ದಿ' : '+ Share'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/profile' as any)}
+              activeOpacity={0.8}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: '#FFFFFF',
+                borderWidth: 1.5,
+                borderColor: '#E2E8F0',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.06,
+                shadowRadius: 6,
+                elevation: 2,
+              }}
+            >
+              <Text style={{ fontSize: 18 }}>👤</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        {/* Large "Feed" Title (Matching Dribbble Mockup) */}
-        <Text
-          style={{
-            fontSize: 32,
-            fontWeight: '900',
-            color: '#0F172A',
-            letterSpacing: -0.6,
-            marginTop: 4,
-          }}
-        >
-          {isKn ? 'ಸುದ್ದಿ ಫೀಡ್' : 'Feed'}
-        </Text>
         <Text
           style={{
             fontSize: 12,
