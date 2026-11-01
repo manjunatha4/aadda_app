@@ -12,12 +12,12 @@ interface TabItemConfig {
 
 const LEFT_TABS: TabItemConfig[] = [
   { name: 'index', labelEn: 'Feed', labelKn: 'ಮುಖಪುಟ' },
-  { name: 'buzz', labelEn: 'Search', labelKn: 'ಹುಡುಕಿ' },
+  { name: 'chats', labelEn: 'Rooms', labelKn: 'ರೂಮ್ಸ್' },
 ];
 
 const RIGHT_TABS: TabItemConfig[] = [
   { name: 'chaos', labelEn: 'News', labelKn: 'ಸುದ್ದಿ' },
-  { name: 'chats', labelEn: 'Rooms', labelKn: 'ರೂಮ್ಸ್' },
+  { name: 'profile', labelEn: 'Profile', labelKn: 'ಪ್ರೊಫೈಲ್' },
 ];
 
 function TabVectorIcon({ name, isFocused }: { name: string; isFocused: boolean }) {
@@ -86,7 +86,7 @@ function TabVectorIcon({ name, isFocused }: { name: string; isFocused: boolean }
         </Svg>
       );
     case 'chats':
-      // 4th (last): Rooms / Chat Bubble Outline Icon
+      // 2nd: Rooms / Chat Bubble Outline Icon
       return (
         <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
           <Path
@@ -98,6 +98,20 @@ function TabVectorIcon({ name, isFocused }: { name: string; isFocused: boolean }
           />
           <Line x1="8" y1="9" x2="16" y2="9" stroke={stroke} strokeWidth={2} strokeLinecap="round" />
           <Line x1="8" y1="13" x2="13" y2="13" stroke={stroke} strokeWidth={2} strokeLinecap="round" />
+        </Svg>
+      );
+    case 'profile':
+      // 4th: Profile User Outline Icon
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+            stroke={stroke}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Circle cx="12" cy="7" r="4" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
         </Svg>
       );
     default:
@@ -454,9 +468,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="buzz"
+        name="chats"
         options={{
-          title: isKn ? 'ಅನ್ವೇಷಿಸಿ' : 'Search',
+          title: isKn ? 'ರೂಮ್ಸ್ ಮತ್ತು ಚಾಟ್‌ಗಳು' : 'Rooms & Chats',
         }}
       />
       <Tabs.Screen
@@ -466,15 +480,14 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="chats"
-        options={{
-          title: isKn ? 'ರೂಮ್ಸ್ ಮತ್ತು ಚಾಟ್‌ಗಳು' : 'Rooms & Chats',
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: isKn ? 'ಪ್ರೊಫೈಲ್' : 'Profile',
+        }}
+      />
+      <Tabs.Screen
+        name="buzz"
+        options={{
           href: null,
         }}
       />
