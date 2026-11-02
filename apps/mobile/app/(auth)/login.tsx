@@ -19,6 +19,7 @@ import {
   SecondaryButton,
   InputField,
   ToastNotification,
+  BrandLogo,
   DS_TOKENS,
   DS_FONTS,
 } from '../../src/components/DesignSystem';
@@ -624,23 +625,8 @@ export default function AuthScreen() {
       >
         {/* Top Header Bar */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <View
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 10,
-                backgroundColor: DS_TOKENS.colors.purple,
-                alignItems: 'center',
-                justifyContent: 'center',
-                shadowColor: DS_TOKENS.colors.purple,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-              }}
-            >
-              <Text style={{ fontSize: 18, color: '#FFFFFF' }}>⚡</Text>
-            </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+            <BrandLogo size={34} withGlow />
             <Text
               style={{
                 fontFamily: DS_FONTS.heading,

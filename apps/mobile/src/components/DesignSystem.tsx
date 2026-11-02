@@ -15,6 +15,8 @@ import {
 import { useRouter, usePathname } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../stores/authStore';
+import { BrandLogo } from './BrandLogo';
+export { BrandLogo };
 
 // ---------------------------------------------------------------------
 // CENTRALIZED TYPOGRAPHY TOKENS (Space Grotesk, Inter, Space Mono)
@@ -269,24 +271,9 @@ export const TopNavigation: React.FC = () => {
       {/* Brand Logo */}
       <TouchableOpacity
         onPress={() => router.push('/(tabs)')}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}
       >
-        <View
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 10,
-            backgroundColor: DS_TOKENS.colors.purple,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: DS_TOKENS.colors.purple,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.3,
-            shadowRadius: 6,
-          }}
-        >
-          <Text style={{ fontSize: 18, color: '#FFFFFF' }}>⚡</Text>
-        </View>
+        <BrandLogo size={34} withGlow />
         <Text
           style={{
             fontFamily: DS_FONTS.heading,

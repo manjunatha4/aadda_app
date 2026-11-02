@@ -32,6 +32,7 @@ import {
   ToastNotification,
   ConfirmationDialog,
   LoadingState,
+  BrandLogo,
   DS_TOKENS,
   DS_FONTS,
 } from '../../src/components/DesignSystem';
@@ -169,41 +170,32 @@ function AnimatedAaddaBrand({ isKn }: { isKn: boolean }) {
         }}
       >
         {/* Animated Brand Emblem with Pulsing Aura */}
-        <View style={{ position: 'relative', width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ position: 'relative', width: 38, height: 38, alignItems: 'center', justifyContent: 'center' }}>
           {/* Ambient Glowing Halo */}
           <Animated.View
             style={{
               position: 'absolute',
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: '#6366F1',
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              backgroundColor: '#0284C7',
               opacity: glowAnim,
               transform: [{ scale: glowAnim.interpolate({ inputRange: [0.35, 0.85], outputRange: [0.95, 1.15] }) }],
               ...(Platform.OS === 'web' ? ({ filter: 'blur(8px)' } as any) : {}),
             }}
           />
 
-          {/* Core Vibrant Icon Box */}
+          {/* Core Vibrant Logo Image */}
           <Animated.View
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 12,
-              backgroundColor: '#4F46E5',
+              width: 38,
+              height: 38,
               alignItems: 'center',
               justifyContent: 'center',
-              borderWidth: 1.5,
-              borderColor: 'rgba(255, 255, 255, 0.9)',
-              shadowColor: '#4F46E5',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.4,
-              shadowRadius: 8,
-              elevation: 5,
               transform: [{ rotate: spin }],
             }}
           >
-            <Text style={{ fontSize: 18, color: '#FFFFFF' }}>⚡</Text>
+            <BrandLogo size={36} />
           </Animated.View>
         </View>
 
