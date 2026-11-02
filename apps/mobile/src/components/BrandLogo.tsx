@@ -35,12 +35,12 @@ export function BrandLogo({
         <View
           style={{
             position: 'absolute',
-            width: size * 1.18,
-            height: size * 1.18,
-            borderRadius: (size * 1.18) / 2,
+            width: size * 1.06,
+            height: size * 1.06,
+            borderRadius: (size * 1.06) / 2,
             backgroundColor: glowColor,
-            opacity: 0.35,
-            ...(Platform.OS === 'web' ? ({ filter: `blur(${Math.max(6, size * 0.22)}px)` } as any) : {}),
+            opacity: 0.12,
+            ...(Platform.OS === 'web' ? ({ filter: `blur(${Math.max(2, size * 0.08)}px)` } as any) : {}),
           }}
         />
       )}
@@ -56,14 +56,14 @@ export function BrandLogo({
             ? ({
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
-                filter: 'drop-shadow(0 2px 10px rgba(14, 165, 233, 0.35))',
+                filter: 'drop-shadow(0 1px 3px rgba(14, 165, 233, 0.18))',
               } as any)
             : {
                 shadowColor: '#0EA5E9',
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-                elevation: 4,
+                shadowOffset: { width: 0, height: 1.5 },
+                shadowOpacity: 0.15,
+                shadowRadius: 3,
+                elevation: 2,
               },
           imageStyle,
         ]}
@@ -74,3 +74,4 @@ export function BrandLogo({
 }
 
 export default BrandLogo;
+

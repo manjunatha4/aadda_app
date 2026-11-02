@@ -169,35 +169,18 @@ function AnimatedAaddaBrand({ isKn }: { isKn: boolean }) {
           gap: 9,
         }}
       >
-        {/* Animated Brand Emblem with Pulsing Aura */}
-        <View style={{ position: 'relative', width: 38, height: 38, alignItems: 'center', justifyContent: 'center' }}>
-          {/* Ambient Glowing Halo */}
-          <Animated.View
-            style={{
-              position: 'absolute',
-              width: 46,
-              height: 46,
-              borderRadius: 23,
-              backgroundColor: '#0284C7',
-              opacity: glowAnim,
-              transform: [{ scale: glowAnim.interpolate({ inputRange: [0.35, 0.85], outputRange: [0.95, 1.15] }) }],
-              ...(Platform.OS === 'web' ? ({ filter: 'blur(8px)' } as any) : {}),
-            }}
-          />
-
-          {/* Core Vibrant Logo Image */}
-          <Animated.View
-            style={{
-              width: 38,
-              height: 38,
-              alignItems: 'center',
-              justifyContent: 'center',
-              transform: [{ rotate: spin }],
-            }}
-          >
-            <BrandLogo size={36} />
-          </Animated.View>
-        </View>
+        {/* Animated Brand Emblem */}
+        <Animated.View
+          style={{
+            width: 36,
+            height: 36,
+            alignItems: 'center',
+            justifyContent: 'center',
+            transform: [{ rotate: spin }],
+          }}
+        >
+          <BrandLogo size={36} />
+        </Animated.View>
 
         {/* Wordmark: "AADDA" */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
@@ -847,62 +830,6 @@ export default function BuzzFeedScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ------------------------------------------------------------- */}
-      {/* 4. CIRCLE MEMBER STORY BUBBLES (Screenshot 2 & 5)             */}
-      {/* ------------------------------------------------------------- */}
-      <View style={{ marginBottom: 16 }}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 14, paddingRight: 8 }}
-        >
-          {CIRCLE_STORIES.map((st) => (
-            <TouchableOpacity
-              key={st.id}
-              onPress={() => setActiveStory(st)}
-              activeOpacity={0.75}
-              style={{ alignItems: 'center', width: 68 }}
-            >
-              <View
-                style={{
-                  width: 58,
-                  height: 58,
-                  borderRadius: 29,
-                  padding: 2.5,
-                  backgroundColor: st.hasUnread ? '#6366F1' : '#E2E8F0',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <View
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: 26,
-                    backgroundColor: '#FFFFFF',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ fontSize: 24 }}>{st.avatar}</Text>
-                </View>
-              </View>
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontSize: 11,
-                  fontWeight: '700',
-                  color: '#0F172A',
-                  marginTop: 4,
-                  textAlign: 'center',
-                }}
-              >
-                {st.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
 
       {/* ------------------------------------------------------------- */}
       {/* 5. FILTER CHIPS (All, Spill the Tea, Verdict, Confessions...) */}
