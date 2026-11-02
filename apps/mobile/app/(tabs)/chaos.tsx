@@ -76,58 +76,145 @@ const INITIAL_NEWS_POSTS: PhotoNewsPost[] = [];
 
 const CATEGORIES = [
   'All News 🌟',
-  'WORLD & SPACE NEWS 🚀',
+  'LATEST INDIAN NEWS 🇮🇳',
   'OORU CITY NEWS 🏙️',
-  'NATURE & WEATHER 🌲',
   'CAMPUS DESK 🎓',
   'TECH & STARTUPS 💻',
-  'COASTAL & TRANSIT 🏖️',
+  'NATURE & WEATHER 🌲',
 ];
 
-async function fetchSpaceNews(): Promise<PhotoNewsPost[]> {
+const DEFAULT_INDIAN_NEWS: PhotoNewsPost[] = [
+  {
+    id: 'in_news_1',
+    authorName: 'NDTV India',
+    authorHandle: '@ndtvindia · Verified Desk',
+    authorAvatar: '🇮🇳',
+    verified: true,
+    timeAgo: '1h ago',
+    category: 'LATEST INDIAN NEWS',
+    categoryIcon: '🇮🇳',
+    categoryColor: '#E11D48',
+    title: 'IPU Gives Final Chance To Students To Complete Pending Degrees: Apply By November 6',
+    details: 'The GGSIPU is providing a last chance to graduate and postgraduate students to complete their pending degrees. Interested students can submit their application form by November 6, 2026.',
+    photoUrl: 'https://c.ndtvimg.com/2026-08/s0mg779o_ip_625x300_12_August_26.jpg?im=FeatureCrop,algorithm=dnn,width=1280,height=720',
+    sourceName: 'NDTV India',
+    sourceUrl: 'https://www.ndtv.com/education',
+    likesCount: 64,
+    commentsCount: 12,
+    isLiked: false,
+    isBookmarked: false,
+    comments: [
+      { id: 'c1', user: 'Adarsh K.', text: 'Super helpful for our batchmates!', time: '30m ago' },
+    ],
+  },
+  {
+    id: 'in_news_2',
+    authorName: 'Times of India',
+    authorHandle: '@timesofindia · Bengaluru Desk',
+    authorAvatar: '🏙️',
+    verified: true,
+    timeAgo: '2h ago',
+    category: 'OORU CITY NEWS',
+    categoryIcon: '🏙️',
+    categoryColor: '#2563EB',
+    title: 'Bengaluru Metro Purple & Yellow Line Interchange Accelerates Commutes',
+    details: 'BMRCL reports significant ridership growth as feeder electric buses and expanded parking stations go live across East & South tech corridors.',
+    photoUrl: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1200&q=80',
+    sourceName: 'Times of India',
+    sourceUrl: 'https://timesofindia.indiatimes.com/city/bengaluru',
+    likesCount: 89,
+    commentsCount: 19,
+    isLiked: false,
+    isBookmarked: false,
+    comments: [],
+  },
+  {
+    id: 'in_news_3',
+    authorName: 'Karnataka Desk',
+    authorHandle: '@karupdates · Verified Wire',
+    authorAvatar: '🎓',
+    verified: true,
+    timeAgo: '4h ago',
+    category: 'CAMPUS DESK',
+    categoryIcon: '🎓',
+    categoryColor: '#7C3AED',
+    title: 'Karnataka State Hackathon & Tech Innovation Summit 2026 Announced',
+    details: 'Over 120 engineering colleges across Karnataka to participate in AI and regional problem-solving hackathons with funding grants for top 10 finalists.',
+    photoUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=80',
+    sourceName: 'Karnataka Tech Bureau',
+    sourceUrl: 'https://karnataka.gov.in',
+    likesCount: 112,
+    commentsCount: 28,
+    isLiked: false,
+    isBookmarked: false,
+    comments: [],
+  },
+];
+
+async function fetchIndianNews(): Promise<PhotoNewsPost[]> {
   try {
-    const res = await fetch('https://api.spaceflightnewsapi.net/v4/articles/?limit=15');
-    if (!res.ok) return [];
-    const data = await res.json();
-    if (!data || !Array.isArray(data.results)) return [];
+    const urls = [
+      'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.feedburner.com%2Fndtvnews-india-news',
+      'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ftimesofindia.indiatimes.com%2Frssfeedstopstories.cms',
+    ];
 
-    return data.results.map((item: any) => {
-      let timeAgo = 'Today';
-      if (item.published_at) {
-        const diffHours = Math.round((Date.now() - new Date(item.published_at).getTime()) / (1000 * 60 * 60));
-        if (diffHours <= 1) timeAgo = 'Just now';
-        else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
-        else {
-          const diffDays = Math.round(diffHours / 24);
-          timeAgo = `${diffDays}d ago`;
-        }
+    const results = await Promise.allSettled(
+      urls.map((u) => fetch(u).then((r) => r.json())),
+    );
+
+    const articles: PhotoNewsPost[] = [];
+
+    for (const res of results) {
+      if (res.status === 'fulfilled' && res.value?.items && Array.isArray(res.value.items)) {
+        res.value.items.slice(0, 6).forEach((item: any, i: number) => {
+          let photoUrl = item.enclosure?.link || item.thumbnail || '';
+          if (!photoUrl || !photoUrl.startsWith('http')) {
+            photoUrl = PRESET_NEWS_PHOTOS[i % PRESET_NEWS_PHOTOS.length].url;
+          }
+
+          let timeAgo = 'Today';
+          if (item.pubDate) {
+            const diffHours = Math.round((Date.now() - new Date(item.pubDate).getTime()) / (1000 * 60 * 60));
+            if (diffHours <= 1) timeAgo = 'Just now';
+            else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
+            else timeAgo = `${Math.round(diffHours / 24)}d ago`;
+          }
+
+          const cleanTitle = (item.title || '').replace(/<[^>]*>?/gm, '').trim();
+          const cleanDetails = (item.description || item.content || item.title || '').replace(/<[^>]*>?/gm, '').trim();
+          const source = item.link?.includes('ndtv') ? 'NDTV India' : 'Times of India';
+
+          if (cleanTitle) {
+            articles.push({
+              id: `in_news_${Date.now()}_${i}`,
+              authorName: source,
+              authorHandle: source === 'NDTV India' ? '@ndtvindia · Verified Desk' : '@timesofindia · National Wire',
+              authorAvatar: '🇮🇳',
+              verified: true,
+              timeAgo,
+              category: 'LATEST INDIAN NEWS',
+              categoryIcon: '🇮🇳',
+              categoryColor: '#E11D48',
+              title: cleanTitle,
+              details: cleanDetails || cleanTitle,
+              photoUrl,
+              sourceName: source,
+              sourceUrl: item.link,
+              likesCount: 42 + i * 5,
+              commentsCount: 4 + (i % 6),
+              isLiked: false,
+              isBookmarked: false,
+              comments: [],
+            });
+          }
+        });
       }
+    }
 
-      return {
-        id: `space_${item.id}`,
-        authorName: item.news_site || 'World News Desk',
-        authorHandle: `@${(item.news_site || 'world').toLowerCase().replace(/[^a-z0-9]/g, '')} · Verified Wire`,
-        authorAvatar: '🛰️',
-        verified: true,
-        timeAgo,
-        category: 'WORLD & SPACE NEWS',
-        categoryIcon: '🚀',
-        categoryColor: '#2563EB',
-        title: item.title,
-        details: item.summary,
-        photoUrl: item.image_url || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-        sourceName: item.news_site || 'World Wire',
-        sourceUrl: item.url,
-        likesCount: 16 + (Number(item.id) % 37),
-        commentsCount: 2 + (Number(item.id) % 9),
-        isLiked: false,
-        isBookmarked: false,
-        comments: [],
-      };
-    });
+    return articles.length > 0 ? articles : DEFAULT_INDIAN_NEWS;
   } catch (e) {
-    console.error('Failed to fetch real-time space & world news:', e);
-    return [];
+    console.error('Failed to fetch real-time Indian news:', e);
+    return DEFAULT_INDIAN_NEWS;
   }
 }
 
@@ -137,10 +224,13 @@ export default function RealNewsFeedScreen() {
   const isKn = i18n.language === 'kn';
   const currentUser = useAuthStore((state) => state.user);
 
-  const [posts, setPosts] = useState<PhotoNewsPost[]>(INITIAL_NEWS_POSTS);
+  const [posts, setPosts] = useState<PhotoNewsPost[]>(DEFAULT_INDIAN_NEWS);
   const [selectedCategory, setSelectedCategory] = useState('All News 🌟');
   const [refreshing, setRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Author Profile Modal state
+  const [selectedAuthor, setSelectedAuthor] = useState<PhotoNewsPost | null>(null);
 
   // Recommended connections state
   const [connectedUsers, setConnectedUsers] = useState<Record<string, boolean>>({});
@@ -170,34 +260,44 @@ export default function RealNewsFeedScreen() {
         }
       }
 
-      // Live real-time world/space news from Spaceflight News API
-      const spaceNews = await fetchSpaceNews();
-      const merged = [...localPosts, ...spaceNews];
-      setPosts(merged);
+      // Live real-time Indian news (NDTV India, Times of India)
+      const indianNews = await fetchIndianNews();
+      const merged = [...localPosts, ...indianNews];
+      setPosts(merged.length > 0 ? merged : DEFAULT_INDIAN_NEWS);
     } catch (e) {
-      console.error('Error loading stored & live news:', e);
+      console.error('Error loading stored & live Indian news:', e);
+      setPosts(DEFAULT_INDIAN_NEWS);
     }
   };
 
-  // Load saved posts and live world news on mount
+  // Load saved posts and live Indian news on mount
   useEffect(() => {
     loadAllNews();
   }, []);
 
   const savePostsToStorage = async (updated: PhotoNewsPost[]) => {
     try {
-      const userOnly = updated.filter((p) => !p.id.startsWith('space_'));
+      const userOnly = updated.filter((p) => p.id.startsWith('news_'));
       await storage.setItem('aadda_user_photo_news', JSON.stringify(userOnly));
     } catch (e) {
       console.error('Error saving news to storage:', e);
     }
   };
 
+  const handleDeletePost = (postId: string) => {
+    setPosts((prev) => {
+      const updated = prev.filter((p) => p.id !== postId);
+      savePostsToStorage(updated);
+      return updated;
+    });
+    showToast(isKn ? 'ನಿಮ್ಮ ಸುದ್ದಿ ಪೋಸ್ಟ್ ಅಳಿಸಲಾಗಿದೆ 🗑️' : 'Your photo news post was deleted! 🗑️');
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadAllNews();
     setRefreshing(false);
-    showToast(isKn ? 'ದೈನಂದಿನ ಜಾಗತಿಕ & ಸ್ಥಳೀಯ ಸುದ್ದಿ ನವೀಕರಿಸಲಾಗಿದೆ ✨' : 'Daily world & circle news refreshed ✨');
+    showToast(isKn ? 'ಭಾರತೀಯ & ಸ್ಥಳೀಯ ಸುದ್ದಿ ನವೀಕರಿಸಲಾಗಿದೆ ✨' : 'Latest Indian & circle news refreshed ✨');
   };
 
   const handlePickFromGallery = () => {
@@ -691,7 +791,11 @@ export default function RealNewsFeedScreen() {
                     marginBottom: 12,
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <TouchableOpacity
+                    onPress={() => setSelectedAuthor(post)}
+                    activeOpacity={0.75}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}
+                  >
                     <View
                       style={{
                         width: 42,
@@ -706,7 +810,7 @@ export default function RealNewsFeedScreen() {
                     >
                       <Text style={{ fontSize: 20 }}>{post.authorAvatar}</Text>
                     </View>
-                    <View>
+                    <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                         <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
                           {post.authorName}
@@ -728,22 +832,51 @@ export default function RealNewsFeedScreen() {
                         {post.authorHandle} · {post.timeAgo}
                       </Text>
                     </View>
-                  </View>
+                  </TouchableOpacity>
 
-                  {/* Category Badge */}
-                  <View
-                    style={{
-                      backgroundColor: '#F8FAFC',
-                      borderWidth: 1,
-                      borderColor: '#E2E8F0',
-                      paddingHorizontal: 8,
-                      paddingVertical: 3,
-                      borderRadius: 9999,
-                    }}
-                  >
-                    <Text style={{ fontSize: 10, fontWeight: '800', color: post.categoryColor }}>
-                      {post.categoryIcon} {post.category.split(' ')[0]}
-                    </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {/* Delete option for posts shared by user */}
+                    {(post.id.startsWith('news_') ||
+                      post.authorName === (currentUser?.displayName || currentUser?.username) ||
+                      post.authorHandle.includes(currentUser?.username || 'member')) && (
+                      <TouchableOpacity
+                        onPress={() => handleDeletePost(post.id)}
+                        activeOpacity={0.75}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                          backgroundColor: '#FEF2F2',
+                          borderWidth: 1,
+                          borderColor: '#FECACA',
+                          paddingHorizontal: 8,
+                          paddingVertical: 4,
+                          borderRadius: 9999,
+                        }}
+                      >
+                        <Text style={{ fontSize: 11 }}>🗑️</Text>
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#EF4444' }}>
+                          {isKn ? 'ಅಳಿಸಿ' : 'Delete'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {/* Category Badge */}
+                    <View
+                      style={{
+                        backgroundColor: '#F8FAFC',
+                        borderWidth: 1,
+                        borderColor: '#E2E8F0',
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        borderRadius: 9999,
+                      }}
+                    >
+                      <Text style={{ fontSize: 10, fontWeight: '800', color: post.categoryColor }}>
+                        {post.categoryIcon} {post.category.split(' ')[0]}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
@@ -1362,6 +1495,168 @@ export default function RealNewsFeedScreen() {
                   }}
                 >
                   <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>Post</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* 7. MODAL: AUTHOR PROFILE CARD (CLICKABLE ON AUTHOR AVATAR & NAME) */}
+      {selectedAuthor && (
+        <Modal visible={Boolean(selectedAuthor)} transparent animationType="fade">
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(15, 23, 42, 0.75)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 20,
+            }}
+          >
+            <View
+              style={{
+                width: '100%',
+                maxWidth: 380,
+                backgroundColor: '#FFFFFF',
+                borderRadius: 28,
+                padding: 24,
+                borderWidth: 1.5,
+                borderColor: '#E2E8F0',
+                shadowColor: '#000000',
+                shadowOffset: { width: 0, height: 12 },
+                shadowOpacity: 0.2,
+                shadowRadius: 20,
+                elevation: 8,
+              }}
+            >
+              {/* Top Row with Close */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: 16,
+                }}
+              >
+                <View
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    backgroundColor: '#EEF2FF',
+                    borderWidth: 2,
+                    borderColor: '#C7D2FE',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 32 }}>{selectedAuthor.authorAvatar}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setSelectedAuthor(null)} style={{ padding: 6 }}>
+                  <Text style={{ fontSize: 20, color: '#94A3B8', fontWeight: '800' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Name & Handle */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>
+                  {selectedAuthor.authorName}
+                </Text>
+                {selectedAuthor.verified && (
+                  <View
+                    style={{
+                      backgroundColor: '#E0F2FE',
+                      paddingHorizontal: 6,
+                      paddingVertical: 1,
+                      borderRadius: 9999,
+                    }}
+                  >
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: '#0284C7' }}>✓ Verified</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#64748B', marginTop: 2 }}>
+                {selectedAuthor.authorHandle}
+              </Text>
+
+              {/* Bio / Details */}
+              <View
+                style={{
+                  backgroundColor: '#F8FAFC',
+                  borderRadius: 16,
+                  padding: 14,
+                  marginVertical: 16,
+                  borderWidth: 1,
+                  borderColor: '#F1F5F9',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '800',
+                    color: '#6366F1',
+                    textTransform: 'uppercase',
+                    marginBottom: 4,
+                  }}
+                >
+                  {isKn ? 'ವರದಿದಾರ ವಿವರ' : 'Reporter Profile & Vibe'}
+                </Text>
+                <Text style={{ fontSize: 13, color: '#334155', lineHeight: 19 }}>
+                  {selectedAuthor.id.startsWith('in_news_')
+                    ? 'Verified Indian national wire reporter covering education, policies, and local developments.'
+                    : 'Active member of Karnataka circle Adda sharing real-time verified updates and moments.'}
+                </Text>
+              </View>
+
+              {/* Action Buttons: Connect / Follow & Close */}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    handleToggleConnect(selectedAuthor.id, selectedAuthor.authorName);
+                    setSelectedAuthor(null);
+                  }}
+                  activeOpacity={0.8}
+                  style={{
+                    flex: 1,
+                    backgroundColor: connectedUsers[selectedAuthor.id] ? '#F1F5F9' : '#4F46E5',
+                    paddingVertical: 12,
+                    borderRadius: 16,
+                    alignItems: 'center',
+                    borderWidth: connectedUsers[selectedAuthor.id] ? 1 : 0,
+                    borderColor: '#E2E8F0',
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: '800',
+                      color: connectedUsers[selectedAuthor.id] ? '#475569' : '#FFFFFF',
+                    }}
+                  >
+                    {connectedUsers[selectedAuthor.id]
+                      ? (isKn ? '✓ ಸಂಪರ್ಕಿಸಲಾಗಿದೆ' : '✓ Connected')
+                      : (isKn ? '🤝 ಸಂಪರ್ಕಿಸಿ' : '🤝 Connect')}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setSelectedAuthor(null)}
+                  activeOpacity={0.8}
+                  style={{
+                    paddingHorizontal: 20,
+                    paddingVertical: 12,
+                    borderRadius: 16,
+                    backgroundColor: '#F8FAFC',
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#64748B' }}>
+                    {isKn ? 'ಮುಚ್ಚಿ' : 'Close'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>

@@ -841,6 +841,7 @@ export default function BuzzFeedScreen() {
               post={post}
               isKn={isKn}
               currentUserId={currentUser?.id}
+              currentUserName={currentUser?.displayName || currentUser?.username}
               onReact={(emoji) => handleToggleReaction(post.id, emoji)}
               onVote={(optionId) => handleVotePoll(post.id, optionId)}
               onBookmark={() => handleToggleBookmark(post.id)}
@@ -1218,6 +1219,7 @@ function ModernBuzzCard({
   post,
   isKn,
   currentUserId,
+  currentUserName,
   onReact,
   onVote,
   onBookmark,
@@ -1229,6 +1231,7 @@ function ModernBuzzCard({
   post: BuzzPost;
   isKn: boolean;
   currentUserId?: string;
+  currentUserName?: string;
   onReact: (emoji: string) => void;
   onVote: (optionId: string) => void;
   onBookmark: () => void;
@@ -1237,7 +1240,11 @@ function ModernBuzzCard({
   onDelete: () => void;
   onReport: () => void;
 }) {
-  const isAuthor = currentUserId === post.authorId;
+  const isAuthor =
+    currentUserId === post.authorId ||
+    post.authorId === 'usr_me' ||
+    post.authorName === 'You' ||
+    (Boolean(currentUserName) && post.authorName === currentUserName);
   const timeAgo = formatTimeAgo(post.createdAt, isKn);
 
   // Total reactions count for summary
@@ -1284,14 +1291,39 @@ function ModernBuzzCard({
           </View>
         </View>
 
-        {/* Action Trigger */}
-        <TouchableOpacity
-          onPress={isAuthor ? onDelete : onReport}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          style={{ padding: 4 }}
-        >
-          <Text style={{ fontSize: 14, color: '#94A3B8' }}>{isAuthor ? '🗑️' : '🚩'}</Text>
-        </TouchableOpacity>
+        {/* Action Trigger (Delete for Author, Report for Others) */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {isAuthor ? (
+            <TouchableOpacity
+              onPress={onDelete}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: '#FEF2F2',
+                borderWidth: 1,
+                borderColor: '#FECACA',
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 9999,
+              }}
+            >
+              <Text style={{ fontSize: 12 }}>🗑️</Text>
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#EF4444' }}>
+                {isKn ? 'ಅಳಿಸಿ' : 'Delete'}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={onReport}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={{ padding: 4 }}
+            >
+              <Text style={{ fontSize: 14, color: '#94A3B8' }}>🚩</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Main Quote / Headline (Screenshot 1: "Apparently, something crazy happened in college today...") */}

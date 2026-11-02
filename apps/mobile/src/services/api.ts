@@ -7,15 +7,10 @@ const getApiBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
-  if (
-    typeof window !== 'undefined' &&
-    window.location &&
-    window.location.hostname !== 'localhost' &&
-    window.location.hostname !== '127.0.0.1'
-  ) {
+  if (typeof window !== 'undefined' && window.location) {
     return `${window.location.origin}/api`;
   }
-  return 'http://localhost:4000/api';
+  return 'http://localhost:8081/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();

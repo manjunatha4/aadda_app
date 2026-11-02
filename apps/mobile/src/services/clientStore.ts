@@ -107,7 +107,134 @@ const DEFAULT_FOLDER_ITEMS: Record<string, SavedItem[]> = {};
 
 const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19413d89279c4';
 
-const DEFAULT_BUZZ_POSTS: BuzzPost[] = [];
+const DEFAULT_BUZZ_POSTS: BuzzPost[] = [
+  {
+    id: 'buzz_spill_1',
+    addaId: 'default',
+    addaName: 'Varavu Adda',
+    authorId: 'usr_reporter',
+    authorName: 'Varun K.',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: BuzzCategory.SPILL_THE_TEA,
+    credibility: BuzzCredibility.PERSONAL_EXPERIENCE,
+    expiry: BuzzExpiry.PERMANENT,
+    title: 'Apparently, something crazy happened in college today... 👀',
+    content: 'Prof announced a surprise viva right after fest practice! Half the gang pretended their webcams and mics were broken 😂. Anyone got the Unit 3 notes? Spill below! ☕',
+    reactions: { '😂': 14, '👀': 8, '🍿': 12, '☕': 9 },
+    userReactions: [],
+    commentsCount: 8,
+    bookmarksCount: 4,
+    isBookmarked: false,
+    isTrending: true,
+    engagementScore: 18.5,
+    createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'buzz_tribunal_1',
+    addaId: 'default',
+    addaName: 'Varavu Adda',
+    authorId: 'usr_circle',
+    authorName: 'Sneha Rao',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: BuzzCategory.POLL_HOT_TAKE,
+    credibility: BuzzCredibility.PERSONAL_EXPERIENCE,
+    expiry: BuzzExpiry.PERMANENT,
+    title: "What's the Verdict? 🗳️",
+    content: "Debate of the semester: Late-night canteen Maggi vs Morning hot crispy masala dosa? Let's vote, guru!",
+    pollOptions: [
+      { id: 'opt_1', text: 'Late-night Canteen Maggi 🍜', votesCount: 42, voterIds: [] },
+      { id: 'opt_2', text: 'Crispy Masala Dosa 🥞', votesCount: 38, voterIds: [] },
+      { id: 'opt_3', text: 'Filter Coffee only ☕', votesCount: 19, voterIds: [] },
+    ],
+    reactions: { '🔥': 22, '🍿': 15, '😂': 9 },
+    userReactions: [],
+    commentsCount: 14,
+    bookmarksCount: 6,
+    isBookmarked: false,
+    isTrending: true,
+    engagementScore: 24.2,
+    createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'buzz_trending_1',
+    addaId: 'default',
+    addaName: 'Varavu Adda',
+    authorId: 'usr_rohit',
+    authorName: 'Rohit M.',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: BuzzCategory.HOT_TAKE,
+    credibility: BuzzCredibility.PERSONAL_EXPERIENCE,
+    expiry: BuzzExpiry.PERMANENT,
+    title: 'Hot Take of the Day 🔥',
+    content: 'Weekend group study always ends up as a food crawl. Started DBMS at 4 PM, by 5:30 we were at CTR eating benne dosa discussing IPL auctions! Every single time. 🔥',
+    reactions: { '😂': 31, '🔥': 24, '❤️': 18 },
+    userReactions: [],
+    commentsCount: 11,
+    bookmarksCount: 7,
+    isBookmarked: false,
+    isTrending: true,
+    engagementScore: 32.1,
+    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'buzz_news_1',
+    addaId: 'default',
+    addaName: 'Varavu Adda',
+    authorId: 'usr_desk',
+    authorName: 'Adda Campus Desk',
+    authorAvatar: null,
+    isAnonymous: false,
+    category: BuzzCategory.NEWS,
+    credibility: BuzzCredibility.VERIFIED_NEWS,
+    expiry: BuzzExpiry.PERMANENT,
+    title: 'Karnataka State Inter-College Fest Registrations Open! 📰',
+    content: 'Cultural events, technical hackathons, and esports registrations are officially open. Teams of 4 allowed. Let us represent our Adda! 🚀',
+    linkPreview: {
+      url: 'https://karnataka.gov.in',
+      title: 'State Inter-College Youth Festival 2026',
+      description: 'Official schedule and registration portal.',
+      siteName: 'CAMPUS RADAR',
+    },
+    reactions: { '🔥': 19, '❤️': 14, '🍿': 7 },
+    userReactions: [],
+    commentsCount: 5,
+    bookmarksCount: 8,
+    isBookmarked: false,
+    isTrending: false,
+    engagementScore: 16.0,
+    createdAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'buzz_confession_1',
+    addaId: 'default',
+    addaName: 'Varavu Adda',
+    authorId: 'usr_anon_1',
+    authorName: 'Blue Gorilla 🦍',
+    authorAvatar: null,
+    isAnonymous: true,
+    category: BuzzCategory.CONFESSION,
+    credibility: BuzzCredibility.PERSONAL_EXPERIENCE,
+    expiry: BuzzExpiry.PERMANENT,
+    title: 'Anonymous Confession #42 🤫',
+    content: 'I was the one who hid the lab projector remote during the 8 AM lecture last Friday... I just needed 30 mins of extra sleep.',
+    reactions: { '😂': 28, '💀': 16, '👀': 11 },
+    userReactions: [],
+    commentsCount: 9,
+    bookmarksCount: 3,
+    isBookmarked: false,
+    isTrending: true,
+    engagementScore: 21.4,
+    createdAt: new Date(Date.now() - 120 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 120 * 60 * 1000).toISOString(),
+  },
+];
 
 const DEFAULT_BUZZ_COMMENTS: Record<string, BuzzComment[]> = {};
 
@@ -457,7 +584,20 @@ class ClientStore {
 
     await this.persist();
 
-    // Cross-device cloud sync: ensure rooms are instantly joinable by friends
+    // 1. Sync with local server API if running in browser
+    if (typeof window !== 'undefined' && window.location) {
+      try {
+        await fetch(`${window.location.origin}/api/addas`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newAdda.name, description: newAdda.description }),
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    // 2. Cross-device cloud sync: ensure rooms are instantly joinable by friends
     try {
       const syncRes = await fetch(`${CLOUD_SYNC_URL}?_t=${Date.now()}`, { cache: 'no-store' });
       if (syncRes.ok) {
@@ -506,7 +646,46 @@ class ClientStore {
     );
 
     if (!adda) {
-      // Check cloud store with cache busting
+      // 1. Check local server API first
+      if (typeof window !== 'undefined' && window.location) {
+        try {
+          const localApiRes = await fetch(`${window.location.origin}/api/invitations/accept`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: raw }),
+          });
+          if (localApiRes.ok) {
+            const apiData = await localApiRes.json();
+            if (apiData?.adda) {
+              const matchedAdda: LocalAdda = apiData.adda;
+              adda = matchedAdda;
+              if (!this.addas.find((a) => a.id === matchedAdda.id)) {
+                this.addas.unshift(matchedAdda);
+              }
+              if (!this.conversations.find((c) => c.id === matchedAdda.conversationId)) {
+                this.conversations.unshift({
+                  id: matchedAdda.conversationId,
+                  type: 'ADDA',
+                  name: matchedAdda.name,
+                  addaId: matchedAdda.id,
+                  adda: matchedAdda,
+                  members: [],
+                  lastMessage: {
+                    content: `Welcome to ${matchedAdda.name}! 🎉`,
+                    createdAt: new Date().toISOString(),
+                  },
+                });
+              }
+              await this.persist();
+              return { adda: matchedAdda, conversationId: matchedAdda.conversationId };
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      // 2. Check cloud store with cache busting
       try {
         const r = await fetch(`${CLOUD_SYNC_URL}?_t=${Date.now()}`, { cache: 'no-store' });
         if (r.ok) {
@@ -814,7 +993,20 @@ class ClientStore {
 
     if (!this.buzzPosts[targetAddaId]) { this.buzzPosts[targetAddaId] = []; }
 
-    let posts = [...(this.buzzPosts[targetAddaId] || [])];
+    let allAddaPosts = [...(this.buzzPosts[targetAddaId] || [])];
+    if (allAddaPosts.length === 0 && this.buzzPosts['default'] && this.buzzPosts['default'].length > 0) {
+      allAddaPosts = [...this.buzzPosts['default']];
+    }
+    if (allAddaPosts.length === 0) {
+      const collected: BuzzPost[] = [];
+      Object.values(this.buzzPosts).forEach((arr) => {
+        if (Array.isArray(arr)) collected.push(...arr);
+      });
+      allAddaPosts = collected.length > 0 ? collected : [...DEFAULT_BUZZ_POSTS];
+      this.buzzPosts[targetAddaId] = [...allAddaPosts];
+    }
+
+    let posts = allAddaPosts;
     const now = Date.now();
 
     // Exclude expired posts
