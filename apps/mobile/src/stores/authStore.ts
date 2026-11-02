@@ -34,30 +34,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initAuth: async () => {
     try {
-      const savedUserStr = await storage.getItem('aadda_client_current_user').catch(() => null);
-      if (savedUserStr) {
-        try {
-          const savedUser = JSON.parse(savedUserStr);
-          if (savedUser) set({ user: savedUser, isAuthenticated: true });
-        } catch {}
-      }
       const token = await storage.getItem('accessToken');
-      if (token) {
-        set({ accessToken: token });
-        const user = await api.get('/auth/me');
-        if (user) {
-          const merged = { ...get().user, ...user };
-          set({ user: merged, isAuthenticated: true });
-          await storage.setItem('aadda_client_current_user', JSON.stringify(merged)).catch(() => {});
-          if (merged.language) {
-            i18n.changeLanguage(merged.language);
-          }
+      if (!token) {
+        await storage.removeItem('accessToken');
+        await storage.removeItem('refreshToken');
+        await storage.removeItem('aadda_client_current_user');
+        set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false });
+        return;
+      }
+      set({ accessToken: token });
+      const user = await api.get('/auth/me');
+      if (user && (user.id || user.username)) {
+        set({ user, isAuthenticated: true, isLoading: false });
+        await storage.setItem('aadda_client_current_user', JSON.stringify(user)).catch(() => {});
+        if (user.language) {
+          i18n.changeLanguage(user.language);
         }
+      } else {
+        await storage.removeItem('accessToken');
+        await storage.removeItem('refreshToken');
+        await storage.removeItem('aadda_client_current_user');
+        set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false });
       }
     } catch {
       await storage.removeItem('accessToken');
       await storage.removeItem('refreshToken');
-      set({ user: null, accessToken: null, isAuthenticated: false });
+      await storage.removeItem('aadda_client_current_user');
+      set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false });
     } finally {
       set({ isLoading: false });
     }
@@ -98,7 +101,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } finally {
       await storage.removeItem('accessToken');
       await storage.removeItem('refreshToken');
-      set({ user: null, accessToken: null, isAuthenticated: false });
+      await storage.removeItem('aadda_client_current_user');
+      set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false });
     }
   },
 }));

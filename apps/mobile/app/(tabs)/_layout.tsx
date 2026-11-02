@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs, useRouter, Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { View, Text, TouchableOpacity, Platform, Modal, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Modal, StyleSheet, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle, Line, Polyline } from 'react-native-svg';
+import { useAuthStore } from '../../src/stores/authStore';
 
 interface TabItemConfig {
   name: string;
@@ -453,6 +454,19 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
 export default function TabLayout() {
   const { t, i18n } = useTranslation();
   const isKn = i18n.language === 'kn';
+  const { isAuthenticated, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#4F46E5" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   return (
     <Tabs

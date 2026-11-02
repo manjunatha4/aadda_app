@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
-import { Stack } from 'expo-router';
+import { Platform, View, ActivityIndicator, Text } from 'react-native';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '../src/stores/authStore';
@@ -20,36 +20,89 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 
 const queryClient = new QueryClient();
 
-export default function RootLayout() {
-  const initAuth = useAuthStore((state) => state.initAuth);
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, initAuth } = useAuthStore();
+  const segments = useSegments();
+  const router = useRouter();
 
   useEffect(() => {
     initAuth();
   }, []);
 
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inAuthGroup =
+      segments[0] === '(auth)' || segments[0] === 'login' || segments[0] === 'register';
+
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace('/(auth)/login');
+    } else if (isAuthenticated && inAuthGroup) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated, isLoading, segments]);
+
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: '#FFFFFF',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
+        }}
+      >
+        <View
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 20,
+            backgroundColor: '#4F46E5',
+            alignItems: 'center',
+            justifyContent: 'center',
+            shadowColor: '#4F46E5',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.35,
+            shadowRadius: 10,
+            elevation: 6,
+          }}
+        >
+          <Text style={{ fontSize: 32, color: '#FFFFFF' }}>⚡</Text>
+        </View>
+        <ActivityIndicator size="large" color="#4F46E5" />
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#FFFFFF' },
-        }}
-      >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="adda/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="chaos/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="buzz/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="buzz/create" options={{ presentation: 'modal', headerShown: false }} />
-        <Stack.Screen name="create-adda" options={{ headerShown: false }} />
-        <Stack.Screen name="modal/vibe" options={{ presentation: 'modal', headerShown: false }} />
-        <Stack.Screen name="modal/create-adda" options={{ presentation: 'modal', headerShown: false }} />
-      </Stack>
+      <AuthGuard>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: '#FFFFFF' },
+          }}
+        >
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="adda/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="chaos/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="buzz/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="buzz/create" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="create-adda" options={{ headerShown: false }} />
+          <Stack.Screen name="modal/vibe" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="modal/create-adda" options={{ presentation: 'modal', headerShown: false }} />
+        </Stack>
+      </AuthGuard>
     </QueryClientProvider>
   );
 }
-

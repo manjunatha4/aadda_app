@@ -2,6 +2,19 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const crypto = require('crypto');
+
+function hashPassword(password, salt) {
+  return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+}
+
+function generateSalt() {
+  return crypto.randomBytes(16).toString('hex');
+}
+
+function generateVerificationCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 const DIST_DIR = path.resolve(__dirname, 'apps/mobile/dist');
 const DATA_DIR = path.resolve(__dirname, 'data');
@@ -384,19 +397,265 @@ const server = http.createServer(async (req, res) => {
       return sendJson(user);
     }
 
-    if ((apiPath === '/users/profile' || apiPath === '/auth/me') && req.method === 'GET') {
+    // A3. Authentication Routes
+    if (apiPath === '/auth/check-email' && req.method === 'POST') {
+      const body = await readBody(req);
+      const email = (body.email || '').trim().toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return sendJson({ available: false, message: 'Please enter a valid email address' }, 400);
+      }
+      if (!store.users) store.users = [];
+      const existing = store.users.find((u) => u.email && u.email.toLowerCase() === email && u.isEmailVerified !== false);
+      if (existing) {
+        return sendJson({ available: false, message: 'This email is already registered. Please sign in instead.' });
+      }
+      return sendJson({ available: true, message: 'Email is available' });
+    }
+
+    if (apiPath === '/auth/check-username' && req.method === 'POST') {
+      const body = await readBody(req);
+      const username = (body.username || '').trim().toLowerCase();
+      if (!username || username.length < 3 || username.length > 20) {
+        return sendJson({ available: false, message: 'Username must be 3-20 characters long' }, 400);
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return sendJson({ available: false, message: 'Username can only contain letters, numbers, and underscores' }, 400);
+      }
+      if (!store.users) store.users = [];
+      const existing = store.users.find((u) => u.username && u.username.toLowerCase() === username);
+      if (existing) {
+        return sendJson({ available: false, message: 'Username is already taken' });
+      }
+      return sendJson({ available: true, message: 'Username is available' });
+    }
+
+    if (apiPath === '/auth/register' && req.method === 'POST') {
+      const body = await readBody(req);
+      const email = (body.email || '').trim().toLowerCase();
+      const username = (body.username || '').trim().toLowerCase();
+      const displayName = (body.displayName || body.username || email.split('@')[0]).trim();
+      const state = (body.state || 'Karnataka').trim();
+      const district = (body.district || 'Bengaluru Urban').trim();
+      const password = body.password || '';
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return sendJson({ message: 'Valid email is required' }, 400);
+      }
+      if (!username || username.length < 3) {
+        return sendJson({ message: 'Username must be at least 3 characters' }, 400);
+      }
+
+      if (!store.users) store.users = [];
+      const existingEmail = store.users.find((u) => u.email && u.email.toLowerCase() === email && u.isEmailVerified !== false);
+      if (existingEmail) {
+        return sendJson({ message: 'This email is already registered. Please sign in.' }, 400);
+      }
+
+      const existingUsername = store.users.find((u) => u.username && u.username.toLowerCase() === username && u.id !== existingEmail?.id);
+      if (existingUsername) {
+        return sendJson({ message: 'Username is already taken' }, 400);
+      }
+
+      const salt = generateSalt();
+      const passwordHash = password ? hashPassword(password, salt) : '';
+      const verificationCode = generateVerificationCode();
+      const verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+      let user = store.users.find((u) => u.email && u.email.toLowerCase() === email);
+      if (user) {
+        user.username = username;
+        user.displayName = displayName;
+        user.state = state;
+        user.district = district;
+        user.salt = salt;
+        user.passwordHash = passwordHash;
+        user.verificationCode = verificationCode;
+        user.verificationExpires = verificationExpires;
+        user.isEmailVerified = false;
+      } else {
+        user = {
+          id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          email,
+          username,
+          displayName,
+          state,
+          district,
+          salt,
+          passwordHash,
+          isEmailVerified: false,
+          verificationCode,
+          verificationExpires,
+          createdAt: new Date().toISOString(),
+          language: body.language || 'en',
+        };
+        store.users.push(user);
+      }
+
+      persistStore();
+      syncToCloud();
+
+      return sendJson({
+        success: true,
+        message: 'Account created! Please verify your email.',
+        email: user.email,
+        verificationCode,
+      });
+    }
+
+    if (apiPath === '/auth/verify-email' && req.method === 'POST') {
+      const body = await readBody(req);
+      const email = (body.email || '').trim().toLowerCase();
+      const code = (body.code || '').trim();
+
+      if (!store.users) store.users = [];
+      const user = store.users.find((u) => u.email && u.email.toLowerCase() === email);
+      if (!user) {
+        return sendJson({ message: 'User account not found' }, 404);
+      }
+
+      if (!user.verificationCode || user.verificationCode !== code) {
+        return sendJson({ message: 'Invalid verification code. Please check and try again.' }, 400);
+      }
+
+      if (user.verificationExpires && new Date(user.verificationExpires).getTime() < Date.now()) {
+        return sendJson({ message: 'Verification code has expired. Please request a new one.' }, 400);
+      }
+
+      user.isEmailVerified = true;
+      delete user.verificationCode;
+      delete user.verificationExpires;
+
+      persistStore();
+      syncToCloud();
+
+      const safeUser = { ...user };
+      delete safeUser.passwordHash;
+      delete safeUser.salt;
+
+      return sendJson({
+        success: true,
+        user: safeUser,
+        tokens: {
+          accessToken: `token_${user.id}`,
+          refreshToken: `ref_${user.id}`,
+        },
+      });
+    }
+
+    if (apiPath === '/auth/resend-code' && req.method === 'POST') {
+      const body = await readBody(req);
+      const email = (body.email || '').trim().toLowerCase();
+      if (!store.users) store.users = [];
+      const user = store.users.find((u) => u.email && u.email.toLowerCase() === email);
+      if (!user) {
+        return sendJson({ message: 'User account not found' }, 404);
+      }
+
+      const code = generateVerificationCode();
+      user.verificationCode = code;
+      user.verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      persistStore();
+
+      return sendJson({
+        success: true,
+        message: 'Verification code resent successfully',
+        verificationCode: code,
+      });
+    }
+
+    if (apiPath === '/auth/login' && req.method === 'POST') {
+      const body = await readBody(req);
+      const login = (body.login || '').trim().toLowerCase();
+      const password = body.password || '';
+
+      if (!store.users) store.users = [];
+      let user = store.users.find(
+        (u) => (u.email && u.email.toLowerCase() === login) || (u.username && u.username.toLowerCase() === login),
+      );
+
+      if (!user) {
+        if (!password) {
+          const username = login.includes('@') ? login.split('@')[0] : login;
+          user = {
+            id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            email: login.includes('@') ? login : `${login}@aadda.app`,
+            username,
+            displayName: username,
+            state: 'Karnataka',
+            district: 'Bengaluru Urban',
+            isEmailVerified: true,
+            language: 'en',
+            createdAt: new Date().toISOString(),
+          };
+          store.users.push(user);
+          persistStore();
+        } else {
+          return sendJson({ message: 'Account not found. Please register.' }, 404);
+        }
+      }
+
+      if (user.passwordHash && user.salt && password) {
+        const hash = hashPassword(password, user.salt);
+        const bufHash = Buffer.from(hash, 'hex');
+        const bufStored = Buffer.from(user.passwordHash, 'hex');
+        if (bufHash.length !== bufStored.length || !crypto.timingSafeEqual(bufHash, bufStored)) {
+          return sendJson({ message: 'Incorrect password. Please try again.' }, 401);
+        }
+      }
+
+      if (user.isEmailVerified === false) {
+        return sendJson({
+          requiresVerification: true,
+          email: user.email,
+          verificationCode: user.verificationCode,
+          message: 'Please verify your email address to continue.',
+        }, 403);
+      }
+
+      const safeUser = { ...user };
+      delete safeUser.passwordHash;
+      delete safeUser.salt;
+
+      return sendJson({
+        user: safeUser,
+        tokens: {
+          accessToken: `token_${user.id}`,
+          refreshToken: `ref_${user.id}`,
+        },
+      });
+    }
+
+    if (apiPath === '/auth/me' && req.method === 'GET') {
       const authHeader = req.headers.authorization || '';
       const token = authHeader.replace('Bearer ', '').trim();
-      const userId = token.replace('token_', '') || (store.users && store.users[0]?.id) || 'usr_default';
-      const user = (store.users && store.users.find((u) => u.id === userId)) || (store.users && store.users[0]) || {
-        id: userId,
-        username: 'circle_member',
-        displayName: 'Circle Member',
-        district: 'Bengaluru Urban',
-        language: 'en',
-        avatarUrl: null,
-      };
-      return sendJson(user);
+      if (!token || token === 'null' || token === 'undefined') {
+        return sendJson({ message: 'Unauthorized' }, 401);
+      }
+      const userId = token.replace('token_', '');
+      const user = store.users && store.users.find((u) => u.id === userId);
+      if (user) {
+        const safeUser = { ...user };
+        delete safeUser.passwordHash;
+        delete safeUser.salt;
+        return sendJson(safeUser);
+      }
+      return sendJson({ message: 'Unauthorized' }, 401);
+    }
+
+    if (apiPath === '/auth/logout' && req.method === 'POST') {
+      return sendJson({ success: true });
+    }
+
+    if (apiPath === '/users/profile' && req.method === 'GET') {
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.replace('Bearer ', '').trim();
+      if (!token || token === 'null' || token === 'undefined') {
+        return sendJson({ message: 'Unauthorized' }, 401);
+      }
+      const userId = token.replace('token_', '');
+      const user = store.users && store.users.find((u) => u.id === userId);
+      if (user) return sendJson(user);
+      return sendJson({ message: 'Unauthorized' }, 401);
     }
 
     // B. Join Room via Secret Code

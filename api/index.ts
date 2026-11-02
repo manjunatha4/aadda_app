@@ -552,15 +552,18 @@ export default async function handler(req: any, res: any) {
     if (pathname === '/auth/me' && method === 'GET') {
       const authHeader = req.headers.authorization || '';
       const token = authHeader.replace('Bearer ', '').trim();
+      if (!token || token === 'null' || token === 'undefined') {
+        return json({ message: 'Unauthorized' }, 401);
+      }
       const userId = token.replace('token_', '');
-      const user = store.users.find((u) => u.id === userId) || store.users[0] || null;
+      const user = store.users && store.users.find((u) => u.id === userId);
       if (user) {
         const safeUser = { ...user };
         delete safeUser.passwordHash;
         delete safeUser.salt;
         return json(safeUser);
       }
-      return json(null);
+      return json({ message: 'Unauthorized' }, 401);
     }
 
     if ((pathname === '/users/profile' || pathname.startsWith('/users/profile')) && (method === 'PATCH' || method === 'PUT')) {

@@ -114,7 +114,10 @@ class ApiClient {
 
     // 7. Current User
     if (endpoint.startsWith('/auth/me') && method === 'GET') {
+      const token = await storage.getItem('accessToken');
+      if (!token) throw new Error('Not authenticated');
       const user = await clientStore.getCurrentUser();
+      if (!user) throw new Error('Not authenticated');
       return user as unknown as T;
     }
 
