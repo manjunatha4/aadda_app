@@ -449,11 +449,7 @@ const server = http.createServer(async (req, res) => {
         const filter = parsedUrl.searchParams.get('filter');
         const addaId = parsedUrl.searchParams.get('addaId') || 'default';
 
-        let posts = store.buzzPosts[addaId];
-        if (!posts || posts.length === 0) {
-          posts = store.buzzPosts['default'] || [];
-        }
-        posts = [...posts];
+        let posts = [...(store.buzzPosts[addaId] || store.buzzPosts['default'] || [])];
 
         if (cat && cat !== 'ALL') {
           posts = posts.filter((p) => p.category === cat);
