@@ -13,8 +13,6 @@ export interface BrandLogoProps {
 
 export function BrandLogo({
   size = 36,
-  withGlow = false,
-  glowColor = '#38BDF8',
   style,
   imageStyle,
 }: BrandLogoProps) {
@@ -26,24 +24,10 @@ export function BrandLogo({
           height: size,
           alignItems: 'center',
           justifyContent: 'center',
-          position: 'relative',
         },
         style,
       ]}
     >
-      {withGlow && (
-        <View
-          style={{
-            position: 'absolute',
-            width: size * 1.06,
-            height: size * 1.06,
-            borderRadius: (size * 1.06) / 2,
-            backgroundColor: glowColor,
-            opacity: 0.12,
-            ...(Platform.OS === 'web' ? ({ filter: `blur(${Math.max(2, size * 0.08)}px)` } as any) : {}),
-          }}
-        />
-      )}
       <Image
         source={LOGO_SOURCE}
         style={[
@@ -56,15 +40,8 @@ export function BrandLogo({
             ? ({
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
-                filter: 'drop-shadow(0 1px 3px rgba(14, 165, 233, 0.18))',
               } as any)
-            : {
-                shadowColor: '#0EA5E9',
-                shadowOffset: { width: 0, height: 1.5 },
-                shadowOpacity: 0.15,
-                shadowRadius: 3,
-                elevation: 2,
-              },
+            : {},
           imageStyle,
         ]}
         resizeMode="contain"

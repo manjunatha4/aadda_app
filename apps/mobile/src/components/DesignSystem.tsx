@@ -273,7 +273,7 @@ export const TopNavigation: React.FC = () => {
         onPress={() => router.push('/(tabs)')}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}
       >
-        <BrandLogo size={34} withGlow />
+        <BrandLogo size={34} />
         <Text
           style={{
             fontFamily: DS_FONTS.heading,

@@ -626,7 +626,7 @@ export default function AuthScreen() {
         {/* Top Header Bar */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
-            <BrandLogo size={34} withGlow />
+            <BrandLogo size={34} />
             <Text
               style={{
                 fontFamily: DS_FONTS.heading,

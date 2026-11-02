@@ -5,6 +5,22 @@
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>AADDA</title>
+    <!-- Automatic Cache Buster & Service Worker Invalidator -->
+    <script>
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            for (var r of regs) r.unregister();
+          });
+        }
+        if ('caches' in window) {
+          caches.keys().then(function(keys) {
+            for (var k of keys) caches.delete(k);
+          });
+        }
+      } catch (e) {}
+    </script>
+
     <!-- Google Fonts Official Source -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,6 +86,6 @@
     </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
-  <script src="/_expo/static/js/web/entry-82cca5d5bb4e71f8991eeb810a0da98b.js?v=logo_crisp_v2" defer></script>
+  <script src="/_expo/static/js/web/entry-663e846e908b66331cc9958912823fb0.js?v=final_v4" defer></script>
 </body>
 </html>
