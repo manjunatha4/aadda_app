@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import { DS_FONTS } from './DesignSystem';
 
 const VIBE_METADATA: Record<
   string,
@@ -106,6 +107,7 @@ export const VibePill: React.FC<VibePillProps> = ({
       <View>
         <Text
           style={{
+            fontFamily: DS_FONTS.mono,
             color: meta.text,
             fontWeight: '700',
             fontSize: compact ? 11 : 13,
@@ -117,6 +119,7 @@ export const VibePill: React.FC<VibePillProps> = ({
         {customNote && !compact && (
           <Text
             style={{
+              fontFamily: DS_FONTS.body,
               color: '#64748B',
               fontSize: 11,
               marginTop: 1,

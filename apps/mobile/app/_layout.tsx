@@ -6,13 +6,82 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '../src/stores/authStore';
 import '../src/i18n';
 
-// Ensure full white background across all web views and browsers
+// Ensure full white background and typography across all web views and browsers
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   try {
     document.documentElement.style.backgroundColor = '#FFFFFF';
     document.body.style.backgroundColor = '#FFFFFF';
     document.body.style.margin = '0';
     document.body.style.padding = '0';
+
+    // Inject Google Fonts preconnect and stylesheet
+    if (!document.getElementById('aadda-google-fonts')) {
+      const preconnect1 = document.createElement('link');
+      preconnect1.rel = 'preconnect';
+      preconnect1.href = 'https://fonts.googleapis.com';
+      document.head.appendChild(preconnect1);
+
+      const preconnect2 = document.createElement('link');
+      preconnect2.rel = 'preconnect';
+      preconnect2.href = 'https://fonts.gstatic.com';
+      preconnect2.crossOrigin = 'anonymous';
+      document.head.appendChild(preconnect2);
+
+      const fontLink = document.createElement('link');
+      fontLink.id = 'aadda-google-fonts';
+      fontLink.rel = 'stylesheet';
+      fontLink.href =
+        'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap';
+      document.head.appendChild(fontLink);
+    }
+
+    // Inject centralized font-family variables & global application typography rules
+    if (!document.getElementById('aadda-font-variables')) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'aadda-font-variables';
+      styleEl.textContent = `
+        :root {
+          --font-heading: 'Space Grotesk', sans-serif;
+          --font-body: 'Inter', sans-serif;
+          --font-mono: 'Space Mono', monospace;
+        }
+
+        /* Default application text to Inter */
+        html, body, #root, input, textarea, select, button {
+          font-family: var(--font-body);
+        }
+
+        /* React Native Web default text elements inherit Inter */
+        div[dir="auto"], span[dir="auto"], [dir="ltr"], [dir="rtl"], .css-text-146c351 {
+          font-family: var(--font-body);
+        }
+
+        /* Headings: Space Grotesk */
+        h1, h2, h3, h4, h5, h6,
+        [data-font="heading"],
+        .font-heading {
+          font-family: var(--font-heading) !important;
+        }
+
+        /* Body & general content: Inter */
+        p,
+        [data-font="body"],
+        .font-body {
+          font-family: var(--font-body) !important;
+        }
+
+        /* Monospace elements, technical labels, counters, timestamps, badges: Space Mono */
+        code, pre, kbd, samp,
+        [data-font="mono"],
+        .font-mono,
+        .badge-mono,
+        .timestamp,
+        .counter {
+          font-family: var(--font-mono) !important;
+        }
+      `;
+      document.head.appendChild(styleEl);
+    }
   } catch (e) {
     // ignore
   }

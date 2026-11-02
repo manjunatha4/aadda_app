@@ -14,6 +14,7 @@ import {
   LoadingState,
   ToastNotification,
   DS_TOKENS,
+  DS_FONTS,
 } from '../../src/components/DesignSystem';
 
 export default function AddaDetailScreen() {
@@ -126,17 +127,17 @@ export default function AddaDetailScreen() {
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 20, fontWeight: '900' }}>
+              <Text style={{ fontFamily: DS_FONTS.heading, color: DS_TOKENS.colors.textPrimary, fontSize: 20, fontWeight: '900' }}>
                 {adda.name}
               </Text>
-              <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 2 }}>
+              <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 2 }}>
                 👥 {adda.memberCount || 1} {isKn ? 'ಸದಸ್ಯರು' : 'members'} · Created {new Date(adda.createdAt || Date.now()).toLocaleDateString()}
               </Text>
             </View>
           </View>
 
           {Boolean(adda.description) && (
-            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 4 }}>
+            <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 4 }}>
               {adda.description}
             </Text>
           )}
@@ -156,10 +157,10 @@ export default function AddaDetailScreen() {
             }}
           >
             <View>
-              <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 11, fontWeight: '800', letterSpacing: 0.8 }}>
+              <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.purple, fontSize: 11, fontWeight: '800', letterSpacing: 0.8 }}>
                 {isKn ? 'ಇನ್ವೈಟ್ ಕೋಡ್' : 'SECRET INVITE CODE'}
               </Text>
-              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: 2, marginTop: 4 }}>
+              <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: 2, marginTop: 4 }}>
                 {activeInvite}
               </Text>
             </View>

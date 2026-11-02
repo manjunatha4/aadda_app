@@ -6,6 +6,11 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        heading: ["var(--font-heading)", "'Space Grotesk'", 'sans-serif'],
+        body: ["var(--font-body)", 'Inter', 'sans-serif'],
+        mono: ["var(--font-mono)", "'Space Mono'", 'monospace'],
+      },
       colors: {
         'aadda-purple': {
           DEFAULT: '#24183B',

@@ -12,6 +12,7 @@ import {
   InputField,
   ToastNotification,
   DS_TOKENS,
+  DS_FONTS,
 } from '../../src/components/DesignSystem';
 
 const VIBE_OPTIONS = [
@@ -90,10 +91,10 @@ export default function VibeModal() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                     <Text style={{ fontSize: 24 }}>{opt.emoji}</Text>
                     <View>
-                      <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 15, fontWeight: '800' }}>
+                      <Text style={{ fontFamily: DS_FONTS.heading, color: DS_TOKENS.colors.textPrimary, fontSize: 15, fontWeight: '800' }}>
                         {isKn ? opt.labelKn : opt.labelEn}
                       </Text>
-                      <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+                      <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
                         {opt.desc}
                       </Text>
                     </View>

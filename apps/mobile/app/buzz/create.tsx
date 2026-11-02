@@ -27,6 +27,7 @@ import {
   SecondaryButton,
   ToastNotification,
   DS_TOKENS,
+  DS_FONTS,
 } from '../../src/components/DesignSystem';
 
 const CATEGORIES = [
@@ -230,7 +231,7 @@ export default function CreateBuzzScreen() {
         {/* 1. Circle Selection */}
         {addas.length > 1 && (
           <GlassCard elevated style={{ padding: 16 }}>
-            <Text style={{ fontSize: 13, fontWeight: '800', color: DS_TOKENS.colors.textPrimary, marginBottom: 8 }}>
+            <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 13, fontWeight: '800', color: DS_TOKENS.colors.textPrimary, marginBottom: 8 }}>
               {isKn ? 'ಅಡ್ಡ ಆಯ್ಕೆಮಾಡಿ' : '1. SELECT CIRCLE'}
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
@@ -267,7 +268,7 @@ export default function CreateBuzzScreen() {
 
         {/* 2. Category Selector */}
         <GlassCard elevated style={{ padding: 16 }}>
-          <Text style={{ fontSize: 13, fontWeight: '800', color: DS_TOKENS.colors.textPrimary, marginBottom: 8 }}>
+          <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 13, fontWeight: '800', color: DS_TOKENS.colors.textPrimary, marginBottom: 8 }}>
             {isKn ? 'ವಿಭಾಗ ಆಯ್ಕೆಮಾಡಿ' : 'CATEGORY'}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -308,7 +309,7 @@ export default function CreateBuzzScreen() {
 
         {/* 3. Credibility Tag Selector */}
         <GlassCard elevated style={{ padding: 16 }}>
-          <Text style={{ fontSize: 13, fontWeight: '800', color: DS_TOKENS.colors.textPrimary, marginBottom: 8 }}>
+          <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 13, fontWeight: '800', color: DS_TOKENS.colors.textPrimary, marginBottom: 8 }}>
             {isKn ? 'ವಿಶ್ವಾಸಾರ್ಹತೆ ಲೇಬಲ್' : 'CREDIBILITY BADGE'}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

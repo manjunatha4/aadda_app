@@ -27,6 +27,7 @@ import {
   ToastNotification,
   LoadingState,
   DS_TOKENS,
+  DS_FONTS,
 } from '../../src/components/DesignSystem';
 
 const REACTION_EMOJIS = ['😂', '👀', '🍿', '☕', '🔥', '💀', '❤️'];
@@ -221,10 +222,10 @@ export default function BuzzDetailScreen() {
                   <Text style={{ fontSize: 20 }}>{post.isAnonymous ? '🤫' : '👤'}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '800', color: post.isAnonymous ? '#7E22CE' : DS_TOKENS.colors.textPrimary }}>
+                  <Text style={{ fontFamily: DS_FONTS.heading, fontSize: 15, fontWeight: '800', color: post.isAnonymous ? '#7E22CE' : DS_TOKENS.colors.textPrimary }}>
                     {post.authorName}
                   </Text>
-                  <Text style={{ fontSize: 12, color: DS_TOKENS.colors.textMuted }}>
+                  <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 12, color: DS_TOKENS.colors.textMuted }}>
                     {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {post.addaName || 'Circle'}
                   </Text>
                 </View>
@@ -240,7 +241,7 @@ export default function BuzzDetailScreen() {
                   borderRadius: DS_TOKENS.radii.pill,
                 }}
               >
-                <Text style={{ fontSize: 11, fontWeight: '700', color: credibilityBadge.color }}>
+                <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 11, fontWeight: '700', color: credibilityBadge.color }}>
                   {credibilityBadge.label}
                 </Text>
               </View>
@@ -248,12 +249,12 @@ export default function BuzzDetailScreen() {
 
             {/* Title & Content */}
             {Boolean(post.title) && (
-              <Text style={{ fontSize: 18, fontWeight: '900', color: DS_TOKENS.colors.textPrimary, marginBottom: 6 }}>
+              <Text style={{ fontFamily: DS_FONTS.heading, fontSize: 18, fontWeight: '900', color: DS_TOKENS.colors.textPrimary, marginBottom: 6 }}>
                 {post.title}
               </Text>
             )}
 
-            <Text style={{ fontSize: 15, lineHeight: 22, color: DS_TOKENS.colors.textSecondary, marginBottom: 14 }}>
+            <Text style={{ fontFamily: DS_FONTS.body, fontSize: 15, lineHeight: 22, color: DS_TOKENS.colors.textSecondary, marginBottom: 14 }}>
               {post.content}
             </Text>
 
@@ -328,7 +329,7 @@ export default function BuzzDetailScreen() {
                           <Text style={{ fontSize: 13, fontWeight: hasVotedThis ? '800' : '600', color: DS_TOKENS.colors.textPrimary }}>
                             {hasVotedThis ? '✓ ' : ''}{opt.text}
                           </Text>
-                          <Text style={{ fontSize: 12, fontWeight: '700', color: DS_TOKENS.colors.purple }}>
+                          <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 12, fontWeight: '700', color: DS_TOKENS.colors.purple }}>
                             {pct}% ({opt.votesCount || 0})
                           </Text>
                         </View>

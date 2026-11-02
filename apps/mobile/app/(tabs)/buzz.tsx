@@ -33,6 +33,7 @@ import {
   ConfirmationDialog,
   LoadingState,
   DS_TOKENS,
+  DS_FONTS,
 } from '../../src/components/DesignSystem';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -210,6 +211,7 @@ function AnimatedAaddaBrand({ isKn }: { isKn: boolean }) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
           <Text
             style={{
+              fontFamily: DS_FONTS.heading,
               fontSize: 21,
               fontWeight: '900',
               color: '#0F172A',
@@ -256,7 +258,7 @@ function AnimatedAaddaBrand({ isKn }: { isKn: boolean }) {
               />
             </View>
 
-            <Text style={{ fontSize: 10, fontWeight: '800', color: '#15803D', letterSpacing: 0.3 }}>
+            <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 10, fontWeight: '800', color: '#15803D', letterSpacing: 0.3 }}>
               {isKn ? 'ಖಾಸಗಿ ಸರ್ಕಲ್' : 'LIVE CIRCLE'}
             </Text>
           </View>
@@ -1477,17 +1479,17 @@ function ModernBuzzCard({
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontSize: 14, fontWeight: '900', color: post.isAnonymous ? '#7E22CE' : '#0F172A' }}>
+              <Text style={{ fontFamily: DS_FONTS.heading, fontSize: 14, fontWeight: '900', color: post.isAnonymous ? '#7E22CE' : '#0F172A' }}>
                 {post.authorName}
               </Text>
               {post.isAnonymous && (
                 <View style={{ backgroundColor: '#FAF5FF', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 9999 }}>
-                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#9333EA' }}>ANON</Text>
+                  <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 10, fontWeight: '800', color: '#9333EA' }}>ANON</Text>
                 </View>
               )}
             </View>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#94A3B8' }}>
-              {timeAgo} · {post.addaName || 'Private circle'}
+            <Text style={{ fontFamily: DS_FONTS.body, fontSize: 11, fontWeight: '600', color: '#94A3B8' }}>
+              <Text style={{ fontFamily: DS_FONTS.mono }}>{timeAgo}</Text> · {post.addaName || 'Private circle'}
             </Text>
           </View>
         </View>
@@ -1511,7 +1513,7 @@ function ModernBuzzCard({
               }}
             >
               <Text style={{ fontSize: 12 }}>🗑️</Text>
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#EF4444' }}>
+              <Text style={{ fontFamily: DS_FONTS.body, fontSize: 11, fontWeight: '800', color: '#EF4444' }}>
                 {isKn ? 'ಅಳಿಸಿ' : 'Delete'}
               </Text>
             </TouchableOpacity>
@@ -1530,6 +1532,7 @@ function ModernBuzzCard({
       {/* Main Quote / Headline (Screenshot 1: "Apparently, something crazy happened in college today...") */}
       <Text
         style={{
+          fontFamily: DS_FONTS.heading,
           fontSize: 16,
           fontWeight: '800',
           color: '#0F172A',
@@ -1612,11 +1615,11 @@ function ModernBuzzCard({
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                           {hasVotedThis && <Text style={{ fontSize: 13, color: '#6366F1', fontWeight: '900' }}>✓</Text>}
-                          <Text style={{ fontSize: 13, fontWeight: hasVotedThis ? '800' : '600', color: '#0F172A' }}>
+                          <Text style={{ fontFamily: DS_FONTS.body, fontSize: 13, fontWeight: hasVotedThis ? '800' : '600', color: '#0F172A' }}>
                             {opt.text}
                           </Text>
                         </View>
-                        <Text style={{ fontSize: 12, fontWeight: '800', color: hasVotedThis ? '#6366F1' : '#64748B' }}>
+                        <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 12, fontWeight: '800', color: hasVotedThis ? '#6366F1' : '#64748B' }}>
                           {pct}%
                         </Text>
                       </View>
@@ -1624,7 +1627,7 @@ function ModernBuzzCard({
                   );
                 })}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#94A3B8' }}>
+                  <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 11, fontWeight: '700', color: '#94A3B8' }}>
                     👥 {totalVotes} {isKn ? 'ಒಟ್ಟು ಮತಗಳು' : 'votes'} · {isKn ? 'ಮುಕ್ತಾಯಕ್ಕೆ 2 ದಿನ' : 'Expires in 2d'}
                   </Text>
                 </View>
@@ -1646,10 +1649,10 @@ function ModernBuzzCard({
           marginTop: 2,
         }}
       >
-        <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748B' }}>
-          {totalReactionsCount} {isKn ? 'ಪ್ರತಿಕ್ರಿಯೆಗಳು' : 'reactions'} · {post.commentsCount || 0} {isKn ? 'ಕಾಮೆಂಟ್‌ಗಳು' : 'comments'}
+        <Text style={{ fontFamily: DS_FONTS.body, fontSize: 12, fontWeight: '700', color: '#64748B' }}>
+          <Text style={{ fontFamily: DS_FONTS.mono }}>{totalReactionsCount}</Text> {isKn ? 'ಪ್ರತಿಕ್ರಿಯೆಗಳು' : 'reactions'} · <Text style={{ fontFamily: DS_FONTS.mono }}>{post.commentsCount || 0}</Text> {isKn ? 'ಕಾಮೆಂಟ್‌ಗಳು' : 'comments'}
         </Text>
-        <Text style={{ fontSize: 11, color: '#94A3B8', fontWeight: '600' }}>
+        <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 11, color: '#94A3B8', fontWeight: '600' }}>
           {timeAgo}
         </Text>
       </View>

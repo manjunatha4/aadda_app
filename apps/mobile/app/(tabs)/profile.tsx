@@ -22,6 +22,7 @@ import {
   ConfirmationDialog,
   ToastNotification,
   DS_TOKENS,
+  DS_FONTS,
 } from '../../src/components/DesignSystem';
 
 const PRESET_AVATARS = [
@@ -244,10 +245,10 @@ export default function ProfileScreen() {
           </View>
         </TouchableOpacity>
 
-        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: -0.3 }}>
+        <Text style={{ fontFamily: DS_FONTS.heading, color: DS_TOKENS.colors.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: -0.3 }}>
           {displayName}
         </Text>
-        <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 14, fontWeight: '700', marginTop: 3 }}>
+        <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.textSecondary, fontSize: 14, fontWeight: '700', marginTop: 3 }}>
           @{user?.username || 'member'}
         </Text>
 
@@ -263,7 +264,7 @@ export default function ProfileScreen() {
               paddingVertical: 5,
             }}
           >
-            <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
+            <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
               📍 {user?.district || 'Bengaluru'}
             </Text>
           </View>
@@ -278,7 +279,7 @@ export default function ProfileScreen() {
               paddingVertical: 5,
             }}
           >
-            <Text style={{ color: DS_TOKENS.colors.emerald, fontSize: 12, fontWeight: '800' }}>✓ Verified</Text>
+            <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.emerald, fontSize: 12, fontWeight: '800' }}>✓ Verified</Text>
           </View>
 
           <TouchableOpacity
@@ -454,10 +455,10 @@ export default function ProfileScreen() {
             <Text style={{ fontSize: 22 }}>🚪</Text>
           </View>
           <View style={{ flex: 1, paddingRight: 4 }}>
-            <Text style={{ color: '#E11D48', fontSize: 16, fontWeight: '900', letterSpacing: -0.2 }}>
+            <Text style={{ fontFamily: DS_FONTS.heading, color: '#E11D48', fontSize: 16, fontWeight: '900', letterSpacing: -0.2 }}>
               {isKn ? 'ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್' : 'Sign Out of AADDA'}
             </Text>
-            <Text style={{ color: '#64748B', fontSize: 12, fontWeight: '600', marginTop: 2, lineHeight: 17 }}>
+            <Text style={{ fontFamily: DS_FONTS.body, color: '#64748B', fontSize: 12, fontWeight: '600', marginTop: 2, lineHeight: 17 }}>
               {isKn ? 'ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಸೆಶನ್ ಮುಗಿಸಿ. ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಮತ್ತೆ ಲಾಗಿನ್ ಆಗಬಹುದು.' : 'End your current session. You can log back in anytime with your credentials.'}
             </Text>
           </View>
@@ -489,7 +490,7 @@ export default function ProfileScreen() {
           ) : (
             <>
               <Text style={{ fontSize: 16, color: '#FFFFFF' }}>🚪</Text>
-              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800', letterSpacing: 0.3 }}>
+              <Text style={{ fontFamily: DS_FONTS.body, color: '#FFFFFF', fontSize: 14, fontWeight: '800', letterSpacing: 0.3 }}>
                 {isKn ? 'ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್ ಮಾಡಿ' : 'Log Out of Account'}
               </Text>
             </>

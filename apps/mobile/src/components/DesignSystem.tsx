@@ -17,9 +17,32 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../stores/authStore';
 
 // ---------------------------------------------------------------------
+// CENTRALIZED TYPOGRAPHY TOKENS (Space Grotesk, Inter, Space Mono)
+// ---------------------------------------------------------------------
+export const DS_FONTS = {
+  heading: Platform.select({
+    web: "var(--font-heading, 'Space Grotesk', sans-serif)",
+    default: 'Space Grotesk',
+  }),
+  body: Platform.select({
+    web: "var(--font-body, 'Inter', sans-serif)",
+    default: 'Inter',
+  }),
+  mono: Platform.select({
+    web: "var(--font-mono, 'Space Mono', monospace)",
+    default: 'Space Mono',
+  }),
+};
+
+// ---------------------------------------------------------------------
 // GLOBAL WHITE THEME DESIGN SYSTEM TOKENS
 // ---------------------------------------------------------------------
 export const DS_TOKENS = {
+  typography: {
+    heading: DS_FONTS.heading,
+    body: DS_FONTS.body,
+    mono: DS_FONTS.mono,
+  },
   colors: {
     bg: '#FFFFFF',                      // Pure white main background
     bgSecondary: '#F8FAFC',             // Very light grey background for sections/inputs
@@ -146,6 +169,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, badge, 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Text
             style={{
+              fontFamily: DS_FONTS.heading,
               color: DS_TOKENS.colors.textPrimary,
               fontSize: 28,
               fontWeight: '900',
@@ -165,7 +189,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, badge, 
                 paddingVertical: 2,
               }}
             >
-              <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
+              <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
                 {badge}
               </Text>
             </View>
@@ -174,6 +198,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, badge, 
         {Boolean(subtitle) && (
           <Text
             style={{
+              fontFamily: DS_FONTS.body,
               color: DS_TOKENS.colors.textSecondary,
               fontSize: 13,
               fontWeight: '600',
@@ -264,6 +289,7 @@ export const TopNavigation: React.FC = () => {
         </View>
         <Text
           style={{
+            fontFamily: DS_FONTS.heading,
             color: DS_TOKENS.colors.textPrimary,
             fontSize: 18,
             fontWeight: '900',
@@ -280,7 +306,7 @@ export const TopNavigation: React.FC = () => {
             borderRadius: 6,
           }}
         >
-          <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 10, fontWeight: '800' }}>PRO</Text>
+          <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.purple, fontSize: 10, fontWeight: '800' }}>PRO</Text>
         </View>
       </TouchableOpacity>
 
@@ -311,6 +337,7 @@ export const TopNavigation: React.FC = () => {
               <Text style={{ fontSize: 15 }}>{item.icon}</Text>
               <Text
                 style={{
+                  fontFamily: DS_FONTS.body,
                   color: isActive ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
                   fontWeight: isActive ? '800' : '600',
                   fontSize: 13,
@@ -336,7 +363,7 @@ export const TopNavigation: React.FC = () => {
             borderRadius: DS_TOKENS.radii.pill,
           }}
         >
-          <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 12, fontWeight: '700' }}>
+          <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.textPrimary, fontSize: 12, fontWeight: '700' }}>
             {isKn ? 'KN' : 'EN'} 🌐
           </Text>
         </TouchableOpacity>
@@ -367,11 +394,11 @@ export const TopNavigation: React.FC = () => {
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '900' }}>
+              <Text style={{ fontFamily: DS_FONTS.heading, color: '#FFFFFF', fontSize: 12, fontWeight: '900' }}>
                 {(user.displayName || user.username || 'U').charAt(0).toUpperCase()}
               </Text>
             </View>
-            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 12, fontWeight: '700' }}>
+            <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textPrimary, fontSize: 12, fontWeight: '700' }}>
               {user.displayName || user.username}
             </Text>
           </TouchableOpacity>
@@ -527,6 +554,7 @@ export const PrimaryButton: React.FC<ButtonProps> = ({
           {Boolean(icon) && <Text style={{ fontSize: 16 }}>{icon}</Text>}
           <Text
             style={{
+              fontFamily: DS_FONTS.body,
               color: disabled ? '#94A3B8' : '#FFFFFF',
               fontWeight: '900',
               fontSize: 14,
@@ -570,7 +598,7 @@ export const SecondaryButton: React.FC<ButtonProps> = ({
       ]}
     >
       {Boolean(icon) && <Text style={{ fontSize: 15 }}>{icon}</Text>}
-      <Text style={{ color: DS_TOKENS.colors.textPrimary, fontWeight: '800', fontSize: 13 }}>
+      <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textPrimary, fontWeight: '800', fontSize: 13 }}>
         {title}
       </Text>
     </TouchableOpacity>
@@ -618,6 +646,7 @@ export const InputField: React.FC<InputFieldProps> = ({
       {Boolean(label) && (
         <Text
           style={{
+            fontFamily: DS_FONTS.body,
             color: DS_TOKENS.colors.textPrimary,
             fontSize: 13,
             fontWeight: '800',
@@ -660,6 +689,7 @@ export const InputField: React.FC<InputFieldProps> = ({
           keyboardType={keyboardType}
           secureTextEntry={secureTextEntry}
           style={{
+            fontFamily: DS_FONTS.body,
             flex: 1,
             color: DS_TOKENS.colors.textPrimary,
             fontSize: 14,
@@ -670,13 +700,14 @@ export const InputField: React.FC<InputFieldProps> = ({
         {rightElement}
         {Boolean(value) && !multiline && !rightElement && (
           <TouchableOpacity onPress={() => onChangeText('')} style={{ padding: 4 }}>
-            <Text style={{ color: DS_TOKENS.colors.textMuted, fontWeight: '800', fontSize: 13 }}>✕</Text>
+            <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textMuted, fontWeight: '800', fontSize: 13 }}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
       {Boolean(errorMessage) && (
         <Text
           style={{
+            fontFamily: DS_FONTS.body,
             color: DS_TOKENS.colors.rose,
             fontSize: 12,
             fontWeight: '700',
@@ -689,6 +720,7 @@ export const InputField: React.FC<InputFieldProps> = ({
       {Boolean(successMessage) && !errorMessage && (
         <Text
           style={{
+            fontFamily: DS_FONTS.body,
             color: DS_TOKENS.colors.emerald,
             fontSize: 12,
             fontWeight: '700',
@@ -758,7 +790,7 @@ export const Modal: React.FC<ModalProps> = ({
                 paddingBottom: 12,
               }}
             >
-              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 18, fontWeight: '900' }}>
+              <Text style={{ fontFamily: DS_FONTS.heading, color: DS_TOKENS.colors.textPrimary, fontSize: 18, fontWeight: '900' }}>
                 {title}
               </Text>
               <TouchableOpacity
@@ -799,7 +831,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, value, options, onSel
   return (
     <View style={{ marginBottom: 14 }}>
       {Boolean(label) && (
-        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
+        <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textPrimary, fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
           {label}
         </Text>
       )}
@@ -830,6 +862,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, value, options, onSel
               {Boolean(opt.emoji) && <Text style={{ fontSize: 13 }}>{opt.emoji}</Text>}
               <Text
                 style={{
+                  fontFamily: DS_FONTS.body,
                   color: isSelected ? DS_TOKENS.colors.purple : DS_TOKENS.colors.textSecondary,
                   fontSize: 12,
                   fontWeight: '800',
@@ -849,7 +882,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, value, options, onSel
 // 9. DATA TABLE (WHITE THEME)
 // ---------------------------------------------------------------------
 export interface DataTableProps {
-  columns: Array<{ key: string; label: string; flex?: number }>;
+  columns: Array<{ key: string; label: string; flex?: number; isNumeric?: boolean }>;
   data: any[];
   renderRow: (item: any, index: number) => React.ReactNode;
 }
@@ -872,6 +905,7 @@ export const DataTable: React.FC<DataTableProps> = ({ columns, data, renderRow }
           <Text
             key={c.key}
             style={{
+              fontFamily: DS_FONTS.heading,
               flex: c.flex || 1,
               color: DS_TOKENS.colors.textSecondary,
               fontSize: 12,
@@ -921,6 +955,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <Text style={{ fontSize: 44, marginBottom: 12 }}>{icon}</Text>
       <Text
         style={{
+          fontFamily: DS_FONTS.heading,
           color: DS_TOKENS.colors.textPrimary,
           fontSize: 18,
           fontWeight: '900',
@@ -932,6 +967,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       </Text>
       <Text
         style={{
+          fontFamily: DS_FONTS.body,
           color: DS_TOKENS.colors.textSecondary,
           fontSize: 13,
           fontWeight: '600',
@@ -959,7 +995,7 @@ export const LoadingState: React.FC<{ message?: string }> = ({
   return (
     <View style={{ paddingVertical: 48, alignItems: 'center', justifyContent: 'center' }}>
       <ActivityIndicator size="large" color={DS_TOKENS.colors.purple} />
-      <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 13, fontWeight: '700', marginTop: 12 }}>
+      <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textSecondary, fontSize: 13, fontWeight: '700', marginTop: 12 }}>
         {message}
       </Text>
     </View>
@@ -976,10 +1012,10 @@ export const ErrorState: React.FC<{ message: string; onRetry?: () => void }> = (
   return (
     <GlassCard style={{ borderColor: DS_TOKENS.colors.roseBorder, backgroundColor: DS_TOKENS.colors.roseLight, alignItems: 'center', padding: 24 }}>
       <Text style={{ fontSize: 36, marginBottom: 10 }}>⚠️</Text>
-      <Text style={{ color: '#991B1B', fontSize: 16, fontWeight: '900', marginBottom: 4 }}>
+      <Text style={{ fontFamily: DS_FONTS.heading, color: '#991B1B', fontSize: 16, fontWeight: '900', marginBottom: 4 }}>
         Something went wrong
       </Text>
-      <Text style={{ color: '#B91C1C', fontSize: 13, textAlign: 'center', marginBottom: 16 }}>
+      <Text style={{ fontFamily: DS_FONTS.body, color: '#B91C1C', fontSize: 13, textAlign: 'center', marginBottom: 16 }}>
         {message}
       </Text>
       {onRetry && <PrimaryButton title="Try Again" onPress={onRetry} variant="rose" />}
@@ -1019,6 +1055,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         <Text style={{ fontSize: 36, marginBottom: 8 }}>{icon || (destructive ? '🗑️' : '❓')}</Text>
         <Text
           style={{
+            fontFamily: DS_FONTS.heading,
             color: DS_TOKENS.colors.textPrimary,
             fontSize: 18,
             fontWeight: '900',
@@ -1030,6 +1067,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         </Text>
         <Text
           style={{
+            fontFamily: DS_FONTS.body,
             color: DS_TOKENS.colors.textSecondary,
             fontSize: 13,
             fontWeight: '600',
@@ -1123,7 +1161,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
         ]}
       >
         <Text style={{ fontSize: 14, color: iconColor }}>{icon}</Text>
-        <Text style={{ color: DS_TOKENS.colors.textPrimary, fontWeight: '800', fontSize: 13 }}>
+        <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textPrimary, fontWeight: '800', fontSize: 13 }}>
           {message}
         </Text>
         {onDismiss && (
@@ -1137,3 +1175,22 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
     </View>
   );
 };
+
+// ---------------------------------------------------------------------
+// 15. TYPOGRAPHY HELPERS (SPACE GROTESK, INTER, SPACE MONO)
+// ---------------------------------------------------------------------
+export interface TypographyTextProps extends React.ComponentProps<typeof Text> {
+  children?: React.ReactNode;
+}
+
+export const HeadingText: React.FC<TypographyTextProps> = ({ style, ...props }) => (
+  <Text style={[{ fontFamily: DS_FONTS.heading }, style]} {...props} />
+);
+
+export const BodyText: React.FC<TypographyTextProps> = ({ style, ...props }) => (
+  <Text style={[{ fontFamily: DS_FONTS.body }, style]} {...props} />
+);
+
+export const MonoText: React.FC<TypographyTextProps> = ({ style, ...props }) => (
+  <Text style={[{ fontFamily: DS_FONTS.mono }, style]} {...props} />
+);

@@ -9,6 +9,7 @@ import { useChatStore } from '../../src/stores/chatStore';
 import { MessageBubble } from '../../src/components/MessageBubble';
 import { Floating } from '../../src/components/AnimatedVisuals';
 import { SocketEvents } from '@aadda/shared';
+import { DS_FONTS } from '../../src/components/DesignSystem';
 
 // Gen-Z Sticker Collection matching the reference image
 const STICKER_COLLECTION = [
@@ -298,6 +299,7 @@ export default function ChatScreen() {
           <Text
             numberOfLines={1}
             style={{
+              fontFamily: DS_FONTS.heading,
               color: '#0F172A',
               fontSize: 16,
               fontWeight: '900',
@@ -323,7 +325,7 @@ export default function ChatScreen() {
             justifyContent: 'center',
           }}
         >
-          <Text style={{ color: '#6366F1', fontWeight: '900', fontSize: 14 }}>
+          <Text style={{ fontFamily: DS_FONTS.heading, color: '#6366F1', fontWeight: '900', fontSize: 14 }}>
             {roomTitle.charAt(0)}
           </Text>
         </View>
@@ -341,7 +343,7 @@ export default function ChatScreen() {
             borderColor: '#E2E8F0',
           }}
         >
-          <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 }}>
+          <Text style={{ fontFamily: DS_FONTS.mono, color: '#64748B', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 }}>
             TODAY
           </Text>
         </View>

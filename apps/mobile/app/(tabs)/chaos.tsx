@@ -24,6 +24,7 @@ import {
   ToastNotification,
   ConfirmationDialog,
   DS_TOKENS,
+  DS_FONTS,
 } from '../../src/components/DesignSystem';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -1471,6 +1472,7 @@ export default function RealNewsFeedScreen() {
                     {/* Headline & Details */}
                     <Text
                       style={{
+                        fontFamily: DS_FONTS.heading,
                         fontSize: 16,
                         fontWeight: '900',
                         color: '#0F172A',
@@ -1482,6 +1484,7 @@ export default function RealNewsFeedScreen() {
                     </Text>
                     <Text
                       style={{
+                        fontFamily: DS_FONTS.body,
                         fontSize: 13,
                         fontWeight: '500',
                         color: '#475569',
@@ -1767,6 +1770,7 @@ export default function RealNewsFeedScreen() {
                       {/* Headline & Details */}
                       <Text
                         style={{
+                          fontFamily: DS_FONTS.heading,
                           fontSize: 16,
                           fontWeight: '900',
                           color: '#0F172A',
@@ -1778,6 +1782,7 @@ export default function RealNewsFeedScreen() {
                       </Text>
                       <Text
                         style={{
+                          fontFamily: DS_FONTS.body,
                           fontSize: 13,
                           fontWeight: '500',
                           color: '#475569',

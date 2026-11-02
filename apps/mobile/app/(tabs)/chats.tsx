@@ -16,6 +16,7 @@ import {
   LoadingState,
   ToastNotification,
   DS_TOKENS,
+  DS_FONTS,
 } from '../../src/components/DesignSystem';
 
 export default function ChatsScreen() {
@@ -271,15 +272,15 @@ export default function ChatsScreen() {
                   {/* Room Details */}
                   <View style={{ flex: 1, marginRight: 8 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                      <Text numberOfLines={1} style={{ color: '#0F172A', fontSize: 15, fontWeight: '800', flex: 1 }}>
+                      <Text numberOfLines={1} style={{ fontFamily: DS_FONTS.heading, color: '#0F172A', fontSize: 15, fontWeight: '800', flex: 1 }}>
                         {name}
                       </Text>
-                      <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', marginLeft: 6 }}>
+                      <Text style={{ fontFamily: DS_FONTS.mono, color: '#94A3B8', fontSize: 11, fontWeight: '700', marginLeft: 6 }}>
                         {time}
                       </Text>
                     </View>
 
-                    <Text numberOfLines={1} style={{ color: '#64748B', fontSize: 12, fontWeight: '500' }}>
+                    <Text numberOfLines={1} style={{ fontFamily: DS_FONTS.body, color: '#64748B', fontSize: 12, fontWeight: '500' }}>
                       {lastMsg}
                     </Text>
 
@@ -299,7 +300,7 @@ export default function ChatsScreen() {
                             borderRadius: 6,
                           }}
                         >
-                          <Text style={{ fontSize: 10, fontWeight: '800', color: '#4F46E5' }}>
+                          <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 10, fontWeight: '800', color: '#4F46E5' }}>
                             🔑 {matchingAdda.inviteCode} {copiedId === item.id ? '✓' : '📋'}
                           </Text>
                         </TouchableOpacity>

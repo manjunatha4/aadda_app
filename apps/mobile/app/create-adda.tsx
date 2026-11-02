@@ -13,6 +13,7 @@ import {
   InputField,
   ToastNotification,
   DS_TOKENS,
+  DS_FONTS,
 } from '../src/components/DesignSystem';
 
 const BADGE_OPTIONS = ['🛖', '⚡', '☕', '🔥', '👑', '🍕', '🎮', '🚀', '💎', '🐸', '🍓', '🍦', '👅', '💡', '🛼'];
@@ -126,10 +127,10 @@ export default function CreateAddaScreen() {
               <Text style={{ fontSize: 36 }}>🎉</Text>
             </View>
 
-            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 24, fontWeight: '900', textAlign: 'center' }}>
+            <Text style={{ fontFamily: DS_FONTS.heading, color: DS_TOKENS.colors.textPrimary, fontSize: 24, fontWeight: '900', textAlign: 'center' }}>
               {createdAdda.name}
             </Text>
-            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 13, textAlign: 'center', marginTop: 4, maxWidth: 360 }}>
+            <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textSecondary, fontSize: 13, textAlign: 'center', marginTop: 4, maxWidth: 360 }}>
               {isKn ? 'ನಿಮ್ಮ ಹೊಸ ರೂಮ್ ಸಿದ್ಧವಾಗಿದೆ! ಸ್ನೇಹಿತರೊಂದಿಗೆ ಸೀಕ್ರೆಟ್ ಕೋಡ್ ಹಂಚಿಕೊಳ್ಳಿ.' : 'Your room is live across all devices! Share the secret invite code with your crew.'}
             </Text>
 
@@ -146,11 +147,12 @@ export default function CreateAddaScreen() {
                 borderColor: DS_TOKENS.colors.borderSubtle,
               }}
             >
-              <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 11, fontWeight: '800', letterSpacing: 1 }}>
+              <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.purple, fontSize: 11, fontWeight: '800', letterSpacing: 1 }}>
                 {isKn ? 'ಸೀಕ್ರೆಟ್ ಕೊಠಡಿ ಕೋಡ್' : 'SECRET ROOM JOINING CODE'}
               </Text>
               <Text
                 style={{
+                  fontFamily: DS_FONTS.mono,
                   color: DS_TOKENS.colors.textPrimary,
                   fontSize: 32,
                   fontWeight: '900',

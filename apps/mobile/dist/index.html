@@ -4,10 +4,45 @@
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta httpEquiv="Pragma" content="no-cache" />
-    <meta httpEquiv="Expires" content="0" />
     <title>AADDA</title>
+    <!-- Google Fonts Official Source -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+    <!-- Centralized Font-Family Variables & Typography Rules -->
+    <style id="aadda-fonts-static">
+      :root {
+        --font-heading: 'Space Grotesk', sans-serif;
+        --font-body: 'Inter', sans-serif;
+        --font-mono: 'Space Mono', monospace;
+      }
+
+      /* Default interface, body text, inputs & React Native Web text */
+      html, body, #root, input, textarea, select, button {
+        font-family: var(--font-body);
+      }
+
+      div[dir="auto"], span[dir="auto"], [dir="ltr"], [dir="rtl"], .css-text-146c351 {
+        font-family: var(--font-body);
+      }
+
+      /* Primary headings and display typography */
+      h1, h2, h3, h4, h5, h6, [data-font="heading"], .font-heading {
+        font-family: var(--font-heading) !important;
+      }
+
+      /* Body text, descriptions, navigation, buttons and general interface text */
+      p, [data-font="body"], .font-body {
+        font-family: var(--font-body) !important;
+      }
+
+      /* Monospace elements, technical labels, counters, timestamps, badges and numerical indicators */
+      code, pre, kbd, samp, [data-font="mono"], .font-mono, .badge-mono, .timestamp, .counter {
+        font-family: var(--font-mono) !important;
+      }
+    </style>
+
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
       /* These styles make the body full-height */
@@ -35,6 +70,6 @@
     </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
-  <script src="/_expo/static/js/web/entry-fdd9efba7acb1687cff5e60f6de53cc7.js?v=logout_fix_v2" defer></script>
+  <script src="/_expo/static/js/web/entry-4417e56aeeaa0b9e751d0e556849a69d.js?v=font_integration_v1" defer></script>
 </body>
 </html>

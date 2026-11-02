@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Platform, Modal, StyleSheet, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle, Line, Polyline } from 'react-native-svg';
 import { useAuthStore } from '../../src/stores/authStore';
+import { DS_FONTS } from '../../src/components/DesignSystem';
 
 interface TabItemConfig {
   name: string;
@@ -182,6 +183,7 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
         </View>
         <Text
           style={{
+            fontFamily: DS_FONTS.body,
             fontSize: 10,
             fontWeight: '700',
             color: isFocused ? '#4F46E5' : '#94A3B8',
@@ -312,7 +314,7 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
             }}
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>
+              <Text style={{ fontFamily: DS_FONTS.heading, fontSize: 16, fontWeight: '900', color: '#0F172A' }}>
                 {isKn ? 'ಹೊಸದನ್ನು ರಚಿಸಿ ✨' : 'Create Something New ✨'}
               </Text>
               <TouchableOpacity onPress={() => setShowCreateSheet(false)}>
@@ -352,10 +354,10 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
                   <Text style={{ fontSize: 22, color: '#FFFFFF' }}>🛖</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
+                  <Text style={{ fontFamily: DS_FONTS.heading, fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
                     {isKn ? 'ಹೊಸ ರೂಮ್ ರಚಿಸಿ (Adda)' : 'Create New Room (Adda)'}
                   </Text>
-                  <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                  <Text style={{ fontFamily: DS_FONTS.body, fontSize: 12, color: '#64748B', marginTop: 2 }}>
                     {isKn ? 'ಸ್ನೇಹಿತರೊಂದಿಗೆ ಹರಟೆ ಹೊಡೆಯಲು ಖಾಸಗಿ ಕೊಠಡಿ' : 'Start a private hangout room with invite code'}
                   </Text>
                 </View>
@@ -393,10 +395,10 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
                   <Text style={{ fontSize: 22, color: '#FFFFFF' }}>📷</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
+                  <Text style={{ fontFamily: DS_FONTS.heading, fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
                     {isKn ? 'ಫೋಟೋ ಸುದ್ದಿ ಹಂಚಿಕೊಳ್ಳಿ' : 'Share Photo News'}
                   </Text>
-                  <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                  <Text style={{ fontFamily: DS_FONTS.body, fontSize: 12, color: '#64748B', marginTop: 2 }}>
                     {isKn ? 'ಸ್ಥಳೀಯ ಅಥವಾ ಕಾಲೇಜು ಸುದ್ದಿ ಫೋಟೋ ಸಹಿತ' : 'Post verified news with photos & full details'}
                   </Text>
                 </View>
@@ -434,10 +436,10 @@ function FloatingGlassTabBar({ state, descriptors, navigation }: any) {
                   <Text style={{ fontSize: 22, color: '#FFFFFF' }}>☕</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
+                  <Text style={{ fontFamily: DS_FONTS.heading, fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
                     {isKn ? 'ಟೀ ಕುಡಿತಾ ಹರಟೆ ಅಥವಾ ಮತದಾನ' : 'Spill the Tea or Start a Poll'}
                   </Text>
-                  <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                  <Text style={{ fontFamily: DS_FONTS.body, fontSize: 12, color: '#64748B', marginTop: 2 }}>
                     {isKn ? 'ಗುಪ್ತ ಕನ್ಫೆಷನ್ ಅಥವಾ ಸರ್ಕಲ್ ಮತದಾನ' : 'Confessions, polls, or juicy circle stories'}
                   </Text>
                 </View>

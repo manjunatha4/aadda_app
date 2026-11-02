@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, Platform } from 'react-native';
+import { DS_FONTS } from './DesignSystem';
 
 interface Reaction {
   id: string;
@@ -77,6 +78,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {!isMe && (
           <Text
             style={{
+              fontFamily: DS_FONTS.heading,
               color: '#6366F1',
               fontSize: 11,
               fontWeight: '700',
@@ -151,6 +153,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {Boolean(content) && (
             <Text
               style={{
+                fontFamily: DS_FONTS.body,
                 color: isMe ? '#FFFFFF' : '#0F172A',
                 fontSize: 15,
                 lineHeight: 21,
@@ -182,11 +185,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   marginRight: 6,
                 }}
               >
-                <Text style={{ color: '#FFFFFF', fontSize: 9, fontWeight: '800' }}>YOU</Text>
+                <Text style={{ fontFamily: DS_FONTS.mono, color: '#FFFFFF', fontSize: 9, fontWeight: '800' }}>YOU</Text>
               </View>
             )}
             <Text
               style={{
+                fontFamily: DS_FONTS.mono,
                 color: isMe ? 'rgba(255, 255, 255, 0.8)' : '#94A3B8',
                 fontSize: 10,
                 fontWeight: '600',
@@ -229,7 +233,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 }}
               >
                 <Text style={{ fontSize: 11 }}>{emoji}</Text>
-                <Text style={{ color: '#0F172A', fontSize: 10, fontWeight: '800', marginLeft: 3 }}>
+                <Text style={{ fontFamily: DS_FONTS.mono, color: '#0F172A', fontSize: 10, fontWeight: '800', marginLeft: 3 }}>
                   {count}
                 </Text>
               </TouchableOpacity>

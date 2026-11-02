@@ -20,6 +20,7 @@ import {
   InputField,
   ToastNotification,
   DS_TOKENS,
+  DS_FONTS,
 } from '../../src/components/DesignSystem';
 
 export const INDIAN_STATES_AND_DISTRICTS: Record<string, string[]> = {
@@ -642,6 +643,7 @@ export default function AuthScreen() {
             </View>
             <Text
               style={{
+                fontFamily: DS_FONTS.heading,
                 color: DS_TOKENS.colors.textPrimary,
                 fontWeight: '900',
                 fontSize: 18,
@@ -664,7 +666,7 @@ export default function AuthScreen() {
                 borderRadius: DS_TOKENS.radii.pill,
               }}
             >
-              <Text style={{ color: DS_TOKENS.colors.textPrimary, fontWeight: '800', fontSize: 12 }}>
+              <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textPrimary, fontWeight: '800', fontSize: 12 }}>
                 {isKn ? 'English' : 'ಕನ್ನಡ'} 🌐
               </Text>
             </TouchableOpacity>
@@ -693,6 +695,7 @@ export default function AuthScreen() {
 
           <Text
             style={{
+              fontFamily: DS_FONTS.heading,
               color: DS_TOKENS.colors.textPrimary,
               fontSize: 26,
               fontWeight: '900',
@@ -727,6 +730,7 @@ export default function AuthScreen() {
 
           <Text
             style={{
+              fontFamily: DS_FONTS.body,
               color: DS_TOKENS.colors.textSecondary,
               fontSize: 13,
               fontWeight: '600',
@@ -772,10 +776,10 @@ export default function AuthScreen() {
                   marginBottom: 6,
                 }}
               >
-                <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
+                <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
                   STEP {step} OF 5
                 </Text>
-                <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '700' }}>
+                <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '700' }}>
                   {step === 1
                     ? 'Email'
                     : step === 2
@@ -1277,11 +1281,12 @@ export default function AuthScreen() {
                     marginBottom: 16,
                   }}
                 >
-                  <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
+                  <Text style={{ fontFamily: DS_FONTS.mono, color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
                     📬 Verification Code Sent:
                   </Text>
                   <Text
                     style={{
+                      fontFamily: DS_FONTS.mono,
                       color: DS_TOKENS.colors.textPrimary,
                       fontSize: 18,
                       fontWeight: '900',
@@ -1291,7 +1296,7 @@ export default function AuthScreen() {
                   >
                     {serverVerificationCode}
                   </Text>
-                  <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 11, marginTop: 2 }}>
+                  <Text style={{ fontFamily: DS_FONTS.body, color: DS_TOKENS.colors.textSecondary, fontSize: 11, marginTop: 2 }}>
                     Enter this 6-digit code below to activate your account.
                   </Text>
                 </View>

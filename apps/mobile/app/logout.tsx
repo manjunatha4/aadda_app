@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Image } from 'react-na
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../src/stores/authStore';
-import { MainLayout, GlassCard, PageHeader } from '../src/components/DesignSystem';
+import { MainLayout, GlassCard, PageHeader, DS_FONTS } from '../src/components/DesignSystem';
 
 export default function LogoutScreen() {
   const { i18n } = useTranslation();
@@ -71,7 +71,7 @@ export default function LogoutScreen() {
             <Text style={{ fontSize: 36 }}>🚪</Text>
           </View>
 
-          <Text style={{ fontSize: 20, fontWeight: '900', color: '#0F172A', textAlign: 'center', marginBottom: 6 }}>
+          <Text style={{ fontFamily: DS_FONTS.heading, fontSize: 20, fontWeight: '900', color: '#0F172A', textAlign: 'center', marginBottom: 6 }}>
             {isKn ? 'ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್ ಮಾಡಬೇಕೆ?' : 'Sign out of your account?'}
           </Text>
 
@@ -104,10 +104,10 @@ export default function LogoutScreen() {
                 {user.avatarUrl ? (
                   <Image source={{ uri: user.avatarUrl }} style={{ width: '100%', height: '100%' }} />
                 ) : (
-                  <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 13 }}>{initial}</Text>
+                  <Text style={{ fontFamily: DS_FONTS.heading, color: '#FFFFFF', fontWeight: '800', fontSize: 13 }}>{initial}</Text>
                 )}
               </View>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155' }}>
+              <Text style={{ fontFamily: DS_FONTS.mono, fontSize: 13, fontWeight: '700', color: '#334155' }}>
                 {displayName} (@{user.username})
               </Text>
             </View>
@@ -115,6 +115,7 @@ export default function LogoutScreen() {
 
           <Text
             style={{
+              fontFamily: DS_FONTS.body,
               fontSize: 13,
               fontWeight: '500',
               color: '#64748B',
@@ -154,7 +155,7 @@ export default function LogoutScreen() {
               ) : (
                 <>
                   <Text style={{ fontSize: 18, color: '#FFFFFF' }}>🚪</Text>
-                  <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '800' }}>
+                  <Text style={{ fontFamily: DS_FONTS.body, color: '#FFFFFF', fontSize: 15, fontWeight: '800' }}>
                     {isKn ? 'ಹೌದು, ಲಾಗ್ ಔಟ್ ಮಾಡಿ' : 'Yes, Sign Out of Account'}
                   </Text>
                 </>
@@ -174,7 +175,7 @@ export default function LogoutScreen() {
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ color: '#475569', fontSize: 14, fontWeight: '700' }}>
+              <Text style={{ fontFamily: DS_FONTS.body, color: '#475569', fontSize: 14, fontWeight: '700' }}>
                 {isKn ? 'ರದ್ದು (ಖಾತೆಯಲ್ಲಿಯೇ ಇರಿ)' : 'Cancel (Stay Signed In)'}
               </Text>
             </TouchableOpacity>

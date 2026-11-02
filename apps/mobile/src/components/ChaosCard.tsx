@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import { DS_FONTS } from './DesignSystem';
 
 interface Entry {
   id: string;
@@ -61,14 +62,14 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <View style={{ backgroundColor: '#EEF2FF', borderWidth: 1, borderColor: '#C7D2FE', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
-          <Text style={{ color: '#6366F1', fontWeight: '800', fontSize: 10 }}>
+          <Text style={{ fontFamily: DS_FONTS.mono, color: '#6366F1', fontWeight: '800', fontSize: 10 }}>
             CHAOS 🔥 {category}
           </Text>
         </View>
-        <Text style={{ color: '#64748B', fontSize: 11, fontWeight: '600' }}>Active Round</Text>
+        <Text style={{ fontFamily: DS_FONTS.body, color: '#64748B', fontSize: 11, fontWeight: '600' }}>Active Round</Text>
       </View>
 
-      <Text style={{ color: '#0F172A', fontSize: 16, fontWeight: '700', marginBottom: 12, lineHeight: 22 }}>
+      <Text style={{ fontFamily: DS_FONTS.heading, color: '#0F172A', fontSize: 16, fontWeight: '700', marginBottom: 12, lineHeight: 22 }}>
         {displayPrompt}
       </Text>
 
@@ -90,10 +91,10 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
               }}
             >
               <View style={{ flex: 1, marginRight: 8 }}>
-                <Text style={{ color: '#6366F1', fontSize: 11, fontWeight: '800' }}>
+                <Text style={{ fontFamily: DS_FONTS.heading, color: '#6366F1', fontSize: 11, fontWeight: '800' }}>
                   {entry.user.displayName}
                 </Text>
-                <Text style={{ color: '#334155', fontSize: 13, marginTop: 2 }}>{entry.content}</Text>
+                <Text style={{ fontFamily: DS_FONTS.body, color: '#334155', fontSize: 13, marginTop: 2 }}>{entry.content}</Text>
               </View>
 
               {onVote && (
@@ -112,7 +113,7 @@ export const ChaosCard: React.FC<ChaosCardProps> = ({
                   }}
                 >
                   <Text style={{ fontSize: 12 }}>🔥</Text>
-                  <Text style={{ color: '#0F172A', fontSize: 11, fontWeight: '800' }}>
+                  <Text style={{ fontFamily: DS_FONTS.mono, color: '#0F172A', fontSize: 11, fontWeight: '800' }}>
                     {entry.voteCount}
                   </Text>
                 </TouchableOpacity>
