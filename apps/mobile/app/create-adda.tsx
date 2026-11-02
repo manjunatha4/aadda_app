@@ -53,6 +53,9 @@ export default function CreateAddaScreen() {
         res = await clientStore.createAdda(fullName, description.trim() || undefined);
       }
 
+      if (res) {
+        await clientStore.saveAddaLocally(res);
+      }
       setCreatedAdda(res);
       setToastMessage(isKn ? 'ರೂಮ್ ರಚಿಸಲಾಗಿದೆ! 🎉' : 'Room created successfully! 🎉');
     } catch (e: any) {

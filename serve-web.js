@@ -19,15 +19,91 @@ function generateVerificationCode() {
 const DIST_DIR = path.resolve(__dirname, 'apps/mobile/dist');
 const DATA_DIR = path.resolve(__dirname, 'data');
 const STORE_FILE = path.join(DATA_DIR, 'store.json');
+const LEGACY_DB_FILE = path.join(DATA_DIR, 'aadda-db.json');
+const LOGS_DIR = path.join(DATA_DIR, 'logs');
+const SERVER_LOG_FILE = path.join(LOGS_DIR, 'server.log');
+const USER_ACTIVITY_FILE = path.join(LOGS_DIR, 'user_activity.json');
 const PORT = 8081;
 const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19413d89279c4';
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
+if (!fs.existsSync(LOGS_DIR)) {
+  fs.mkdirSync(LOGS_DIR, { recursive: true });
+}
+
+// Universal Room Code Normalizer
+function normalizeRoomCode(code) {
+  if (!code || typeof code !== 'string') return '';
+  return code
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '') // remove hyphens, spaces, hashes, quotes
+    .replace(/^ADDA/, '');     // strip leading ADDA prefix
+}
+
+// User Activity & Server Logging
+let userLogs = [];
+if (fs.existsSync(USER_ACTIVITY_FILE)) {
+  try {
+    userLogs = JSON.parse(fs.readFileSync(USER_ACTIVITY_FILE, 'utf8')) || [];
+  } catch {
+    userLogs = [];
+  }
+}
+
+function logEvent(type, details = {}, req = null) {
+  const timestamp = new Date().toISOString();
+  const ip = req
+    ? (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1').split(',')[0].trim()
+    : 'internal';
+  const userAgent = req ? (req.headers['user-agent'] || 'unknown') : 'system';
+
+  const entry = {
+    id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    timestamp,
+    type,
+    ip,
+    userAgent,
+    ...details,
+  };
+
+  userLogs.unshift(entry);
+  if (userLogs.length > 500) userLogs.pop();
+
+  const msgText = details.message || JSON.stringify(details);
+  const colorPrefix =
+    type.includes('FAIL') || type.includes('ERR')
+      ? '\x1b[31m' // Red
+      : type.includes('SUCCESS') || type.includes('CREATE')
+      ? '\x1b[32m' // Green
+      : type.includes('AUTH')
+      ? '\x1b[36m' // Cyan
+      : '\x1b[33m'; // Yellow
+  const resetColor = '\x1b[0m';
+
+  console.log(`${colorPrefix}[${timestamp}] [${type}]${resetColor} ${msgText} (IP: ${ip})`);
+
+  try {
+    fs.appendFileSync(SERVER_LOG_FILE, `[${timestamp}] [${type}] ${msgText} (IP: ${ip})\n`, 'utf8');
+    fs.writeFileSync(USER_ACTIVITY_FILE, JSON.stringify(userLogs.slice(0, 200), null, 2), 'utf8');
+  } catch (e) {
+    console.error('Failed to write log:', e);
+  }
+}
 
 // In-memory + File-backed Store
 let store = {
+  users: [],
+  invitations: [
+    {
+      id: 'inv_1',
+      code: 'ADDA-LL9U',
+      addaId: 'adda_1',
+      conversationId: 'conv_1',
+      createdAt: new Date().toISOString(),
+    },
+  ],
   addas: [
     {
       id: 'adda_1',
@@ -219,6 +295,45 @@ if (fs.existsSync(STORE_FILE)) {
   }
 }
 
+// Backfill invitations index if missing
+if (!store.invitations || !Array.isArray(store.invitations) || store.invitations.length === 0) {
+  store.invitations = (store.addas || []).map((a) => ({
+    id: `inv_${a.id}`,
+    code: a.inviteCode || 'ADDA-LL9U',
+    addaId: a.id,
+    conversationId: a.conversationId,
+    createdAt: a.createdAt || new Date().toISOString(),
+  }));
+}
+
+// Merge legacy database users if present
+if (fs.existsSync(LEGACY_DB_FILE)) {
+  try {
+    const legacyRaw = fs.readFileSync(LEGACY_DB_FILE, 'utf8');
+    const legacyParsed = JSON.parse(legacyRaw);
+    if (legacyParsed?.users && Array.isArray(legacyParsed.users)) {
+      if (!store.users) store.users = [];
+      for (const lu of legacyParsed.users) {
+        if (!store.users.some((u) => u.email?.toLowerCase() === lu.email?.toLowerCase())) {
+          store.users.push({
+            id: lu.id || `usr_${Date.now()}`,
+            email: lu.email,
+            username: lu.username,
+            displayName: lu.displayName || lu.username,
+            state: 'Karnataka',
+            district: lu.district || 'Bengaluru Urban',
+            isEmailVerified: lu.isVerified !== false,
+            language: lu.language || 'en',
+            createdAt: lu.createdAt || new Date().toISOString(),
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Legacy DB check warning:', e.message);
+  }
+}
+
 function persistStore() {
   try {
     fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 2), 'utf8');
@@ -227,15 +342,46 @@ function persistStore() {
   }
 }
 
+// Fetch from cloud store
+function fetchFromCloud() {
+  return new Promise((resolve) => {
+    const req = https.get(CLOUD_SYNC_URL + '?_t=' + Date.now(), (res) => {
+      let data = '';
+      res.on('data', (chunk) => (data += chunk));
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          resolve(parsed?.data || null);
+        } catch {
+          resolve(null);
+        }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.setTimeout(5000, () => {
+      req.destroy();
+      resolve(null);
+    });
+  });
+}
+
 // Background sync to cloud store
 function syncToCloud() {
   try {
     const payload = JSON.stringify({
       name: 'aadda_room_store',
       data: {
-        addas: store.addas.slice(0, 100),
-        invitations: store.addas.map((a) => ({ code: a.inviteCode, addaId: a.id, conversationId: a.conversationId })),
-        conversations: store.conversations.slice(0, 50),
+        users: (store.users || []).slice(0, 50).map((u) => ({
+          id: u.id,
+          username: u.username,
+          displayName: u.displayName,
+          district: u.district,
+          language: u.language,
+          avatarUrl: u.avatarUrl || null,
+        })),
+        addas: (store.addas || []).slice(0, 100),
+        invitations: (store.invitations || []).slice(0, 100),
+        conversations: (store.conversations || []).slice(0, 50),
       },
     });
 
@@ -251,6 +397,32 @@ function syncToCloud() {
     req.end();
   } catch {}
 }
+
+// Startup pull from cloud store to ensure any rooms created on other devices are synced
+fetchFromCloud().then((cloudData) => {
+  if (cloudData && Array.isArray(cloudData.addas)) {
+    let merged = false;
+    for (const ca of cloudData.addas) {
+      if (!store.addas.some((a) => a.id === ca.id)) {
+        store.addas.push(ca);
+        merged = true;
+      }
+    }
+    if (Array.isArray(cloudData.invitations)) {
+      if (!store.invitations) store.invitations = [];
+      for (const ci of cloudData.invitations) {
+        if (!store.invitations.some((i) => i.code === ci.code)) {
+          store.invitations.push(ci);
+          merged = true;
+        }
+      }
+    }
+    if (merged) {
+      persistStore();
+      logEvent('STARTUP_CLOUD_SYNC', { message: `Synced ${cloudData.addas.length} rooms from cloud store` });
+    }
+  }
+}).catch(() => {});
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -313,19 +485,29 @@ const server = http.createServer(async (req, res) => {
     if (apiPath === '/addas' && req.method === 'POST') {
       const body = await readBody(req);
       const name = (body.name || '').trim();
-      if (!name) return sendJson({ message: 'Room name is required' }, 400);
+      if (!name) {
+        logEvent('ROOM_CREATE_FAILED', { reason: 'Room name is required' }, req);
+        return sendJson({ message: 'Room name is required' }, 400);
+      }
 
       const addaId = `adda_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      const hexCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const inviteCode = `ADDA-${hexCode}`;
+
+      let inviteCode = '';
+      if (body.inviteCode && typeof body.inviteCode === 'string' && body.inviteCode.trim()) {
+        const rawInv = body.inviteCode.trim().toUpperCase();
+        inviteCode = rawInv.startsWith('ADDA-') ? rawInv : `ADDA-${normalizeRoomCode(rawInv)}`;
+      } else {
+        const hexCode = crypto.randomBytes(2).toString('hex').toUpperCase();
+        inviteCode = `ADDA-${hexCode}`;
+      }
 
       const newAdda = {
         id: addaId,
         name,
         description: body.description?.trim() || '',
         inviteCode,
-        creatorId: 'user_creator',
+        creatorId: body.creatorId || 'user_creator',
         conversationId,
         memberCount: 1,
         myRole: 'OWNER',
@@ -345,6 +527,15 @@ const server = http.createServer(async (req, res) => {
         },
       };
 
+      if (!store.invitations) store.invitations = [];
+      store.invitations.unshift({
+        id: `inv_${Date.now()}`,
+        code: inviteCode,
+        addaId,
+        conversationId,
+        createdAt: new Date().toISOString(),
+      });
+
       store.addas.unshift(newAdda);
       store.conversations.unshift(newConv);
       store.messages[conversationId] = [
@@ -362,6 +553,15 @@ const server = http.createServer(async (req, res) => {
 
       persistStore();
       syncToCloud();
+
+      logEvent('ROOM_CREATED', {
+        addaId,
+        name,
+        inviteCode,
+        conversationId,
+        message: `Created room "${name}" with secret code ${inviteCode}`,
+      }, req);
+
       return sendJson(newAdda);
     }
 
@@ -494,6 +694,16 @@ const server = http.createServer(async (req, res) => {
       persistStore();
       syncToCloud();
 
+      logEvent('AUTH_REGISTER', {
+        email: user.email,
+        username: user.username,
+        displayName: user.displayName,
+        state: user.state,
+        district: user.district,
+        verificationCode,
+        message: `New account registered: ${user.username} (${user.email})`,
+      }, req);
+
       return sendJson({
         success: true,
         message: 'Account created! Please verify your email.',
@@ -510,14 +720,17 @@ const server = http.createServer(async (req, res) => {
       if (!store.users) store.users = [];
       const user = store.users.find((u) => u.email && u.email.toLowerCase() === email);
       if (!user) {
+        logEvent('AUTH_VERIFY_FAILED', { email, reason: 'User not found' }, req);
         return sendJson({ message: 'User account not found' }, 404);
       }
 
       if (!user.verificationCode || user.verificationCode !== code) {
+        logEvent('AUTH_VERIFY_FAILED', { email, reason: 'Invalid code', code }, req);
         return sendJson({ message: 'Invalid verification code. Please check and try again.' }, 400);
       }
 
       if (user.verificationExpires && new Date(user.verificationExpires).getTime() < Date.now()) {
+        logEvent('AUTH_VERIFY_FAILED', { email, reason: 'Code expired' }, req);
         return sendJson({ message: 'Verification code has expired. Please request a new one.' }, 400);
       }
 
@@ -527,6 +740,13 @@ const server = http.createServer(async (req, res) => {
 
       persistStore();
       syncToCloud();
+
+      logEvent('AUTH_VERIFY_SUCCESS', {
+        userId: user.id,
+        email: user.email,
+        username: user.username,
+        message: `Email verified successfully for ${user.username} (${user.email})`,
+      }, req);
 
       const safeUser = { ...user };
       delete safeUser.passwordHash;
@@ -589,7 +809,9 @@ const server = http.createServer(async (req, res) => {
           };
           store.users.push(user);
           persistStore();
+          logEvent('AUTH_GUEST_LOGIN', { userId: user.id, username: user.username, message: `Guest user auto-created: ${user.username}` }, req);
         } else {
+          logEvent('AUTH_LOGIN_FAILED', { login, reason: 'Account not found' }, req);
           return sendJson({ message: 'Account not found. Please register.' }, 404);
         }
       }
@@ -599,11 +821,13 @@ const server = http.createServer(async (req, res) => {
         const bufHash = Buffer.from(hash, 'hex');
         const bufStored = Buffer.from(user.passwordHash, 'hex');
         if (bufHash.length !== bufStored.length || !crypto.timingSafeEqual(bufHash, bufStored)) {
+          logEvent('AUTH_LOGIN_FAILED', { login, reason: 'Incorrect password' }, req);
           return sendJson({ message: 'Incorrect password. Please try again.' }, 401);
         }
       }
 
       if (user.isEmailVerified === false) {
+        logEvent('AUTH_LOGIN_UNVERIFIED', { email: user.email, message: `Login halted: Email not yet verified for ${user.email}` }, req);
         return sendJson({
           requiresVerification: true,
           email: user.email,
@@ -615,6 +839,13 @@ const server = http.createServer(async (req, res) => {
       const safeUser = { ...user };
       delete safeUser.passwordHash;
       delete safeUser.salt;
+
+      logEvent('AUTH_LOGIN_SUCCESS', {
+        userId: user.id,
+        username: user.username,
+        email: user.email,
+        message: `User signed in successfully: ${user.username} (${user.email})`,
+      }, req);
 
       return sendJson({
         user: safeUser,
@@ -643,7 +874,29 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (apiPath === '/auth/logout' && req.method === 'POST') {
+      logEvent('AUTH_LOGOUT', { message: 'User logged out' }, req);
       return sendJson({ success: true });
+    }
+
+    // A4. Admin & Activity Logs
+    if (apiPath === '/logs' && req.method === 'GET') {
+      const limit = parseInt(parsedUrl.searchParams.get('limit') || '100', 10);
+      return sendJson({
+        total: userLogs.length,
+        logs: userLogs.slice(0, limit),
+      });
+    }
+
+    if (apiPath === '/health' && req.method === 'GET') {
+      return sendJson({
+        status: 'ok',
+        uptime: Math.floor(process.uptime()),
+        totalUsers: (store.users || []).length,
+        totalRooms: (store.addas || []).length,
+        totalConversations: (store.conversations || []).length,
+        totalLogs: userLogs.length,
+        time: new Date().toISOString(),
+      });
     }
 
     if (apiPath === '/users/profile' && req.method === 'GET') {
@@ -658,27 +911,118 @@ const server = http.createServer(async (req, res) => {
       return sendJson({ message: 'Unauthorized' }, 401);
     }
 
-    // B. Join Room via Secret Code
+    // B. Join Room via Secret Code (Robust & Multi-Device Sync)
     if (apiPath === '/invitations/accept' && req.method === 'POST') {
       const body = await readBody(req);
-      const rawCode = (body.code || '').trim().toUpperCase();
-      if (!rawCode) return sendJson({ message: 'Please enter room code' }, 400);
+      const rawCode = (body.code || '').trim();
+      if (!rawCode) {
+        logEvent('ROOM_JOIN_FAILED', { reason: 'Empty room code' }, req);
+        return sendJson({ message: 'Please enter room code' }, 400);
+      }
 
-      const cleanNoPrefix = rawCode.replace(/^ADDA-?/, '');
-      const variants = [rawCode, cleanNoPrefix, `ADDA-${cleanNoPrefix}`];
+      const cleanCode = normalizeRoomCode(rawCode);
+      const upperRaw = rawCode.toUpperCase();
 
-      let targetAdda = store.addas.find(
-        (a) => a.inviteCode && variants.includes(a.inviteCode.toUpperCase()),
-      );
+      // Finder helper to check store.addas and store.invitations
+      const findTargetAdda = () => {
+        // 1. Direct or normalized match in store.addas
+        let found = (store.addas || []).find((a) => {
+          if (!a) return false;
+          if (a.id === rawCode) return true;
+          if (a.inviteCode && a.inviteCode.toUpperCase() === upperRaw) return true;
+          if (a.inviteCode && normalizeRoomCode(a.inviteCode) === cleanCode) return true;
+          return false;
+        });
+        if (found) return found;
+
+        // 2. Match in store.invitations lookup table
+        if (store.invitations && Array.isArray(store.invitations)) {
+          const matchedInv = store.invitations.find((inv) => {
+            if (!inv || !inv.code) return false;
+            if (inv.code.toUpperCase() === upperRaw) return true;
+            if (normalizeRoomCode(inv.code) === cleanCode) return true;
+            return false;
+          });
+          if (matchedInv) {
+            found = (store.addas || []).find(
+              (a) => a.id === matchedInv.addaId || a.conversationId === matchedInv.conversationId,
+            );
+            if (found) return found;
+          }
+        }
+
+        // 3. Fallback: fuzzy room name match if input is long enough
+        if (cleanCode.length >= 3) {
+          found = (store.addas || []).find(
+            (a) => a.name && a.name.toLowerCase() === rawCode.toLowerCase(),
+          );
+          if (found) return found;
+        }
+
+        return null;
+      };
+
+      let targetAdda = findTargetAdda();
+
+      // If not found in local memory, check live cloud store (handles rooms created on other devices/Vercel)
+      if (!targetAdda) {
+        try {
+          const cloudData = await fetchFromCloud();
+          if (cloudData && Array.isArray(cloudData.addas)) {
+            let merged = false;
+            for (const ca of cloudData.addas) {
+              if (!store.addas.some((existing) => existing.id === ca.id)) {
+                store.addas.push(ca);
+                merged = true;
+              }
+            }
+            if (Array.isArray(cloudData.invitations)) {
+              if (!store.invitations) store.invitations = [];
+              for (const ci of cloudData.invitations) {
+                if (!store.invitations.some((existing) => existing.code === ci.code)) {
+                  store.invitations.push(ci);
+                  merged = true;
+                }
+              }
+            }
+            if (Array.isArray(cloudData.conversations)) {
+              for (const cc of cloudData.conversations) {
+                if (!store.conversations.some((existing) => existing.id === cc.id)) {
+                  store.conversations.push(cc);
+                  merged = true;
+                }
+              }
+            }
+            if (merged) {
+              persistStore();
+            }
+          }
+        } catch (cloudErr) {
+          console.warn('Cloud pull on join failed:', cloudErr.message);
+        }
+
+        targetAdda = findTargetAdda();
+      }
 
       if (!targetAdda) {
+        logEvent('ROOM_JOIN_FAILED', {
+          reason: 'Invalid room code',
+          rawCode,
+          normalizedCode: cleanCode,
+          message: `Friend entered code "${rawCode}", but no matching room was found`,
+        }, req);
         return sendJson({ message: 'Invalid Room Code. Please check the code and try again.' }, 404);
       }
 
+      // Member joined successfully
       targetAdda.memberCount = (targetAdda.memberCount || 1) + 1;
-      const conv = store.conversations.find((c) => c.id === targetAdda.conversationId);
+      const conv = (store.conversations || []).find((c) => c.id === targetAdda.conversationId);
       if (conv) {
         conv.memberCount = targetAdda.memberCount;
+        conv.lastMessage = {
+          content: 'A friend just joined via secret code! 🎉',
+          createdAt: new Date().toISOString(),
+        };
       }
 
       if (!store.messages[targetAdda.conversationId]) {
@@ -689,7 +1033,7 @@ const server = http.createServer(async (req, res) => {
         conversationId: targetAdda.conversationId,
         senderId: 'system',
         sender: { id: 'system', displayName: 'Adda Bot', username: 'addabot' },
-        content: `A friend just joined ${targetAdda.name} via secret code! 🎉`,
+        content: `A friend just joined ${targetAdda.name} via secret code! 🎉 Welcome to the room!`,
         mediaUrl: null,
         createdAt: new Date().toISOString(),
         reactions: [],
@@ -697,6 +1041,16 @@ const server = http.createServer(async (req, res) => {
 
       persistStore();
       syncToCloud();
+
+      logEvent('ROOM_JOIN_SUCCESS', {
+        addaId: targetAdda.id,
+        addaName: targetAdda.name,
+        code: targetAdda.inviteCode,
+        inputCode: rawCode,
+        memberCount: targetAdda.memberCount,
+        message: `Friend joined room "${targetAdda.name}" using code "${rawCode}"`,
+      }, req);
+
       return sendJson({
         success: true,
         adda: targetAdda,
@@ -744,6 +1098,11 @@ const server = http.createServer(async (req, res) => {
       }
 
       persistStore();
+      logEvent('MESSAGE_SENT', {
+        conversationId,
+        sender: msg.sender?.displayName || 'User',
+        contentPreview: (msg.content || '').substring(0, 40),
+      }, req);
       return sendJson(msg);
     }
 

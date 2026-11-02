@@ -270,6 +270,14 @@ function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+function normalizeRoomCode(code: string): string {
+  if (!code || typeof code !== 'string') return '';
+  return code
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .replace(/^ADDA/, '');
+}
+
 export default async function handler(req: any, res: any) {
   // CORS Configuration
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -610,16 +618,22 @@ export default async function handler(req: any, res: any) {
 
       const addaId = `adda_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      // Generate clean 4-character uppercase alphanumeric code: e.g. ADDA-7K2X
-      const randomHex = crypto.randomBytes(2).toString('hex').toUpperCase();
-      const inviteCode = `ADDA-${randomHex}`;
+
+      let inviteCode = '';
+      if (body.inviteCode && typeof body.inviteCode === 'string' && body.inviteCode.trim()) {
+        const rawInv = body.inviteCode.trim().toUpperCase();
+        inviteCode = rawInv.startsWith('ADDA-') ? rawInv : `ADDA-${normalizeRoomCode(rawInv)}`;
+      } else {
+        const randomHex = crypto.randomBytes(2).toString('hex').toUpperCase();
+        inviteCode = `ADDA-${randomHex}`;
+      }
 
       const newAdda = {
         id: addaId,
         name,
         description: body.description?.trim() || '',
         inviteCode,
-        creatorId: 'user_creator',
+        creatorId: body.creatorId || 'user_creator',
         conversationId,
         memberCount: 1,
         myRole: 'OWNER',
@@ -656,6 +670,7 @@ export default async function handler(req: any, res: any) {
       ];
 
       // Save invitation lookup index
+      if (!store.invitations) store.invitations = [];
       store.invitations.unshift({
         id: `inv_${Date.now()}`,
         code: inviteCode,
@@ -671,24 +686,40 @@ export default async function handler(req: any, res: any) {
     // ROOM JOINING VIA INVITE CODE (CRITICAL REQUIREMENT)
     // -------------------------------------------------------------
     if (pathname === '/invitations/accept' && method === 'POST') {
-      const rawCode = (body.code || '').trim().toUpperCase();
+      const rawCode = (body.code || '').trim();
       if (!rawCode) {
         return json({ message: 'Please enter invite code' }, 400);
       }
 
-      // Check case-insensitive against store.addas and store.invitations with prefix flexibility
-      const cleanNoPrefix = rawCode.replace(/^ADDA-?/, '');
-      const variants = [rawCode, cleanNoPrefix, `ADDA-${cleanNoPrefix}`];
+      const cleanCode = normalizeRoomCode(rawCode);
+      const upperRaw = rawCode.toUpperCase();
 
-      let targetAdda = store.addas.find(
-        (a) => a.inviteCode && variants.includes(a.inviteCode.toUpperCase()),
-      );
+      let targetAdda = (store.addas || []).find((a) => {
+        if (!a) return false;
+        if (a.id === rawCode) return true;
+        if (a.inviteCode && a.inviteCode.toUpperCase() === upperRaw) return true;
+        if (a.inviteCode && normalizeRoomCode(a.inviteCode) === cleanCode) return true;
+        return false;
+      });
 
-      if (!targetAdda) {
-        const inv = store.invitations.find((i) => i.code && variants.includes(i.code.toUpperCase()));
+      if (!targetAdda && store.invitations && Array.isArray(store.invitations)) {
+        const inv = store.invitations.find((i) => {
+          if (!i || !i.code) return false;
+          if (i.code.toUpperCase() === upperRaw) return true;
+          if (normalizeRoomCode(i.code) === cleanCode) return true;
+          return false;
+        });
         if (inv) {
-          targetAdda = store.addas.find((a) => a.id === inv.addaId);
+          targetAdda = (store.addas || []).find(
+            (a) => a.id === inv.addaId || a.conversationId === inv.conversationId,
+          );
         }
+      }
+
+      if (!targetAdda && cleanCode.length >= 3) {
+        targetAdda = (store.addas || []).find(
+          (a) => a.name && a.name.toLowerCase() === rawCode.toLowerCase(),
+        );
       }
 
       if (!targetAdda) {

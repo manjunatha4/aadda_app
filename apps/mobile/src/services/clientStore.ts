@@ -70,6 +70,14 @@ export interface LocalConversation {
   members: LocalUser[];
 }
 
+function normalizeRoomCode(code: string): string {
+  if (!code || typeof code !== 'string') return '';
+  return code
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .replace(/^ADDA/, '');
+}
+
 export interface SavedFolder {
   id: string;
   title: string;
@@ -590,7 +598,11 @@ class ClientStore {
         await fetch(`${window.location.origin}/api/addas`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: newAdda.name, description: newAdda.description }),
+          body: JSON.stringify({
+            name: newAdda.name,
+            description: newAdda.description,
+            inviteCode: newAdda.inviteCode,
+          }),
         });
       } catch {
         // ignore
@@ -635,84 +647,89 @@ class ClientStore {
     return newAdda;
   }
 
+  async saveAddaLocally(adda: any) {
+    if (!adda || !adda.id) return;
+    await this.init();
+    if (!this.addas.some((a) => a.id === adda.id)) {
+      this.addas.unshift(adda);
+    }
+    if (adda.conversationId && !this.conversations.some((c) => c.id === adda.conversationId)) {
+      this.conversations.unshift({
+        id: adda.conversationId,
+        type: 'ADDA',
+        name: adda.name,
+        addaId: adda.id,
+        adda,
+        members: [],
+        lastMessage: {
+          content: `Welcome to ${adda.name}! 🎉`,
+          createdAt: adda.createdAt || new Date().toISOString(),
+        },
+      });
+    }
+    await this.persist();
+  }
+
   async acceptInvite(code: string) {
     await this.init();
-    const raw = code.trim().toUpperCase();
-    const cleanNoPrefix = raw.replace(/^ADDA-?/, '');
-    const variants = [raw, cleanNoPrefix, `ADDA-${cleanNoPrefix}`];
+    const raw = (code || '').trim();
+    if (!raw) {
+      throw new Error('Please enter room code');
+    }
 
-    let adda = this.addas.find(
-      (a) => a.inviteCode && variants.includes(a.inviteCode.toUpperCase()),
-    );
+    const cleanCode = normalizeRoomCode(raw);
+    const upperRaw = raw.toUpperCase();
 
-    if (!adda) {
-      // 1. Check local server API first
-      if (typeof window !== 'undefined' && window.location) {
-        try {
-          const localApiRes = await fetch(`${window.location.origin}/api/invitations/accept`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: raw }),
-          });
-          if (localApiRes.ok) {
-            const apiData = await localApiRes.json();
-            if (apiData?.adda) {
-              const matchedAdda: LocalAdda = apiData.adda;
-              adda = matchedAdda;
-              if (!this.addas.find((a) => a.id === matchedAdda.id)) {
-                this.addas.unshift(matchedAdda);
-              }
-              if (!this.conversations.find((c) => c.id === matchedAdda.conversationId)) {
-                this.conversations.unshift({
-                  id: matchedAdda.conversationId,
-                  type: 'ADDA',
-                  name: matchedAdda.name,
-                  addaId: matchedAdda.id,
-                  adda: matchedAdda,
-                  members: [],
-                  lastMessage: {
-                    content: `Welcome to ${matchedAdda.name}! 🎉`,
-                    createdAt: new Date().toISOString(),
-                  },
-                });
-              }
-              await this.persist();
-              return { adda: matchedAdda, conversationId: matchedAdda.conversationId };
-            }
+    // 1. Try local server API first (fastest and handles multi-device sync)
+    if (typeof window !== 'undefined' && window.location) {
+      try {
+        const localApiRes = await fetch(`${window.location.origin}/api/invitations/accept`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: raw }),
+        });
+        if (localApiRes.ok) {
+          const apiData = await localApiRes.json();
+          if (apiData?.adda) {
+            const matchedAdda: LocalAdda = apiData.adda;
+            await this.saveAddaLocally(matchedAdda);
+            return {
+              adda: matchedAdda,
+              conversationId: matchedAdda.conversationId,
+            };
           }
-        } catch {
-          // ignore
         }
+      } catch {
+        // Continue to local offline check
       }
+    }
 
-      // 2. Check cloud store with cache busting
+    // 2. Search local memory/storage using robust normalized match
+    let adda = this.addas.find((a) => {
+      if (!a) return false;
+      if (a.id === raw) return true;
+      if (a.inviteCode && a.inviteCode.toUpperCase() === upperRaw) return true;
+      if (a.inviteCode && normalizeRoomCode(a.inviteCode) === cleanCode) return true;
+      return false;
+    });
+
+    // 3. Fallback to cloud store
+    if (!adda) {
       try {
         const r = await fetch(`${CLOUD_SYNC_URL}?_t=${Date.now()}`, { cache: 'no-store' });
         if (r.ok) {
           const cloud = await r.json();
-          if (cloud?.data?.addas) {
-            const match = cloud.data.addas.find(
-              (x: any) => x.inviteCode && variants.includes(x.inviteCode.toUpperCase()),
-            );
+          if (cloud?.data?.addas && Array.isArray(cloud.data.addas)) {
+            const match = cloud.data.addas.find((x: any) => {
+              if (!x) return false;
+              if (x.id === raw) return true;
+              if (x.inviteCode && x.inviteCode.toUpperCase() === upperRaw) return true;
+              if (x.inviteCode && normalizeRoomCode(x.inviteCode) === cleanCode) return true;
+              return false;
+            });
             if (match) {
               adda = match;
-              if (!this.addas.find((a) => a.id === match.id)) {
-                this.addas.unshift(match);
-              }
-              if (!this.conversations.find((c) => c.id === match.conversationId)) {
-                this.conversations.unshift({
-                  id: match.conversationId,
-                  type: 'ADDA',
-                  name: match.name,
-                  addaId: match.id,
-                  adda: match,
-                  members: [],
-                  lastMessage: {
-                    content: `Welcome to ${match.name}! 🎉`,
-                    createdAt: new Date().toISOString(),
-                  },
-                });
-              }
+              await this.saveAddaLocally(match);
             }
           }
         }

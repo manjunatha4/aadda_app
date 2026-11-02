@@ -91,6 +91,9 @@ export default function ChatsScreen() {
         res = await clientStore.acceptInvite(code);
       }
 
+      if (res?.adda) {
+        await clientStore.saveAddaLocally(res.adda);
+      }
       setJoinStatus({
         type: 'success',
         message: `Joined ${res?.adda?.name || 'the Room'}! 🎉`,

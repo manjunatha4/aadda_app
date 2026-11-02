@@ -5,60 +5,6 @@
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>AADDA</title>
-    <!-- Automatic Cache Buster & Service Worker Invalidator -->
-    <script>
-      try {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(regs) {
-            for (var r of regs) r.unregister();
-          });
-        }
-        if ('caches' in window) {
-          caches.keys().then(function(keys) {
-            for (var k of keys) caches.delete(k);
-          });
-        }
-      } catch (e) {}
-    </script>
-
-    <!-- Google Fonts Official Source -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-
-    <!-- Centralized Font-Family Variables & Typography Rules -->
-    <style id="aadda-fonts-static">
-      :root {
-        --font-heading: 'Space Grotesk', sans-serif;
-        --font-body: 'Inter', sans-serif;
-        --font-mono: 'Space Mono', monospace;
-      }
-
-      /* Default interface, body text, inputs & React Native Web text */
-      html, body, #root, input, textarea, select, button {
-        font-family: var(--font-body);
-      }
-
-      div[dir="auto"], span[dir="auto"], [dir="ltr"], [dir="rtl"], .css-text-146c351 {
-        font-family: var(--font-body);
-      }
-
-      /* Primary headings and display typography */
-      h1, h2, h3, h4, h5, h6, [data-font="heading"], .font-heading {
-        font-family: var(--font-heading) !important;
-      }
-
-      /* Body text, descriptions, navigation, buttons and general interface text */
-      p, [data-font="body"], .font-body {
-        font-family: var(--font-body) !important;
-      }
-
-      /* Monospace elements, technical labels, counters, timestamps, badges and numerical indicators */
-      code, pre, kbd, samp, [data-font="mono"], .font-mono, .badge-mono, .timestamp, .counter {
-        font-family: var(--font-mono) !important;
-      }
-    </style>
-
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
       /* These styles make the body full-height */
@@ -86,6 +32,6 @@
     </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
-  <script src="/_expo/static/js/web/entry-663e846e908b66331cc9958912823fb0.js?v=final_v4" defer></script>
+  <script src="/_expo/static/js/web/entry-de0764cf44e3506e4433e0f9f6cc5948.js" defer></script>
 </body>
 </html>
