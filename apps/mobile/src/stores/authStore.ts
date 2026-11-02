@@ -34,14 +34,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initAuth: async () => {
     try {
+      const savedUserStr = await storage.getItem('aadda_client_current_user').catch(() => null);
+      if (savedUserStr) {
+        try {
+          const savedUser = JSON.parse(savedUserStr);
+          if (savedUser) set({ user: savedUser, isAuthenticated: true });
+        } catch {}
+      }
       const token = await storage.getItem('accessToken');
       if (token) {
         set({ accessToken: token });
         const user = await api.get('/auth/me');
         if (user) {
-          set({ user, isAuthenticated: true });
-          if (user.language) {
-            i18n.changeLanguage(user.language);
+          const merged = { ...get().user, ...user };
+          set({ user: merged, isAuthenticated: true });
+          await storage.setItem('aadda_client_current_user', JSON.stringify(merged)).catch(() => {});
+          if (merged.language) {
+            i18n.changeLanguage(merged.language);
           }
         }
       }

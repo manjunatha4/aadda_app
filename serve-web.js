@@ -352,6 +352,53 @@ const server = http.createServer(async (req, res) => {
       return sendJson(newAdda);
     }
 
+    // A2. User Profile Management (Avatar, Display Name, Bio)
+    if ((apiPath === '/users/profile' || apiPath.startsWith('/users/profile')) && (req.method === 'PATCH' || req.method === 'PUT')) {
+      const body = await readBody(req);
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.replace('Bearer ', '').trim();
+      const userId = token.replace('token_', '') || body.id || (store.users && store.users[0]?.id) || 'usr_default';
+
+      if (!store.users) store.users = [];
+      let user = store.users.find((u) => u.id === userId) || store.users[0];
+      if (!user) {
+        user = {
+          id: userId,
+          username: 'circle_member',
+          displayName: 'Circle Member',
+          district: 'Bengaluru Urban',
+          language: 'en',
+          avatarUrl: null,
+        };
+        store.users.push(user);
+      }
+
+      if (body.displayName) user.displayName = body.displayName.trim();
+      if (body.bio !== undefined) user.bio = body.bio.trim();
+      if (body.district) user.district = body.district.trim();
+      if (body.avatarUrl !== undefined) user.avatarUrl = body.avatarUrl;
+      if (body.language) user.language = body.language;
+
+      persistStore();
+      syncToCloud();
+      return sendJson(user);
+    }
+
+    if ((apiPath === '/users/profile' || apiPath === '/auth/me') && req.method === 'GET') {
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.replace('Bearer ', '').trim();
+      const userId = token.replace('token_', '') || (store.users && store.users[0]?.id) || 'usr_default';
+      const user = (store.users && store.users.find((u) => u.id === userId)) || (store.users && store.users[0]) || {
+        id: userId,
+        username: 'circle_member',
+        displayName: 'Circle Member',
+        district: 'Bengaluru Urban',
+        language: 'en',
+        avatarUrl: null,
+      };
+      return sendJson(user);
+    }
+
     // B. Join Room via Secret Code
     if (apiPath === '/invitations/accept' && req.method === 'POST') {
       const body = await readBody(req);
@@ -599,6 +646,12 @@ const server = http.createServer(async (req, res) => {
       res.end('Error loading asset');
       return;
     }
+    
+    // Disable caching completely for all web assets so updates are immediately visible without hard refresh
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     res.writeHead(200, { 'Content-Type': contentType });
     res.end(content);
   });

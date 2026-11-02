@@ -563,6 +563,35 @@ export default async function handler(req: any, res: any) {
       return json(null);
     }
 
+    if ((pathname === '/users/profile' || pathname.startsWith('/users/profile')) && (method === 'PATCH' || method === 'PUT')) {
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.replace('Bearer ', '').trim();
+      const userId = token.replace('token_', '') || body.id || (store.users && store.users[0]?.id) || 'usr_default';
+
+      if (!store.users) store.users = [];
+      let user = store.users.find((u) => u.id === userId) || store.users[0];
+      if (!user) {
+        user = {
+          id: userId,
+          username: 'circle_member',
+          displayName: 'Circle Member',
+          district: 'Bengaluru Urban',
+          language: 'en',
+          avatarUrl: null,
+        };
+        store.users.push(user);
+      }
+
+      if (body.displayName) user.displayName = body.displayName.trim();
+      if (body.bio !== undefined) user.bio = body.bio.trim();
+      if (body.district) user.district = body.district.trim();
+      if (body.avatarUrl !== undefined) user.avatarUrl = body.avatarUrl;
+      if (body.language) user.language = body.language;
+
+      await saveToCloud(store);
+      return json(user);
+    }
+
     // -------------------------------------------------------------
     // ROOM / ADDA CREATION & LISTING
     // -------------------------------------------------------------

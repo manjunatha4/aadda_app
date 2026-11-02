@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  Image,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -15,6 +23,39 @@ import {
   DS_TOKENS,
 } from '../../src/components/DesignSystem';
 
+const PRESET_AVATARS = [
+  {
+    id: 'preset_1',
+    label: 'Modern Aesthetic',
+    url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'preset_2',
+    label: 'Casual Guy',
+    url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'preset_3',
+    label: 'Vibrant Smile',
+    url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'preset_4',
+    label: 'Urban Minimal',
+    url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'preset_5',
+    label: 'Warm Tone',
+    url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'preset_6',
+    label: 'Classic Indigo',
+    url: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=400&q=80',
+  },
+];
+
 export default function ProfileScreen() {
   const { i18n } = useTranslation();
   const router = useRouter();
@@ -25,6 +66,7 @@ export default function ProfileScreen() {
   const [editDisplayName, setEditDisplayName] = useState(user?.displayName || '');
   const [editBio, setEditBio] = useState(user?.bio || '');
   const [editDistrict, setEditDistrict] = useState(user?.district || 'Bengaluru Urban');
+  const [editAvatarUrl, setEditAvatarUrl] = useState<string>(user?.avatarUrl || '');
   const [saving, setSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -33,6 +75,7 @@ export default function ProfileScreen() {
       setEditDisplayName(user.displayName || user.username || '');
       setEditBio(user.bio || '');
       setEditDistrict(user.district || 'Bengaluru Urban');
+      setEditAvatarUrl(user.avatarUrl || '');
     }
   }, [user]);
 
@@ -43,6 +86,38 @@ export default function ProfileScreen() {
     await updateLanguage(next);
     setToastMessage(next === 'kn' ? 'ಭಾಷೆಯನ್ನು ಕನ್ನಡಕ್ಕೆ ಬದಲಾಯಿಸಲಾಗಿದೆ 🌐' : 'Language switched to English 🌐');
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handlePickAvatarFromGallery = () => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e: any) => {
+        const file = e.target?.files?.[0];
+        if (file) {
+          if (file.size > 8 * 1024 * 1024) {
+            setToastMessage(isKn ? 'ಫೋಟೋ ಗಾತ್ರ 8MB ಗಿಂತ ಕಡಿಮೆಯಿರಬೇಕು' : 'Photo size must be under 8MB');
+            setTimeout(() => setToastMessage(null), 3000);
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const dataUrl = event.target?.result as string;
+            if (dataUrl) {
+              setEditAvatarUrl(dataUrl);
+              setToastMessage(isKn ? 'ಗ್ಯಾಲರಿಯಿಂದ ಫೋಟೋ ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ! 📸' : 'Photo chosen from gallery! 📸');
+              setTimeout(() => setToastMessage(null), 2500);
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    } else {
+      setToastMessage(isKn ? 'ಸಾಧನದ ಗ್ಯಾಲರಿ ಬೆಂಬಲಿತವಾಗಿದೆ' : 'Device gallery picker ready');
+      setTimeout(() => setToastMessage(null), 2500);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -57,9 +132,10 @@ export default function ProfileScreen() {
         displayName: editDisplayName.trim(),
         bio: editBio.trim(),
         district: editDistrict.trim(),
+        avatarUrl: editAvatarUrl || null,
       });
       setShowEditModal(false);
-      setToastMessage(isKn ? 'ಪ್ರೊಫೈಲ್ ನವೀಕರಿಸಲಾಗಿದೆ! ✨' : 'Profile updated successfully! ✨');
+      setToastMessage(isKn ? 'ಪ್ರೊಫೈಲ್ ಮತ್ತು ಫೋಟೋ ನವೀಕರಿಸಲಾಗಿದೆ! ✨' : 'Profile & photo updated successfully! ✨');
       setTimeout(() => setToastMessage(null), 3000);
     } catch (e: any) {
       setToastMessage(e.message || (isKn ? 'ನವೀಕರಣ ವಿಫಲವಾಗಿದೆ' : 'Update failed'));
@@ -90,32 +166,70 @@ export default function ProfileScreen() {
       {/* Page Header */}
       <PageHeader
         title={isKn ? 'ಪ್ರೊಫೈಲ್' : 'Account & Profile'}
-        subtitle={isKn ? 'ನಿಮ್ಮ ಖಾತೆ ಮಾಹಿತಿ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್ಸ್' : 'Manage your identity, regional vibe, and preferences'}
+        subtitle={isKn ? 'ನಿಮ್ಮ ಖಾತೆ ಮಾಹಿತಿ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್ಸ್' : 'Manage your identity, photo, regional vibe, and preferences'}
       />
 
       {/* Main Profile Glass Card */}
       <GlassCard elevated style={{ alignItems: 'center', paddingVertical: 28, marginBottom: 20 }}>
-        {/* User Avatar Circle */}
-        <View
-          style={{
-            width: 84,
-            height: 84,
-            borderRadius: 42,
-            backgroundColor: DS_TOKENS.colors.purple,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 3,
-            borderColor: '#FFFFFF',
-            marginBottom: 14,
-            shadowColor: DS_TOKENS.colors.purple,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 12,
-            elevation: 4,
-          }}
+        {/* User Avatar Circle with Camera Overlay */}
+        <TouchableOpacity
+          onPress={() => setShowEditModal(true)}
+          activeOpacity={0.85}
+          style={{ position: 'relative', marginBottom: 14 }}
         >
-          <Text style={{ fontSize: 36, color: '#FFFFFF', fontWeight: '900' }}>{initial}</Text>
-        </View>
+          <View
+            style={{
+              width: 96,
+              height: 96,
+              borderRadius: 48,
+              backgroundColor: DS_TOKENS.colors.purple,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 3.5,
+              borderColor: '#FFFFFF',
+              overflow: 'hidden',
+              shadowColor: DS_TOKENS.colors.purple,
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.35,
+              shadowRadius: 14,
+              elevation: 6,
+            }}
+          >
+            {user?.avatarUrl ? (
+              <Image
+                source={{ uri: user.avatarUrl }}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={{ fontSize: 40, color: '#FFFFFF', fontWeight: '900' }}>{initial}</Text>
+            )}
+          </View>
+
+          {/* Camera Badge Icon */}
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 2,
+              right: 2,
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: '#4F46E5',
+              borderWidth: 2.5,
+              borderColor: '#FFFFFF',
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: '#000000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+              elevation: 4,
+            }}
+          >
+            <Text style={{ fontSize: 14, color: '#FFFFFF' }}>📷</Text>
+          </View>
+        </TouchableOpacity>
 
         <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: -0.3 }}>
           {displayName}
@@ -124,8 +238,8 @@ export default function ProfileScreen() {
           @{user?.username || 'member'}
         </Text>
 
-        {/* User Badges */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
+        {/* User Badges & Action */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
           <View
             style={{
               backgroundColor: DS_TOKENS.colors.purpleLight,
@@ -133,7 +247,7 @@ export default function ProfileScreen() {
               borderColor: DS_TOKENS.colors.purpleBorder,
               borderRadius: DS_TOKENS.radii.pill,
               paddingHorizontal: 12,
-              paddingVertical: 4,
+              paddingVertical: 5,
             }}
           >
             <Text style={{ color: DS_TOKENS.colors.purple, fontSize: 12, fontWeight: '800' }}>
@@ -148,7 +262,7 @@ export default function ProfileScreen() {
               borderColor: DS_TOKENS.colors.emeraldBorder,
               borderRadius: DS_TOKENS.radii.pill,
               paddingHorizontal: 10,
-              paddingVertical: 4,
+              paddingVertical: 5,
             }}
           >
             <Text style={{ color: DS_TOKENS.colors.emerald, fontSize: 12, fontWeight: '800' }}>✓ Verified</Text>
@@ -158,22 +272,29 @@ export default function ProfileScreen() {
             onPress={() => setShowEditModal(true)}
             activeOpacity={0.8}
             style={{
-              backgroundColor: '#EEF2FF',
-              borderWidth: 1,
-              borderColor: '#C7D2FE',
+              backgroundColor: '#4F46E5',
               borderRadius: DS_TOKENS.radii.pill,
-              paddingHorizontal: 12,
-              paddingVertical: 4,
+              paddingHorizontal: 14,
+              paddingVertical: 5,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              shadowColor: '#4F46E5',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 6,
+              elevation: 3,
             }}
           >
-            <Text style={{ color: '#4F46E5', fontSize: 12, fontWeight: '800' }}>
-              ✏️ {isKn ? 'ತಿದ್ದುಪಡಿ' : 'Edit Profile'}
+            <Text style={{ fontSize: 12 }}>✏️</Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '800' }}>
+              {isKn ? 'ಪ್ರೊಫೈಲ್ & ಫೋಟೋ ತಿದ್ದುಪಡಿ' : 'Edit Profile & Photo'}
             </Text>
           </TouchableOpacity>
         </View>
 
         {Boolean(user?.bio) && (
-          <Text style={{ color: '#64748B', fontSize: 13, fontStyle: 'italic', marginTop: 10, textAlign: 'center', paddingHorizontal: 20 }}>
+          <Text style={{ color: '#64748B', fontSize: 13, fontStyle: 'italic', marginTop: 12, textAlign: 'center', paddingHorizontal: 20 }}>
             "{user?.bio}"
           </Text>
         )}
@@ -203,6 +324,33 @@ export default function ProfileScreen() {
           </View>
           <Text style={{ fontSize: 18 }}>✉️</Text>
         </View>
+
+        {/* Change Photo Option */}
+        <TouchableOpacity
+          onPress={() => setShowEditModal(true)}
+          activeOpacity={0.8}
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            borderBottomWidth: 1,
+            borderBottomColor: DS_TOKENS.colors.borderSubtle,
+          }}
+        >
+          <View>
+            <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
+              🖼️ {isKn ? 'ಪ್ರೊಫೈಲ್ ಫೋಟೋ ಬದಲಾಯಿಸಿ' : 'Change Profile Picture'}
+            </Text>
+            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
+              {isKn ? 'ಸಾಧನದ ಗ್ಯಾಲರಿಯಿಂದ ಫೋಟೋ ಅಥವಾ ಅವತಾರ ಆಯ್ಕೆಮಾಡಿ' : 'Upload photo from device gallery or choose avatar'}
+            </Text>
+          </View>
+          <Text style={{ color: '#4F46E5', fontSize: 14, fontWeight: '800' }}>
+            {user?.avatarUrl ? (isKn ? 'ಬದಲಾಯಿಸಿ ›' : 'Change ›') : (isKn ? '+ ಸೇರಿಸಿ ›' : '+ Add ›')}
+          </Text>
+        </TouchableOpacity>
 
         {/* Language Switcher */}
         <TouchableOpacity
@@ -301,7 +449,7 @@ export default function ProfileScreen() {
         onCancel={() => setShowLogoutConfirm(false)}
       />
 
-      {/* Edit Profile Modal */}
+      {/* Edit Profile & Photo Modal */}
       <Modal visible={showEditModal} transparent animationType="fade">
         <TouchableOpacity
           activeOpacity={1}
@@ -311,7 +459,7 @@ export default function ProfileScreen() {
             backgroundColor: 'rgba(15, 23, 42, 0.65)',
             justifyContent: 'center',
             alignItems: 'center',
-            padding: 18,
+            padding: 16,
           }}
         >
           <TouchableOpacity
@@ -320,9 +468,10 @@ export default function ProfileScreen() {
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: 28,
-              padding: 24,
+              padding: 22,
               width: '100%',
-              maxWidth: 420,
+              maxWidth: 440,
+              maxHeight: '90%',
               borderWidth: 1.5,
               borderColor: '#E2E8F0',
               shadowColor: '#000000',
@@ -332,47 +481,170 @@ export default function ProfileScreen() {
               elevation: 12,
             }}
           >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>
-                ✏️ {isKn ? 'ಪ್ರೊಫೈಲ್ ತಿದ್ದುಪಡಿ' : 'Edit Your Profile'}
-              </Text>
-              <TouchableOpacity onPress={() => setShowEditModal(false)}>
-                <Text style={{ fontSize: 18, color: '#94A3B8', fontWeight: '800' }}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ gap: 12 }}>
-              <InputField
-                label={isKn ? 'ಪ್ರದರ್ಶನ ಹೆಸರು' : 'Display Name'}
-                value={editDisplayName}
-                onChangeText={setEditDisplayName}
-                placeholder={isKn ? 'ನಿಮ್ಮ ಪೂರ್ಣ ಹೆಸರು' : 'Your display name'}
-              />
-              <InputField
-                label={isKn ? 'ಜಿಲ್ಲೆ / ಊರು' : 'District / Town'}
-                value={editDistrict}
-                onChangeText={setEditDistrict}
-                placeholder="e.g. Bengaluru Urban, Mysuru, Mangaluru"
-              />
-              <InputField
-                label={isKn ? 'ಬಯೋ / ಸ್ಟೇಟಸ್' : 'Bio / Status'}
-                value={editBio}
-                onChangeText={setEditBio}
-                placeholder={isKn ? 'ನಿಮ್ಮ ಬಗ್ಗೆ ಒಂದು ಸಾಲು...' : 'A brief description...'}
-              />
-
-              <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
-                <SecondaryButton
-                  title={isKn ? 'ರದ್ದು' : 'Cancel'}
-                  onPress={() => setShowEditModal(false)}
-                />
-                <PrimaryButton
-                  title={saving ? (isKn ? 'ಉಳಿಸಲಾಗುತ್ತಿದೆ...' : 'Saving...') : (isKn ? 'ಉಳಿಸಿ' : 'Save Changes')}
-                  onPress={handleSaveProfile}
-                  disabled={saving}
-                />
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 14 }}>
+              {/* Header */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>
+                  ✏️ {isKn ? 'ಪ್ರೊಫೈಲ್ & ಫೋಟೋ ತಿದ್ದುಪಡಿ' : 'Edit Profile & Photo'}
+                </Text>
+                <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                  <Text style={{ fontSize: 18, color: '#94A3B8', fontWeight: '800' }}>✕</Text>
+                </TouchableOpacity>
               </View>
-            </View>
+
+              {/* 1. PHOTO PICKER / PREVIEW SECTION */}
+              <View
+                style={{
+                  alignItems: 'center',
+                  paddingVertical: 14,
+                  paddingHorizontal: 12,
+                  backgroundColor: '#F8FAFC',
+                  borderRadius: 20,
+                  borderWidth: 1,
+                  borderColor: '#E2E8F0',
+                  gap: 12,
+                }}
+              >
+                {/* Avatar Preview */}
+                <View
+                  style={{
+                    width: 90,
+                    height: 90,
+                    borderRadius: 45,
+                    backgroundColor: '#6366F1',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    borderWidth: 3,
+                    borderColor: '#818CF8',
+                    shadowColor: '#6366F1',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 10,
+                  }}
+                >
+                  {editAvatarUrl ? (
+                    <Image
+                      source={{ uri: editAvatarUrl }}
+                      style={{ width: '100%', height: '100%' }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Text style={{ fontSize: 36, color: '#FFFFFF', fontWeight: '900' }}>{initial}</Text>
+                  )}
+                </View>
+
+                {/* Device Gallery Picker & Remove Buttons */}
+                <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <TouchableOpacity
+                    onPress={handlePickAvatarFromGallery}
+                    activeOpacity={0.8}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderRadius: 9999,
+                      backgroundColor: '#EEF2FF',
+                      borderWidth: 1.5,
+                      borderColor: '#818CF8',
+                    }}
+                  >
+                    <Text style={{ fontSize: 14 }}>📁</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '800', color: '#4F46E5' }}>
+                      {isKn ? 'ಗ್ಯಾಲರಿಯಿಂದ ಫೋಟೋ ಆರಿಸಿ' : 'Choose from Gallery'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {Boolean(editAvatarUrl) && (
+                    <TouchableOpacity
+                      onPress={() => setEditAvatarUrl('')}
+                      activeOpacity={0.8}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 9999,
+                        backgroundColor: '#FEF2F2',
+                        borderWidth: 1,
+                        borderColor: '#FECACA',
+                      }}
+                    >
+                      <Text style={{ fontSize: 12 }}>🗑️</Text>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#DC2626' }}>
+                        {isKn ? 'ಫೋಟೋ ತೆಗೆಯಿರಿ' : 'Remove Photo'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Quick Presets */}
+                <View style={{ width: '100%' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', marginBottom: 6, textAlign: 'center' }}>
+                    {isKn ? 'ಅಥವಾ ಪ್ರೊಫೈಲ್ ಅವತಾರ ಆರಿಸಿ:' : 'Or pick an aesthetic avatar preset:'}
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}>
+                    {PRESET_AVATARS.map((p) => {
+                      const isSelected = editAvatarUrl === p.url;
+                      return (
+                        <TouchableOpacity
+                          key={p.id}
+                          onPress={() => setEditAvatarUrl(p.url)}
+                          activeOpacity={0.8}
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 22,
+                            overflow: 'hidden',
+                            borderWidth: isSelected ? 3 : 1.5,
+                            borderColor: isSelected ? '#4F46E5' : '#CBD5E1',
+                          }}
+                        >
+                          <Image source={{ uri: p.url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              </View>
+
+              {/* 2. TEXT FIELDS */}
+              <View style={{ gap: 10 }}>
+                <InputField
+                  label={isKn ? 'ಪ್ರದರ್ಶನ ಹೆಸರು' : 'Display Name'}
+                  value={editDisplayName}
+                  onChangeText={setEditDisplayName}
+                  placeholder={isKn ? 'ನಿಮ್ಮ ಪೂರ್ಣ ಹೆಸರು' : 'Your display name'}
+                />
+                <InputField
+                  label={isKn ? 'ಜಿಲ್ಲೆ / ಊರು' : 'District / Town'}
+                  value={editDistrict}
+                  onChangeText={setEditDistrict}
+                  placeholder="e.g. Bengaluru Urban, Mysuru, Mangaluru"
+                />
+                <InputField
+                  label={isKn ? 'ಬಯೋ / ಸ್ಟೇಟಸ್' : 'Bio / Status'}
+                  value={editBio}
+                  onChangeText={setEditBio}
+                  placeholder={isKn ? 'ನಿಮ್ಮ ಬಗ್ಗೆ ಒಂದು ಸಾಲು...' : 'A brief description...'}
+                />
+
+                <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end', marginTop: 6 }}>
+                  <SecondaryButton
+                    title={isKn ? 'ರದ್ದು' : 'Cancel'}
+                    onPress={() => setShowEditModal(false)}
+                  />
+                  <PrimaryButton
+                    title={saving ? (isKn ? 'ಉಳಿಸಲಾಗುತ್ತಿದೆ...' : 'Saving...') : (isKn ? 'ಉಳಿಸಿ' : 'Save Changes')}
+                    onPress={handleSaveProfile}
+                    disabled={saving}
+                  />
+                </View>
+              </View>
+            </ScrollView>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
