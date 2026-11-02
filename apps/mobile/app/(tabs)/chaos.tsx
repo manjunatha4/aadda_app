@@ -882,47 +882,48 @@ export default function RealNewsFeedScreen() {
       : realNewsPosts.filter((p) => p.categoryId === selectedCategory);
 
   return (
-    <MainLayout>
+    <MainLayout
+      scrollable={true}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      contentContainerStyle={{ paddingBottom: 120 }}
+    >
       <ToastNotification
         visible={Boolean(toastMessage)}
         message={toastMessage || ''}
         onDismiss={() => setToastMessage(null)}
       />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 110 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      {/* ------------------------------------------------------------- */}
+      {/* 1. TOP HEADER (Responsive & Never Cut Off)                     */}
+      {/* ------------------------------------------------------------- */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingVertical: 8,
+          marginBottom: 10,
+          gap: 10,
+        }}
       >
-        {/* ------------------------------------------------------------- */}
-        {/* 1. TOP HEADER                                                 */}
-        {/* ------------------------------------------------------------- */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingVertical: 10,
-            marginBottom: 8,
-          }}
-        >
-          {/* Title & Badge */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        {/* Title & Badge */}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <Text
               style={{
-                fontSize: 26,
+                fontSize: 22,
                 fontWeight: '900',
                 color: '#0F172A',
-                letterSpacing: -0.6,
+                letterSpacing: -0.5,
               }}
             >
-              {isKn ? 'ಸುದ್ದಿ & ಹರಟೆ' : 'News & Circle'}
+              {isKn ? 'ಸುದ್ದಿ & ಹರಟೆ' : 'Photo News'}
             </Text>
             <View
               style={{
                 backgroundColor: subSection === 'friends_gossip' ? '#FEF3C7' : '#EEF2FF',
-                paddingHorizontal: 10,
-                paddingVertical: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 2.5,
                 borderRadius: 9999,
                 borderWidth: 1,
                 borderColor: subSection === 'friends_gossip' ? '#FDE68A' : '#C7D2FE',
@@ -931,7 +932,7 @@ export default function RealNewsFeedScreen() {
               <Text
                 style={{
                   color: subSection === 'friends_gossip' ? '#B45309' : '#4F46E5',
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: '800',
                 }}
               >
@@ -939,52 +940,140 @@ export default function RealNewsFeedScreen() {
               </Text>
             </View>
           </View>
+        </View>
 
-          {/* Right Action: Share button corresponding to active sub-section */}
-          <TouchableOpacity
-            onPress={() => {
-              if (subSection === 'friends_gossip') {
-                setCreateGossipModalVisible(true);
-              } else {
-                setCreateNewsModalVisible(true);
-              }
-            }}
-            activeOpacity={0.8}
+        {/* Right Action: Share button */}
+        <TouchableOpacity
+          onPress={() => {
+            if (subSection === 'friends_gossip') {
+              setCreateGossipModalVisible(true);
+            } else {
+              setCreateNewsModalVisible(true);
+            }
+          }}
+          activeOpacity={0.8}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            paddingHorizontal: 13,
+            paddingVertical: 7,
+            borderRadius: 9999,
+            backgroundColor: subSection === 'friends_gossip' ? '#FDF2F8' : '#EEF2FF',
+            borderWidth: 1.5,
+            borderColor: subSection === 'friends_gossip' ? '#F472B6' : '#818CF8',
+            flexShrink: 0,
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+        >
+          <Text style={{ fontSize: 13 }}>{subSection === 'friends_gossip' ? '🤫' : '📸'}</Text>
+          <Text
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderRadius: 9999,
-              backgroundColor: subSection === 'friends_gossip' ? '#FDF2F8' : '#EEF2FF',
-              borderWidth: 1.5,
-              borderColor: subSection === 'friends_gossip' ? '#F472B6' : '#818CF8',
-              shadowColor: '#000000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 4,
-              elevation: 2,
+              fontSize: 12,
+              fontWeight: '800',
+              color: subSection === 'friends_gossip' ? '#DB2777' : '#4F46E5',
             }}
           >
-            <Text style={{ fontSize: 14 }}>{subSection === 'friends_gossip' ? '🤫' : '📸'}</Text>
-            <Text
+            {subSection === 'friends_gossip'
+              ? isKn
+                ? '+ ಹರಟೆ'
+                : '+ Gossip'
+              : isKn
+              ? '+ ಸುದ್ದಿ'
+              : '+ News'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 2. REPORTERS & CIRCLE STORIES BAR (Horizontal Avatar Row)     */}
+      {/* ------------------------------------------------------------- */}
+      <View style={{ marginBottom: 14 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 12, paddingRight: 24, paddingLeft: 2 }}
+        >
+          {/* Quick Add Story Button */}
+          <TouchableOpacity
+            onPress={() => (subSection === 'friends_gossip' ? setCreateGossipModalVisible(true) : setCreateNewsModalVisible(true))}
+            activeOpacity={0.75}
+            style={{ alignItems: 'center', width: 62 }}
+          >
+            <View
               style={{
-                fontSize: 12,
-                fontWeight: '800',
-                color: subSection === 'friends_gossip' ? '#DB2777' : '#4F46E5',
+                width: 54,
+                height: 54,
+                borderRadius: 27,
+                backgroundColor: '#EEF2FF',
+                borderWidth: 2,
+                borderColor: '#6366F1',
+                borderStyle: 'dashed',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              {subSection === 'friends_gossip'
-                ? isKn
-                  ? '+ ಹರಟೆ'
-                  : '+ Share Gossip'
-                : isKn
-                ? '+ ಸುದ್ದಿ'
-                : '+ Share News'}
+              <Text style={{ fontSize: 20 }}>📸</Text>
+            </View>
+            <Text numberOfLines={1} style={{ fontSize: 10, fontWeight: '800', color: '#4F46E5', marginTop: 4 }}>
+              {isKn ? 'ನಿಮ್ಮ ಸುದ್ದಿ' : 'Your Story'}
             </Text>
           </TouchableOpacity>
-        </View>
+
+          {/* Active Circle Members / Reporters with Colorful Story Rings */}
+          {(subSection === 'friends_gossip' ? friendsGossipPosts : realNewsPosts)
+            .filter((p, index, self) => index === self.findIndex((t) => t.authorName === p.authorName))
+            .map((rep) => (
+              <TouchableOpacity
+                key={rep.id}
+                onPress={() => showToast(`Viewing updates from ${rep.authorName}`)}
+                activeOpacity={0.75}
+                style={{ alignItems: 'center', width: 62 }}
+              >
+                <View
+                  style={{
+                    width: 54,
+                    height: 54,
+                    borderRadius: 27,
+                    padding: 2.5,
+                    backgroundColor: subSection === 'friends_gossip' ? '#F472B6' : '#818CF8',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <View
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: 24,
+                      backgroundColor: '#FFFFFF',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 22 }}>{rep.authorAvatar || '📸'}</Text>
+                  </View>
+                </View>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 10,
+                    fontWeight: '700',
+                    color: '#0F172A',
+                    marginTop: 4,
+                    textAlign: 'center',
+                  }}
+                >
+                  {rep.authorName}
+                </Text>
+              </TouchableOpacity>
+            ))}
+        </ScrollView>
+      </View>
 
         {/* ------------------------------------------------------------- */}
         {/* 2. SUB-SECTIONS SEGMENTED TAB SWITCHER                         */}
@@ -1762,7 +1851,6 @@ export default function RealNewsFeedScreen() {
             </View>
           </View>
         )}
-      </ScrollView>
 
       {/* ------------------------------------------------------------- */}
       {/* 3. MODAL: SHARE REAL NEWS                                     */}
