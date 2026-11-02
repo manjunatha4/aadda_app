@@ -7,8 +7,9 @@ import {
   ScrollView,
   Image,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../src/stores/authStore';
 import {
@@ -59,7 +60,7 @@ const PRESET_AVATARS = [
 export default function ProfileScreen() {
   const { i18n } = useTranslation();
   const router = useRouter();
-  const { user, logout, updateLanguage, updateProfile } = useAuthStore();
+  const { isAuthenticated, isLoading, user, logout, updateLanguage, updateProfile } = useAuthStore();
   const [loggingOut, setLoggingOut] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -69,6 +70,18 @@ export default function ProfileScreen() {
   const [editAvatarUrl, setEditAvatarUrl] = useState<string>(user?.avatarUrl || '');
   const [saving, setSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#4F46E5" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   useEffect(() => {
     if (user) {

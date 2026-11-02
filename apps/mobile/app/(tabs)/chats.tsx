@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, RefreshControl, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
 import { clientStore } from '../../src/services/clientStore';
+import { useAuthStore } from '../../src/stores/authStore';
 import {
   MainLayout,
   PageHeader,
@@ -20,6 +21,15 @@ import {
 export default function ChatsScreen() {
   const { i18n } = useTranslation();
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <LoadingState message={i18n.language === 'kn' ? 'ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...' : 'Loading Rooms...'} />;
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const [conversations, setConversations] = useState<any[]>([]);
   const [addas, setAddas] = useState<any[]>([]);

@@ -12,7 +12,7 @@ import {
   Dimensions,
   Linking,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../src/stores/authStore';
 import { storage } from '../../src/services/storage';
@@ -451,7 +451,19 @@ export default function RealNewsFeedScreen() {
   const router = useRouter();
   const { i18n } = useTranslation();
   const isKn = i18n.language === 'kn';
-  const currentUser = useAuthStore((state) => state.user);
+  const { isAuthenticated, isLoading, user: currentUser } = useAuthStore();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontSize: 14, color: '#4F46E5', fontWeight: '800' }}>Loading News...</Text>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   // Sub-sections: 'real_news' (Verified Indian Wires) vs 'friends_gossip' (Circle Only 🔒)
   const [subSection, setSubSection] = useState<'real_news' | 'friends_gossip'>('real_news');

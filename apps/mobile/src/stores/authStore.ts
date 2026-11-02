@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initAuth: async () => {
     try {
       const token = await storage.getItem('accessToken');
-      if (!token) {
+      if (!token || token === 'token_usr_default' || token === 'null' || token === 'undefined') {
         await storage.removeItem('accessToken');
         await storage.removeItem('refreshToken');
         await storage.removeItem('aadda_client_current_user');
@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       set({ accessToken: token });
       const user = await api.get('/auth/me');
-      if (user && (user.id || user.username)) {
+      if (user && user.id && user.id !== 'usr_default') {
         set({ user, isAuthenticated: true, isLoading: false });
         await storage.setItem('aadda_client_current_user', JSON.stringify(user)).catch(() => {});
         if (user.language) {

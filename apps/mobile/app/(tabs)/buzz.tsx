@@ -11,8 +11,9 @@ import {
   Dimensions,
   Animated,
   Easing,
+  ActivityIndicator,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, Redirect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../src/services/api';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -269,8 +270,20 @@ export default function BuzzFeedScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ addaId?: string }>();
   const { i18n } = useTranslation();
-  const { user: currentUser, updateLanguage, updateProfile, logout } = useAuthStore();
+  const { isAuthenticated, isLoading, user: currentUser, updateLanguage, updateProfile, logout } = useAuthStore();
   const isKn = i18n.language === 'kn';
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#4F46E5" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const [addas, setAddas] = useState<any[]>([]);
   const [selectedAddaId, setSelectedAddaId] = useState<string>(params.addaId || 'default');
