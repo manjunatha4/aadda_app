@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   Modal,
   TextInput,
   Dimensions,
+  Animated,
+  Easing,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -52,6 +54,216 @@ const CATEGORY_CHIPS: Array<{ key: BuzzCategory; labelEn: string; labelKn: strin
   { key: BuzzCategory.LATE_NIGHT_ADDA, labelEn: 'Late Night Adda', labelKn: 'ರಾತ್ರಿ ಹರಟೆ', icon: '🌙' },
   { key: BuzzCategory.HOT_TAKE, labelEn: 'Hot Take of the Day', labelKn: 'ಇಂದಿನ ಹಾಟ್ ಟೇಕ್', icon: '⚡' },
 ];
+
+function AnimatedAaddaBrand({ isKn }: { isKn: boolean }) {
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const glowAnim = useRef(new Animated.Value(0.35)).current;
+  const pingAnim = useRef(new Animated.Value(1)).current;
+  const pressScale = useRef(new Animated.Value(1)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // 1. Organic gentle floating & glow loop
+    Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(floatAnim, {
+            toValue: -2.5,
+            duration: 1800,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: false,
+          }),
+          Animated.timing(floatAnim, {
+            toValue: 0,
+            duration: 1800,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: false,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(glowAnim, {
+            toValue: 0.85,
+            duration: 1800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+          Animated.timing(glowAnim, {
+            toValue: 0.35,
+            duration: 1800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(rotateAnim, {
+            toValue: 1,
+            duration: 3600,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: false,
+          }),
+          Animated.timing(rotateAnim, {
+            toValue: 0,
+            duration: 3600,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: false,
+          }),
+        ]),
+      ])
+    ).start();
+
+    // 2. Realistic live pulse radar ping
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pingAnim, {
+          toValue: 1.45,
+          duration: 1300,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: false,
+        }),
+        Animated.timing(pingAnim, {
+          toValue: 1,
+          duration: 1300,
+          easing: Easing.in(Easing.ease),
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  const handlePressIn = () => {
+    Animated.spring(pressScale, {
+      toValue: 0.94,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(pressScale, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['-3deg', '3deg'],
+  });
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={{ flexDirection: 'row', alignItems: 'center' }}
+    >
+      <Animated.View
+        style={{
+          transform: [{ translateY: floatAnim }, { scale: pressScale }],
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 9,
+        }}
+      >
+        {/* Animated Brand Emblem with Pulsing Aura */}
+        <View style={{ position: 'relative', width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}>
+          {/* Ambient Glowing Halo */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: '#6366F1',
+              opacity: glowAnim,
+              transform: [{ scale: glowAnim.interpolate({ inputRange: [0.35, 0.85], outputRange: [0.95, 1.15] }) }],
+              ...(Platform.OS === 'web' ? ({ filter: 'blur(8px)' } as any) : {}),
+            }}
+          />
+
+          {/* Core Vibrant Icon Box */}
+          <Animated.View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 12,
+              backgroundColor: '#4F46E5',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 1.5,
+              borderColor: 'rgba(255, 255, 255, 0.9)',
+              shadowColor: '#4F46E5',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.4,
+              shadowRadius: 8,
+              elevation: 5,
+              transform: [{ rotate: spin }],
+            }}
+          >
+            <Text style={{ fontSize: 18, color: '#FFFFFF' }}>⚡</Text>
+          </Animated.View>
+        </View>
+
+        {/* Wordmark: "AADDA" */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+          <Text
+            style={{
+              fontSize: 21,
+              fontWeight: '900',
+              color: '#0F172A',
+              letterSpacing: 1.2,
+            }}
+          >
+            AADDA
+          </Text>
+
+          {/* Realistic Live Status Indicator */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              backgroundColor: '#F0FDF4',
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 9999,
+              borderWidth: 1,
+              borderColor: '#BBF7D0',
+            }}
+          >
+            {/* Animated Radar Ping Dot */}
+            <View style={{ width: 8, height: 8, alignItems: 'center', justifyContent: 'center' }}>
+              <Animated.View
+                style={{
+                  position: 'absolute',
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: '#22C55E',
+                  opacity: pingAnim.interpolate({ inputRange: [1, 1.45], outputRange: [0.85, 0] }),
+                  transform: [{ scale: pingAnim }],
+                }}
+              />
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: '#16A34A',
+                }}
+              />
+            </View>
+
+            <Text style={{ fontSize: 10, fontWeight: '800', color: '#15803D', letterSpacing: 0.3 }}>
+              {isKn ? 'ಖಾಸಗಿ ಸರ್ಕಲ್' : 'LIVE CIRCLE'}
+            </Text>
+          </View>
+        </View>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
 
 export default function BuzzFeedScreen() {
   const router = useRouter();
@@ -337,33 +549,8 @@ export default function BuzzFeedScreen() {
           marginBottom: 12,
         }}
       >
-        {/* Title: VARAVU ADDA + Private circle Badge */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '900',
-              color: '#0F172A',
-              letterSpacing: -0.4,
-            }}
-          >
-            VARAVU ADDA
-          </Text>
-          <View
-            style={{
-              backgroundColor: '#F0FDF4',
-              paddingHorizontal: 8,
-              paddingVertical: 3,
-              borderRadius: 9999,
-              borderWidth: 1,
-              borderColor: '#BBF7D0',
-            }}
-          >
-            <Text style={{ fontSize: 11, fontWeight: '800', color: '#15803D' }}>
-              {isKn ? 'ಖಾಸಗಿ ಸರ್ಕಲ್' : 'Private circle'}
-            </Text>
-          </View>
-        </View>
+        {/* Brand: Animated AADDA Emblem & Wordmark with Live Pulse */}
+        <AnimatedAaddaBrand isKn={isKn} />
 
         {/* Right Action: "+ Buzz" Create Button (No profile icon in header; dedicated 4th tab is Profile) */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

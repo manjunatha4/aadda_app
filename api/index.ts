@@ -99,7 +99,7 @@ const SEED_BUZZ_POSTS: any[] = [
   {
     id: 'buzz_news_1',
     addaId: 'default',
-    addaName: 'Varavu Adda',
+    addaName: 'AADDA',
     authorId: 'usr_desk',
     authorName: 'Adda Campus Desk',
     authorAvatar: null,
@@ -1099,8 +1099,8 @@ export default async function handler(req: any, res: any) {
             authorAvatar: isAnon ? null : p.authorAvatar,
             authorName: isAnon
               ? (p.authorName?.includes('Gorilla') || p.authorName?.includes('Dino') || p.authorName?.includes('Starfish')
-                  ? p.authorName
-                  : 'Anonymous Member 🤫')
+                ? p.authorName
+                : 'Anonymous Member 🤫')
               : p.authorName,
             engagementScore: Number(score.toFixed(2)),
             isBookmarked: userBookmarksSet.has(p.id),
