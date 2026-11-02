@@ -999,6 +999,7 @@ export interface ConfirmationDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   destructive?: boolean;
+  icon?: string;
 }
 
 export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -1010,11 +1011,12 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   onConfirm,
   onCancel,
   destructive = false,
+  icon,
 }) => {
   return (
     <Modal visible={visible} onClose={onCancel} maxWidth={400}>
       <View style={{ alignItems: 'center', paddingVertical: 8 }}>
-        <Text style={{ fontSize: 36, marginBottom: 8 }}>{destructive ? '🗑️' : '❓'}</Text>
+        <Text style={{ fontSize: 36, marginBottom: 8 }}>{icon || (destructive ? '🗑️' : '❓')}</Text>
         <Text
           style={{
             color: DS_TOKENS.colors.textPrimary,

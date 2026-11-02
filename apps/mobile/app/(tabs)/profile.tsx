@@ -352,7 +352,7 @@ export default function ProfileScreen() {
             borderBottomColor: DS_TOKENS.colors.borderSubtle,
           }}
         >
-          <View>
+          <View style={{ flex: 1, paddingRight: 10 }}>
             <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
               🖼️ {isKn ? 'ಪ್ರೊಫೈಲ್ ಫೋಟೋ ಬದಲಾಯಿಸಿ' : 'Change Profile Picture'}
             </Text>
@@ -379,7 +379,7 @@ export default function ProfileScreen() {
             borderBottomColor: DS_TOKENS.colors.borderSubtle,
           }}
         >
-          <View>
+          <View style={{ flex: 1, paddingRight: 10 }}>
             <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
               🌐 {isKn ? 'ಅಪ್ಲಿಕೇಶನ್ ಭಾಷೆ' : 'Application Language'}
             </Text>
@@ -415,7 +415,7 @@ export default function ProfileScreen() {
             paddingVertical: 14,
           }}
         >
-          <View>
+          <View style={{ flex: 1, paddingRight: 10 }}>
             <Text style={{ color: DS_TOKENS.colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
               📰 {isKn ? 'ಸುದ್ದಿ ಮತ್ತು ಫೋಟೋ ಫೀಡ್' : 'Real Photo News Feed'}
             </Text>
@@ -427,37 +427,89 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </GlassCard>
 
-      {/* Logout Action */}
-      <GlassCard style={{ padding: 16, borderColor: DS_TOKENS.colors.roseBorder, backgroundColor: DS_TOKENS.colors.roseLight }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View>
-            <Text style={{ color: DS_TOKENS.colors.rose, fontSize: 15, fontWeight: '800' }}>
+      {/* Logout Action (Prominent & Clear, Never Overflowing) */}
+      <GlassCard
+        style={{
+          padding: 18,
+          borderColor: '#FECDD3',
+          backgroundColor: '#FFF1F2',
+          marginBottom: 36,
+          borderRadius: 20,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: '#FFE4E6',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 12,
+              borderWidth: 1,
+              borderColor: '#FDA4AF',
+            }}
+          >
+            <Text style={{ fontSize: 22 }}>🚪</Text>
+          </View>
+          <View style={{ flex: 1, paddingRight: 4 }}>
+            <Text style={{ color: '#E11D48', fontSize: 16, fontWeight: '900', letterSpacing: -0.2 }}>
               {isKn ? 'ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್' : 'Sign Out of AADDA'}
             </Text>
-            <Text style={{ color: DS_TOKENS.colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>
-              {isKn ? 'ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಸೆಶನ್ ಮುಗಿಸಿ' : 'You can log back in anytime with your credentials'}
+            <Text style={{ color: '#64748B', fontSize: 12, fontWeight: '600', marginTop: 2, lineHeight: 17 }}>
+              {isKn ? 'ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಸೆಶನ್ ಮುಗಿಸಿ. ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಮತ್ತೆ ಲಾಗಿನ್ ಆಗಬಹುದು.' : 'End your current session. You can log back in anytime with your credentials.'}
             </Text>
           </View>
-          <SecondaryButton
-            title={isKn ? 'ಲಾಗ್ ಔಟ್' : 'Log Out'}
-            icon="🚪"
-            onPress={() => setShowLogoutConfirm(true)}
-          />
         </View>
+
+        <TouchableOpacity
+          onPress={() => setShowLogoutConfirm(true)}
+          disabled={loggingOut}
+          activeOpacity={0.85}
+          style={{
+            width: '100%',
+            backgroundColor: '#E11D48',
+            paddingVertical: 13,
+            paddingHorizontal: 16,
+            borderRadius: 14,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            shadowColor: '#E11D48',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.25,
+            shadowRadius: 6,
+            elevation: 3,
+          }}
+        >
+          {loggingOut ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <Text style={{ fontSize: 16, color: '#FFFFFF' }}>🚪</Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800', letterSpacing: 0.3 }}>
+                {isKn ? 'ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್ ಮಾಡಿ' : 'Log Out of Account'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
       </GlassCard>
 
       {/* Logout Confirmation Dialog */}
       <ConfirmationDialog
         visible={showLogoutConfirm}
-        title={isKn ? 'ಲಾಗ್ ಔಟ್ ಮಾಡಬೇಕೆ?' : 'Sign out of your account?'}
+        title={isKn ? 'ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್ ಮಾಡಬೇಕೆ?' : 'Sign out of your account?'}
         message={
           isKn
-            ? 'ನಿಮ್ಮ ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್ ಆಗಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?'
-            : 'Are you sure you want to log out? You can sign right back in anytime using your credentials.'
+            ? 'ನಿಮ್ಮ ಖಾತೆಯಿಂದ ಲಾಗ್ ಔಟ್ ಆಗಲು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ? ನಿಮ್ಮ ರುಜುವಾತುಗಳನ್ನು ಬಳಸಿ ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಮತ್ತೆ ಲಾಗಿನ್ ಆಗಬಹುದು.'
+            : 'Are you sure you want to log out of AADDA? You can sign right back in anytime using your credentials.'
         }
-        confirmText={isKn ? 'ಲಾಗ್ ಔಟ್' : 'Log Out'}
-        cancelText={isKn ? 'ರದ್ದು' : 'Cancel'}
+        confirmText={loggingOut ? (isKn ? 'ನಿರ್ಗಮಿಸಲಾಗುತ್ತಿದೆ...' : 'Signing out...') : (isKn ? 'ಖಚಿತವಾಗಿ ಲಾಗ್ ಔಟ್' : 'Yes, Log Out')}
+        cancelText={isKn ? 'ರದ್ದು' : 'Stay Logged In'}
         destructive
+        icon="🚪"
         onConfirm={handleConfirmLogout}
         onCancel={() => setShowLogoutConfirm(false)}
       />

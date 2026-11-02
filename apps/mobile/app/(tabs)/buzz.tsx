@@ -1405,6 +1405,7 @@ export default function BuzzFeedScreen() {
         confirmText={loggingOut ? (isKn ? 'ನಿರ್ಗಮಿಸಲಾಗುತ್ತಿದೆ...' : 'Signing out...') : (isKn ? 'ಲಾಗ್ ಔಟ್' : 'Log Out')}
         cancelText={isKn ? 'ರದ್ದು' : 'Cancel'}
         destructive
+        icon="🚪"
         onConfirm={handleConfirmLogout}
         onCancel={() => setShowLogoutConfirm(false)}
       />
