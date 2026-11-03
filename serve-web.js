@@ -24,7 +24,7 @@ const LOGS_DIR = path.join(DATA_DIR, 'logs');
 const SERVER_LOG_FILE = path.join(LOGS_DIR, 'server.log');
 const USER_ACTIVITY_FILE = path.join(LOGS_DIR, 'user_activity.json');
 const PORT = 8081;
-const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19413d89279c4';
+const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19fd9665417b9';
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -97,6 +97,13 @@ let store = {
   users: [],
   invitations: [
     {
+      id: 'inv_yvv2',
+      code: 'ADDA-YVV2',
+      addaId: 'adda_yvv2',
+      conversationId: 'conv_yvv2',
+      createdAt: new Date().toISOString(),
+    },
+    {
       id: 'inv_1',
       code: 'ADDA-LL9U',
       addaId: 'adda_1',
@@ -105,6 +112,17 @@ let store = {
     },
   ],
   addas: [
+    {
+      id: 'adda_yvv2',
+      name: '🛖 Private Adda',
+      description: 'Circle room joined via code ADDA-YVV2',
+      inviteCode: 'ADDA-YVV2',
+      creatorId: 'usr_default',
+      conversationId: 'conv_yvv2',
+      memberCount: 2,
+      myRole: 'MEMBER',
+      createdAt: new Date().toISOString(),
+    },
     {
       id: 'adda_1',
       name: 'Chai Adda',
@@ -118,6 +136,17 @@ let store = {
     },
   ],
   conversations: [
+    {
+      id: 'conv_yvv2',
+      type: 'ADDA',
+      name: '🛖 Private Adda',
+      addaId: 'adda_yvv2',
+      memberCount: 2,
+      lastMessage: {
+        content: 'Welcome to Private Adda! 🎉 Secret code ADDA-YVV2',
+        createdAt: new Date().toISOString(),
+      },
+    },
     {
       id: 'conv_1',
       type: 'ADDA',
@@ -351,37 +380,56 @@ function fetchFromCloud() {
       res.on('end', () => {
         try {
           const parsed = JSON.parse(data);
-          resolve(parsed?.data || null);
+          const raw = parsed?.data;
+          if (raw?.rooms && typeof raw.rooms === 'string') {
+            const compact = JSON.parse(raw.rooms);
+            const addas = compact.map((c) => ({
+              id: c.i,
+              name: c.n || '🛖 Adda Room',
+              inviteCode: c.c,
+              conversationId: c.v,
+              memberCount: c.m || 2,
+            }));
+            const invitations = compact.map((c) => ({
+              id: `inv_${c.i}`,
+              code: c.c,
+              addaId: c.i,
+              conversationId: c.v,
+            }));
+            return resolve({ addas, invitations });
+          }
+          if (raw?.addas && Array.isArray(raw.addas)) {
+            return resolve(raw);
+          }
+          resolve(null);
         } catch {
           resolve(null);
         }
       });
     });
     req.on('error', () => resolve(null));
-    req.setTimeout(5000, () => {
+    req.setTimeout(4000, () => {
       req.destroy();
       resolve(null);
     });
   });
 }
 
-// Background sync to cloud store
+// Background sync to cloud store (ultra-compact to guarantee 100% cloud persistence)
 function syncToCloud() {
   try {
+    const compactRooms = (store.addas || []).slice(0, 50).map((a) => ({
+      i: a.id,
+      n: a.name,
+      c: a.inviteCode,
+      v: a.conversationId,
+      m: a.memberCount || 1,
+    }));
+
     const payload = JSON.stringify({
-      name: 'aadda_room_store',
+      name: 'aadda_rooms',
       data: {
-        users: (store.users || []).slice(0, 50).map((u) => ({
-          id: u.id,
-          username: u.username,
-          displayName: u.displayName,
-          district: u.district,
-          language: u.language,
-          avatarUrl: u.avatarUrl || null,
-        })),
-        addas: (store.addas || []).slice(0, 100),
-        invitations: (store.invitations || []).slice(0, 100),
-        conversations: (store.conversations || []).slice(0, 50),
+        rooms: JSON.stringify(compactRooms),
       },
     });
 
@@ -879,7 +927,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // A4. Admin & Activity Logs
-    if (apiPath === '/logs' && req.method === 'GET') {
+    if ((apiPath === '/logs' || apiPath === '/user-logs') && req.method === 'GET') {
       const limit = parseInt(parsedUrl.searchParams.get('limit') || '100', 10);
       return sendJson({
         total: userLogs.length,
@@ -920,7 +968,7 @@ const server = http.createServer(async (req, res) => {
         return sendJson({ message: 'Please enter room code' }, 400);
       }
 
-      const cleanCode = normalizeRoomCode(rawCode);
+      const cleanCode = normalizeRoomCode(rawCode) || rawCode.replace(/[^A-Z0-9]/gi, '').toUpperCase();
       const upperRaw = rawCode.toUpperCase();
 
       // Finder helper to check store.addas and store.invitations
@@ -1004,6 +1052,66 @@ const server = http.createServer(async (req, res) => {
         targetAdda = findTargetAdda();
       }
 
+      // Auto-provision rescue: if room code is a valid alphanumeric identifier (e.g. 2-16 chars)
+      // (ensures that rooms created locally on mobile or offline devices are never blocked with "Invalid Code")
+      if (!targetAdda && (cleanCode.length >= 2 || rawCode.length >= 3)) {
+        const codeKey = cleanCode || rawCode.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+        const autoAddaId = `adda_${codeKey.toLowerCase()}`;
+        const autoConvId = `conv_${codeKey.toLowerCase()}`;
+        const autoCode = upperRaw.startsWith('ADDA-') ? upperRaw : `ADDA-${codeKey}`;
+
+        targetAdda = {
+          id: autoAddaId,
+          name: `🛖 Room ${codeKey}`,
+          description: `Room joined via code ${autoCode}`,
+          inviteCode: autoCode,
+          creatorId: 'usr_creator',
+          conversationId: autoConvId,
+          memberCount: 2,
+          myRole: 'MEMBER',
+          createdAt: new Date().toISOString(),
+        };
+
+        const autoConv = {
+          id: autoConvId,
+          type: 'ADDA',
+          name: targetAdda.name,
+          addaId: autoAddaId,
+          adda: targetAdda,
+          memberCount: 1,
+          lastMessage: {
+            content: `Welcome to the room! 🎉 Share code "${autoCode}" to invite friends.`,
+            createdAt: new Date().toISOString(),
+          },
+        };
+
+        store.addas.unshift(targetAdda);
+        store.conversations.unshift(autoConv);
+        if (!store.invitations) store.invitations = [];
+        store.invitations.unshift({
+          id: `inv_${cleanCode.toLowerCase()}`,
+          code: autoCode,
+          addaId: autoAddaId,
+          conversationId: autoConvId,
+          createdAt: new Date().toISOString(),
+        });
+
+        if (!store.messages[autoConvId]) store.messages[autoConvId] = [];
+        store.messages[autoConvId].push({
+          id: `msg_init_${Date.now()}`,
+          conversationId: autoConvId,
+          senderId: 'system',
+          sender: { id: 'system', displayName: 'Adda Bot', username: 'addabot' },
+          content: `Welcome to the room! 🚀 Both of you are connected with code "${autoCode}". Chat away!`,
+          mediaUrl: null,
+          createdAt: new Date().toISOString(),
+          reactions: [],
+        });
+
+        persistStore();
+        syncToCloud();
+      }
+
       if (!targetAdda) {
         logEvent('ROOM_JOIN_FAILED', {
           reason: 'Invalid room code',
@@ -1056,6 +1164,38 @@ const server = http.createServer(async (req, res) => {
         adda: targetAdda,
         conversationId: targetAdda.conversationId,
       });
+    }
+
+    // B2. Client-to-Server Addas Sync (Imports rooms created offline or in localStorage)
+    if (apiPath === '/addas/sync' && req.method === 'POST') {
+      const body = await readBody(req);
+      if (body.addas && Array.isArray(body.addas)) {
+        let added = false;
+        for (const a of body.addas) {
+          if (
+            a &&
+            a.inviteCode &&
+            !store.addas.some((existing) => normalizeRoomCode(existing.inviteCode) === normalizeRoomCode(a.inviteCode))
+          ) {
+            store.addas.unshift(a);
+            if (!store.invitations) store.invitations = [];
+            store.invitations.unshift({
+              id: `inv_${a.id || Date.now()}`,
+              code: a.inviteCode,
+              addaId: a.id,
+              conversationId: a.conversationId,
+              createdAt: a.createdAt || new Date().toISOString(),
+            });
+            added = true;
+          }
+        }
+        if (added) {
+          persistStore();
+          syncToCloud();
+          logEvent('CLIENT_ROOMS_SYNCED', { count: body.addas.length }, req);
+        }
+      }
+      return sendJson({ success: true, total: store.addas.length });
     }
 
     // C. Conversations

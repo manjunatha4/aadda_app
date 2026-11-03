@@ -91,6 +91,10 @@ export default function ChatsScreen() {
         res = await clientStore.acceptInvite(code);
       }
 
+      if (!res || !res.adda) {
+        res = await clientStore.acceptInvite(code);
+      }
+
       if (res?.adda) {
         await clientStore.saveAddaLocally(res.adda);
       }

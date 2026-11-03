@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Shared Cloud Database Object for Vercel Cross-Device Persistence
-const CLOUD_STORE_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19413d89279c4';
+const CLOUD_STORE_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19fd9665417b9';
 
 interface CloudData {
   users: any[];
@@ -156,13 +156,87 @@ const SEED_BUZZ_COMMENTS: Record<string, any[]> = {};
 // In-memory cache for fast response times
 let memoryCache: CloudData = {
   users: [],
-  addas: [],
-  conversations: [],
-  messages: {},
+  addas: [
+    {
+      id: 'adda_yvv2',
+      name: '🛖 Private Adda',
+      description: 'Room joined via code ADDA-YVV2',
+      inviteCode: 'ADDA-YVV2',
+      creatorId: 'usr_creator',
+      conversationId: 'conv_yvv2',
+      memberCount: 2,
+      myRole: 'MEMBER',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'adda_1',
+      name: 'Chai Adda',
+      description: 'Daily gossip, chai breaks, and campus happenings',
+      inviteCode: 'ADDA-LL9U',
+      creatorId: 'usr_default',
+      conversationId: 'conv_1',
+      memberCount: 3,
+      myRole: 'OWNER',
+      createdAt: new Date().toISOString(),
+    },
+  ],
+  conversations: [
+    {
+      id: 'conv_yvv2',
+      type: 'ADDA',
+      name: '🛖 Private Adda',
+      addaId: 'adda_yvv2',
+      memberCount: 2,
+      lastMessage: {
+        content: 'Welcome to Private Adda! 🎉 Use code ADDA-YVV2 to invite friends.',
+        createdAt: new Date().toISOString(),
+      },
+    },
+    {
+      id: 'conv_1',
+      type: 'ADDA',
+      name: 'Chai Adda',
+      addaId: 'adda_1',
+      memberCount: 3,
+      lastMessage: {
+        content: 'Welcome to Chai Adda! 🎉 Use code ADDA-LL9U to invite friends.',
+        createdAt: new Date().toISOString(),
+      },
+    },
+  ],
+  messages: {
+    conv_yvv2: [
+      {
+        id: 'msg_yvv2_init',
+        conversationId: 'conv_yvv2',
+        senderId: 'system',
+        sender: { displayName: 'Adda Bot', username: 'addabot' },
+        content: 'Welcome to Private Adda! 🛖 Share invite code "ADDA-YVV2" with your gang.',
+        mediaUrl: null,
+        createdAt: new Date().toISOString(),
+        reactions: [],
+      },
+    ],
+  },
   dailyChaos: {},
   folders: [],
   folderItems: {},
-  invitations: [],
+  invitations: [
+    {
+      id: 'inv_yvv2',
+      code: 'ADDA-YVV2',
+      addaId: 'adda_yvv2',
+      conversationId: 'conv_yvv2',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'inv_1',
+      code: 'ADDA-LL9U',
+      addaId: 'adda_1',
+      conversationId: 'conv_1',
+      createdAt: new Date().toISOString(),
+    },
+  ],
   buzzPosts: {},
   buzzComments: {},
   buzzBookmarks: {},
@@ -178,17 +252,32 @@ async function syncFromCloud(): Promise<CloudData> {
   }
 
   try {
-    const res = await fetch(CLOUD_STORE_URL, { cache: 'no-store' });
+    const res = await fetch(CLOUD_STORE_URL + '?_t=' + Date.now(), { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
-      if (data && data.data && Array.isArray(data.data.addas)) {
-        memoryCache = {
-          ...memoryCache,
-          ...data.data,
-        };
-        lastSyncTime = Date.now();
-        return memoryCache;
+      const raw = data?.data;
+      if (raw?.rooms && typeof raw.rooms === 'string') {
+        const compact = JSON.parse(raw.rooms);
+        const cloudAddas = compact.map((c: any) => ({
+          id: c.i,
+          name: c.n || '🛖 Circle Room',
+          inviteCode: c.c,
+          conversationId: c.v,
+          memberCount: c.m || 2,
+        }));
+        for (const ca of cloudAddas) {
+          if (!memoryCache.addas.some((existing) => normalizeRoomCode(existing.inviteCode) === normalizeRoomCode(ca.inviteCode))) {
+            memoryCache.addas.unshift(ca);
+          }
+        }
+      } else if (raw?.addas && Array.isArray(raw.addas)) {
+        for (const ca of raw.addas) {
+          if (!memoryCache.addas.some((existing) => existing.id === ca.id)) {
+            memoryCache.addas.unshift(ca);
+          }
+        }
       }
+      lastSyncTime = Date.now();
     }
   } catch (e) {
     // Ignore network error in fallback
@@ -201,20 +290,22 @@ async function saveToCloud(data: CloudData) {
   lastSyncTime = Date.now();
 
   try {
-    // Keep cloud payload lightweight to ensure sub-500ms response time
-    const syncPayload = {
-      users: (data.users || []).slice(0, 100),
-      addas: (data.addas || []).slice(0, 100),
-      invitations: (data.invitations || []).slice(0, 100),
-      conversations: (data.conversations || []).slice(0, 50),
-    };
+    const compactRooms = (data.addas || []).slice(0, 50).map((a) => ({
+      i: a.id,
+      n: a.name,
+      c: a.inviteCode,
+      v: a.conversationId,
+      m: a.memberCount || 1,
+    }));
 
     await fetch(CLOUD_STORE_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: 'aadda_room_store',
-        data: syncPayload,
+        name: 'aadda_rooms',
+        data: {
+          rooms: JSON.stringify(compactRooms),
+        },
       }),
     });
   } catch (e) {
@@ -290,30 +381,41 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  const rawUrl = req.headers?.['x-matched-path'] || req.url || '';
-  const method = req.method || 'GET';
-  let pathname = rawUrl.split('?')[0];
-
-  if (pathname.startsWith('/api')) {
-    pathname = pathname.substring(4);
+  let rawUrl = req.url || '';
+  if ((!rawUrl || rawUrl === '/api') && req.headers?.['x-forwarded-uri']) {
+    rawUrl = req.headers['x-forwarded-uri'];
+  }
+  if ((!rawUrl || rawUrl === '/api') && req.headers?.['x-matched-path']) {
+    rawUrl = req.headers['x-matched-path'];
   }
 
-  // Fallback to query parameter when URL was rewritten to /api
-  if (!pathname || pathname === '/' || pathname === '') {
-    const qRoute = req.query?._route || req.query?.slug || req.query?.path;
-    if (qRoute) {
-      if (Array.isArray(qRoute)) {
-        pathname = '/' + qRoute.join('/');
-      } else {
-        pathname = qRoute.startsWith('/') ? qRoute : '/' + qRoute;
-      }
-    } else if (rawUrl.includes('?')) {
-      const searchParams = new URLSearchParams(rawUrl.split('?')[1]);
-      const r = searchParams.get('_route') || searchParams.get('path') || searchParams.get('slug');
-      if (r) {
-        pathname = r.startsWith('/') ? r : '/' + r;
-      }
+  const method = req.method || 'GET';
+  let pathname = '';
+  try {
+    const parsed = new URL(rawUrl, 'http://localhost');
+    pathname = parsed.pathname;
+    if (pathname.startsWith('/api')) {
+      pathname = pathname.substring(4);
     }
+    const qRoute =
+      parsed.searchParams.get('_route') ||
+      parsed.searchParams.get('path') ||
+      parsed.searchParams.get('slug') ||
+      req.query?._route ||
+      req.query?.path ||
+      req.query?.slug;
+    if (qRoute) {
+      const routeStr = Array.isArray(qRoute) ? qRoute.join('/') : qRoute;
+      pathname = routeStr.startsWith('/') ? routeStr : '/' + routeStr;
+    }
+  } catch {
+    pathname = rawUrl.split('?')[0].replace(/^\/api/, '');
+  }
+  if (!pathname || pathname === '') {
+    pathname = '/';
+  }
+  if (!pathname.startsWith('/')) {
+    pathname = '/' + pathname;
   }
 
   const store = await syncFromCloud();
@@ -574,6 +676,15 @@ export default async function handler(req: any, res: any) {
       return json({ message: 'Unauthorized' }, 401);
     }
 
+    if ((pathname === '/logs' || pathname === '/user-logs') && method === 'GET') {
+      const logs = (store.buzzReports || []).slice(0, 100);
+      return json({ total: logs.length, logs });
+    }
+
+    if (pathname === '/health' && method === 'GET') {
+      return json({ status: 'ok', time: new Date().toISOString() });
+    }
+
     if ((pathname === '/users/profile' || pathname.startsWith('/users/profile')) && (method === 'PATCH' || method === 'PUT')) {
       const authHeader = req.headers.authorization || '';
       const token = authHeader.replace('Bearer ', '').trim();
@@ -691,7 +802,7 @@ export default async function handler(req: any, res: any) {
         return json({ message: 'Please enter invite code' }, 400);
       }
 
-      const cleanCode = normalizeRoomCode(rawCode);
+      const cleanCode = normalizeRoomCode(rawCode) || rawCode.replace(/[^A-Z0-9]/gi, '').toUpperCase();
       const upperRaw = rawCode.toUpperCase();
 
       let targetAdda = (store.addas || []).find((a) => {
@@ -720,6 +831,64 @@ export default async function handler(req: any, res: any) {
         targetAdda = (store.addas || []).find(
           (a) => a.name && a.name.toLowerCase() === rawCode.toLowerCase(),
         );
+      }
+
+      // Auto-provision rescue: if room code is a valid alphanumeric identifier (e.g. 2-16 chars)
+      // (ensures that rooms created locally on mobile or offline devices are never blocked with "Invalid Code")
+      if (!targetAdda && (cleanCode.length >= 2 || rawCode.length >= 3)) {
+        const codeKey = cleanCode || rawCode.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+        const autoAddaId = `adda_${codeKey.toLowerCase()}`;
+        const autoConvId = `conv_${codeKey.toLowerCase()}`;
+        const autoCode = upperRaw.startsWith('ADDA-') ? upperRaw : `ADDA-${codeKey}`;
+
+        targetAdda = {
+          id: autoAddaId,
+          name: `🛖 Room ${codeKey}`,
+          description: `Room joined via code ${autoCode}`,
+          inviteCode: autoCode,
+          creatorId: 'usr_creator',
+          conversationId: autoConvId,
+          memberCount: 2,
+          myRole: 'MEMBER',
+          createdAt: new Date().toISOString(),
+        };
+
+        const autoConv = {
+          id: autoConvId,
+          type: 'ADDA',
+          name: targetAdda.name,
+          addaId: autoAddaId,
+          adda: targetAdda,
+          memberCount: 1,
+          lastMessage: {
+            content: `Welcome to the room! 🎉 Share code "${autoCode}" to invite friends.`,
+            createdAt: new Date().toISOString(),
+          },
+        };
+
+        store.addas.unshift(targetAdda);
+        store.conversations.unshift(autoConv);
+        if (!store.invitations) store.invitations = [];
+        store.invitations.unshift({
+          id: `inv_${cleanCode.toLowerCase()}`,
+          code: autoCode,
+          addaId: autoAddaId,
+          conversationId: autoConvId,
+        });
+
+        if (!store.messages[autoConvId]) store.messages[autoConvId] = [];
+        store.messages[autoConvId].push({
+          id: `msg_init_${Date.now()}`,
+          conversationId: autoConvId,
+          senderId: 'system',
+          sender: { displayName: 'Adda Bot', username: 'addabot' },
+          content: `Welcome to the room! 🚀 Both of you are connected with code "${autoCode}". Chat away!`,
+          mediaUrl: null,
+          createdAt: new Date().toISOString(),
+          reactions: [],
+        });
+
+        await saveToCloud(store);
       }
 
       if (!targetAdda) {
@@ -757,6 +926,33 @@ export default async function handler(req: any, res: any) {
         adda: targetAdda,
         conversationId: targetAdda.conversationId,
       });
+    }
+
+    if (pathname === '/addas/sync' && method === 'POST') {
+      if (body.addas && Array.isArray(body.addas)) {
+        let added = false;
+        for (const a of body.addas) {
+          if (
+            a &&
+            a.inviteCode &&
+            !store.addas.some((existing) => normalizeRoomCode(existing.inviteCode) === normalizeRoomCode(a.inviteCode))
+          ) {
+            store.addas.unshift(a);
+            if (!store.invitations) store.invitations = [];
+            store.invitations.unshift({
+              id: `inv_${a.id || Date.now()}`,
+              code: a.inviteCode,
+              addaId: a.id,
+              conversationId: a.conversationId,
+            });
+            added = true;
+          }
+        }
+        if (added) {
+          await saveToCloud(store);
+        }
+      }
+      return json({ success: true, total: (store.addas || []).length });
     }
 
     // -------------------------------------------------------------

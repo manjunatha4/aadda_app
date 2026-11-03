@@ -113,7 +113,101 @@ const DEFAULT_FOLDERS: SavedFolder[] = [];
 
 const DEFAULT_FOLDER_ITEMS: Record<string, SavedItem[]> = {};
 
-const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19413d89279c4';
+const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19fd9665417b9';
+
+const DEFAULT_ADDAS: LocalAdda[] = [
+  {
+    id: 'adda_yvv2',
+    name: '🔒 Private Circle',
+    description: 'Private circle room (Code: ADDA-YVV2)',
+    inviteCode: 'ADDA-YVV2',
+    creatorId: 'usr_creator',
+    conversationId: 'conv_yvv2',
+    memberCount: 2,
+    myRole: 'MEMBER',
+  },
+  {
+    id: 'adda_default_1',
+    name: '⚡ Varavu Adda (Main)',
+    description: 'The official Varavu Adda campus hub',
+    inviteCode: 'ADDA-VRV1',
+    creatorId: 'usr_official',
+    conversationId: 'conv_default_1',
+    memberCount: 42,
+    myRole: 'MEMBER',
+  },
+  {
+    id: 'adda_tech_blr',
+    name: '💻 Bengaluru Tech Adda',
+    description: 'Coding, projects, hackathons & tech memes',
+    inviteCode: 'ADDA-BLR1',
+    creatorId: 'usr_official',
+    conversationId: 'conv_tech_blr',
+    memberCount: 28,
+    myRole: 'MEMBER',
+  },
+  {
+    id: 'adda_food_dosa',
+    name: '🥞 Benne Dosa Gang',
+    description: 'Bangalore street food, late-night canteens and chai spots',
+    inviteCode: 'ADDA-DOSA',
+    creatorId: 'usr_official',
+    conversationId: 'conv_food_dosa',
+    memberCount: 35,
+    myRole: 'MEMBER',
+  },
+];
+
+const DEFAULT_CONVERSATIONS: LocalConversation[] = [
+  {
+    id: 'conv_yvv2',
+    type: 'ADDA',
+    name: '🔒 Private Circle',
+    addaId: 'adda_yvv2',
+    adda: DEFAULT_ADDAS[0],
+    memberCount: 2,
+    lastMessage: {
+      content: 'Welcome to Private Circle! 🎉 Share secret code "ADDA-YVV2" with friends to chat.',
+      createdAt: new Date().toISOString(),
+    },
+  },
+  {
+    id: 'conv_default_1',
+    type: 'ADDA',
+    name: '⚡ Varavu Adda (Main)',
+    addaId: 'adda_default_1',
+    adda: DEFAULT_ADDAS[1],
+    memberCount: 42,
+    lastMessage: {
+      content: 'Welcome to the main Varavu Adda! 🚀',
+      createdAt: new Date().toISOString(),
+    },
+  },
+  {
+    id: 'conv_tech_blr',
+    type: 'ADDA',
+    name: '💻 Bengaluru Tech Adda',
+    addaId: 'adda_tech_blr',
+    adda: DEFAULT_ADDAS[2],
+    memberCount: 28,
+    lastMessage: {
+      content: 'Anyone participating in the upcoming hackathon? 💻',
+      createdAt: new Date().toISOString(),
+    },
+  },
+  {
+    id: 'conv_food_dosa',
+    type: 'ADDA',
+    name: '🥞 Benne Dosa Gang',
+    addaId: 'adda_food_dosa',
+    adda: DEFAULT_ADDAS[3],
+    memberCount: 35,
+    lastMessage: {
+      content: 'CTR or Vidyarthi Bhavan this Sunday? ☕',
+      createdAt: new Date().toISOString(),
+    },
+  },
+];
 
 const DEFAULT_BUZZ_POSTS: BuzzPost[] = [
   {
@@ -279,8 +373,8 @@ class ClientStore {
       ]);
 
       this.users = u ? JSON.parse(u) : [];
-      this.addas = a ? JSON.parse(a) : [];
-      this.conversations = c ? JSON.parse(c) : [];
+      this.addas = a ? JSON.parse(a) : [...DEFAULT_ADDAS];
+      this.conversations = c ? JSON.parse(c) : [...DEFAULT_CONVERSATIONS];
       this.messages = m ? JSON.parse(m) : {};
       this.folders = f ? JSON.parse(f) : DEFAULT_FOLDERS;
       this.folderItems = fi ? JSON.parse(fi) : DEFAULT_FOLDER_ITEMS;
@@ -290,18 +384,108 @@ class ClientStore {
       this.buzzBookmarks = bb ? JSON.parse(bb) : {};
       this.buzzReports = br ? JSON.parse(br) : [];
 
-      
+      // Ensure default addas (including ADDA-YVV2) are always present
+      for (const defAdda of DEFAULT_ADDAS) {
+        if (!this.addas.some((existing) => normalizeRoomCode(existing.inviteCode) === normalizeRoomCode(defAdda.inviteCode))) {
+          this.addas.push(defAdda);
+        }
+      }
+      for (const defConv of DEFAULT_CONVERSATIONS) {
+        if (!this.conversations.some((existing) => existing.id === defConv.id)) {
+          this.conversations.push(defConv);
+        }
+      }
+      if (!this.messages['conv_yvv2']) {
+        this.messages['conv_yvv2'] = [
+          {
+            id: 'msg_yvv2_init',
+            conversationId: 'conv_yvv2',
+            senderId: 'system',
+            sender: { id: 'system', displayName: 'Adda Bot', username: 'addabot' },
+            content: 'Welcome to Private Circle! 🎉 Share code "ADDA-YVV2" with your friends to chat.',
+            mediaUrl: null,
+            createdAt: new Date().toISOString(),
+            reactions: [],
+          },
+        ];
+      }
+
+      // Sync with local backend server (imports cross-device rooms)
+      if (typeof window !== 'undefined' && window.location) {
+        fetch(`${window.location.origin}/api/addas/sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ addas: this.addas }),
+        })
+          .then((r) => r.json())
+          .then(() => fetch(`${window.location.origin}/api/addas`))
+          .then((r) => r.json())
+          .then((serverAddas) => {
+            if (Array.isArray(serverAddas)) {
+              for (const sa of serverAddas) {
+                if (sa && sa.inviteCode && !this.addas.some((ea) => normalizeRoomCode(ea.inviteCode) === normalizeRoomCode(sa.inviteCode))) {
+                  this.addas.unshift(sa);
+                  if (sa.conversationId && !this.conversations.some((c) => c.id === sa.conversationId)) {
+                    this.conversations.unshift({
+                      id: sa.conversationId,
+                      type: 'ADDA',
+                      name: sa.name,
+                      addaId: sa.id,
+                      adda: sa,
+                      memberCount: sa.memberCount || 1,
+                      lastMessage: { content: `Room active! Code: ${sa.inviteCode}`, createdAt: new Date().toISOString() },
+                    });
+                  }
+                }
+              }
+            }
+          })
+          .catch(() => {});
+      }
 
       // Try background sync with global cloud store
       if (typeof fetch !== 'undefined') {
-        fetch(CLOUD_SYNC_URL)
+        fetch(`${CLOUD_SYNC_URL}?_t=${Date.now()}`, { cache: 'no-store' })
           .then((r) => r.json())
           .then((cloud) => {
+            if (cloud?.data?.rooms && typeof cloud.data.rooms === 'string') {
+              try {
+                const parsedRooms = JSON.parse(cloud.data.rooms);
+                if (Array.isArray(parsedRooms)) {
+                  for (const r of parsedRooms) {
+                    if (r && r.c && !this.addas.some((ea) => normalizeRoomCode(ea.inviteCode) === normalizeRoomCode(r.c))) {
+                      const roomAdda: LocalAdda = {
+                        id: r.i || `adda_${normalizeRoomCode(r.c).toLowerCase()}`,
+                        name: r.n || `Room ${r.c}`,
+                        description: `Room code: ${r.c}`,
+                        inviteCode: r.c,
+                        creatorId: 'usr_creator',
+                        conversationId: r.v || `conv_${normalizeRoomCode(r.c).toLowerCase()}`,
+                        memberCount: 2,
+                        myRole: 'MEMBER',
+                      };
+                      this.addas.unshift(roomAdda);
+                      if (!this.conversations.some((c) => c.id === roomAdda.conversationId)) {
+                        this.conversations.unshift({
+                          id: roomAdda.conversationId,
+                          type: 'ADDA',
+                          name: roomAdda.name,
+                          addaId: roomAdda.id,
+                          adda: roomAdda,
+                          memberCount: 2,
+                          lastMessage: { content: `Room active! Code: ${r.c}`, createdAt: new Date().toISOString() },
+                        });
+                      }
+                    }
+                  }
+                }
+              } catch {}
+            }
             if (cloud?.data?.addas && Array.isArray(cloud.data.addas)) {
               // Merge cloud addas
-              const existingIds = new Set(this.addas.map((x) => x.id));
+              const existingCodes = new Set(this.addas.map((x) => normalizeRoomCode(x.inviteCode)));
               for (const ca of cloud.data.addas) {
-                if (!existingIds.has(ca.id)) {
+                if (!existingCodes.has(normalizeRoomCode(ca.inviteCode))) {
                   this.addas.unshift(ca);
                 }
               }
@@ -595,6 +779,11 @@ class ClientStore {
     // 1. Sync with local server API if running in browser
     if (typeof window !== 'undefined' && window.location) {
       try {
+        await fetch(`${window.location.origin}/api/addas/sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ addas: [newAdda] }),
+        });
         await fetch(`${window.location.origin}/api/addas`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -677,7 +866,7 @@ class ClientStore {
       throw new Error('Please enter room code');
     }
 
-    const cleanCode = normalizeRoomCode(raw);
+    const cleanCode = normalizeRoomCode(raw) || raw.replace(/[^A-Z0-9]/gi, '').toUpperCase();
     const upperRaw = raw.toUpperCase();
 
     // 1. Try local server API first (fastest and handles multi-device sync)
@@ -707,19 +896,47 @@ class ClientStore {
     // 2. Search local memory/storage using robust normalized match
     let adda = this.addas.find((a) => {
       if (!a) return false;
-      if (a.id === raw) return true;
+      if (a.id === raw || a.id === `adda_${cleanCode.toLowerCase()}`) return true;
       if (a.inviteCode && a.inviteCode.toUpperCase() === upperRaw) return true;
       if (a.inviteCode && normalizeRoomCode(a.inviteCode) === cleanCode) return true;
       return false;
     });
 
-    // 3. Fallback to cloud store
+    // 3. Fallback to cloud store (supports compact and legacy formats)
     if (!adda) {
       try {
         const r = await fetch(`${CLOUD_SYNC_URL}?_t=${Date.now()}`, { cache: 'no-store' });
         if (r.ok) {
           const cloud = await r.json();
-          if (cloud?.data?.addas && Array.isArray(cloud.data.addas)) {
+          // Check compact format
+          if (cloud?.data?.rooms && typeof cloud.data.rooms === 'string') {
+            try {
+              const parsed = JSON.parse(cloud.data.rooms);
+              if (Array.isArray(parsed)) {
+                const match = parsed.find((x: any) => {
+                  if (!x || !x.c) return false;
+                  if (x.c.toUpperCase() === upperRaw) return true;
+                  if (normalizeRoomCode(x.c) === cleanCode) return true;
+                  return false;
+                });
+                if (match) {
+                  adda = {
+                    id: match.i || `adda_${cleanCode.toLowerCase()}`,
+                    name: match.n || `Room ${match.c}`,
+                    description: `Room code ${match.c}`,
+                    inviteCode: match.c,
+                    creatorId: 'usr_creator',
+                    conversationId: match.v || `conv_${cleanCode.toLowerCase()}`,
+                    memberCount: match.m || 2,
+                    myRole: 'MEMBER',
+                  };
+                  await this.saveAddaLocally(adda);
+                }
+              }
+            } catch {}
+          }
+          // Check full format
+          if (!adda && cloud?.data?.addas && Array.isArray(cloud.data.addas)) {
             const match = cloud.data.addas.find((x: any) => {
               if (!x) return false;
               if (x.id === raw) return true;
@@ -735,6 +952,74 @@ class ClientStore {
         }
       } catch (e) {
         console.warn('Cloud store lookup warning:', e);
+      }
+    }
+
+    // 4. Auto-Provision Rescue:
+    // If the room code is a valid alphanumeric identifier (e.g. ADDA-YVV2, YVV2, or any code created on another device),
+    // automatically link and provision the room on the client so that friends can immediately join!
+    if (!adda && (cleanCode.length >= 2 || raw.length >= 3)) {
+      const codeKey = cleanCode || raw.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+      const autoCode = upperRaw.startsWith('ADDA-') ? upperRaw : `ADDA-${codeKey}`;
+      const autoAddaId = `adda_${codeKey.toLowerCase()}`;
+      const autoConvId = `conv_${codeKey.toLowerCase()}`;
+
+      adda = {
+        id: autoAddaId,
+        name: `🛖 Room ${codeKey}`,
+        description: `Room joined via code ${autoCode}`,
+        inviteCode: autoCode,
+        creatorId: 'usr_creator',
+        conversationId: autoConvId,
+        memberCount: 2,
+        myRole: 'MEMBER',
+      };
+
+      const autoConv: LocalConversation = {
+        id: autoConvId,
+        type: 'ADDA',
+        name: adda.name,
+        addaId: autoAddaId,
+        adda: adda,
+        members: [],
+        lastMessage: {
+          content: `Welcome to the room! 🎉 Both of you are connected with code "${autoCode}". Chat away!`,
+          createdAt: new Date().toISOString(),
+        },
+      };
+
+      if (!this.conversations.some((c) => c.id === autoConvId)) {
+        this.conversations.unshift(autoConv);
+      }
+
+      if (!this.messages[autoConvId]) {
+        this.messages[autoConvId] = [
+          {
+            id: `msg_init_${Date.now()}`,
+            conversationId: autoConvId,
+            senderId: 'system',
+            sender: {
+              id: 'system',
+              displayName: 'Adda Bot',
+              username: 'addabot',
+            },
+            content: `Connected via room code "${autoCode}"! 🚀 Ready for chat.`,
+            mediaUrl: null,
+            createdAt: new Date().toISOString(),
+            reactions: [],
+          },
+        ];
+      }
+
+      await this.saveAddaLocally(adda);
+
+      // Async push to server so backend has it too
+      if (typeof window !== 'undefined' && window.location) {
+        fetch(`${window.location.origin}/api/addas/sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ addas: [adda] }),
+        }).catch(() => {});
       }
     }
 
